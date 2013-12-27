@@ -29,5 +29,5 @@ External memory interface:
 This product is included in Freescale’s product longevity program, with assured supply for a minimum of 10 years after launch.
 
 ===========
-Supported varsions:
-linux-2.6.28  (current build kernel & ramfs)
+Uboot features:
+- .
