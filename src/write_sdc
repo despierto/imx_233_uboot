@@ -1,0 +1,15 @@
+#echo "Copy uboot.sd from /home/user/src/u-boot_stmp/bin/..."
+#cp /home/user/src/u-boot_stmp/bin/uboot.sb .
+#echo dd if=/dev/sdc2 of=sdc2_16m_before.bin bs=512 count=32768
+#dd if=/dev/sdc2 of=sdc2_16m_before.bin bs=512 count=32768
+#dd if=/dev/zero of=/dev/sdc2 bs=512 count=32768
+echo "Create bin/imx.img..."
+dd if=/dev/zero of=bin/imx.img bs=512 count=4
+echo "Copy bin/uboot.sb to bin/imx.img..."
+dd if=bin/uboot.sb of=bin/imx.img ibs=512 seek=4 conv=sync,notrunc
+echo "Write bin/imx.img to /dev/sdc2"
+dd if=bin/imx.img of=/dev/sdc2 bs=512 count=32768
+#echo dd if=/dev/sdc2 of=sdc2_16m_after.bin bs=512 count=32768
+#dd if=/dev/sdc2 of=sdc2_16m_after.bin bs=512 count=32768
+echo "Copy bin/imx.img to evm_bin"
+cp bin/imx.img evm_bin
