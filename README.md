@@ -1,7 +1,7 @@
 imx_233_uboot
 =============
 
-Uboot for Freescale i.MX233: Applications Processor
+XBoot for Freescale i.MX233: Applications Processor
 
 http://www.freescale.com/webapp/sps/site/prod_summary.jsp?code=i.MX233
 
@@ -29,5 +29,6 @@ External memory interface:
 This product is included in Freescale’s product longevity program, with assured supply for a minimum of 10 years after launch.
 
 ===========
-Uboot features:
+Xboot features:
 - . ver 0.1
+- cmake based compilation
