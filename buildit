@@ -1,0 +1,32 @@
+% cat build
+#!/bin/sh
+
+echo "*************************************************"
+echo "*****        x-Boot building, ver 0.1       *****" 
+echo "*************************************************"
+
+echo "*** cleaning..."
+rm -rf ./_build
+rm -rf ./_install
+
+if [ "$1" != "clean" ]; then
+
+echo ""
+echo "*** pre-building..."
+mkdir -pv ./_build
+mkdir -pv ./_install
+
+cd _build
+cmake .. -DCMAKE_INSTALL_PREFIX=../_install
+
+echo ""
+echo "*** building..."
+make
+make install
+
+cd ..
+echo ""
+echo "*** built results..."
+md5sum ./_install/*
+
+fi
