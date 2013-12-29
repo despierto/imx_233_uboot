@@ -30,4 +30,4 @@ This product is included in Freescale’s product longevity program, with assure
 
 ===========
 Uboot features:
-- .
+- . ver 0.1
