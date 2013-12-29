@@ -1,6 +1,0 @@
-*.o
-/boot_prep/boot_prep
-/linux_prep/include/arch
-/linux_prep/output-target
-*.sb
-zImage
