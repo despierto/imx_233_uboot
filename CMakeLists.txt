@@ -14,7 +14,7 @@ set(CMAKE_ASM_COMPILER "${CROSS_COMPILER_PATH}/bin/${CROSS_COMPILER_PREFIX}-as")
 enable_language(ASM)
 
 include_directories("${CMAKE_SOURCE_DIR}/include")
-include_directories("${CMAKE_SOURCE_DIR}/mach/${TARGET_MACH}/include/")
+include_directories("${CMAKE_SOURCE_DIR}/mach/${TARGET_MACH}/include")
 
 #add_definitions("-DMACH_ARM_V5")
 

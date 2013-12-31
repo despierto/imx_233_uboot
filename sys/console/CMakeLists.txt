@@ -1,8 +1,8 @@
 cmake_minimum_required (VERSION 2.8)
 
-project(sys_console)
+project(syster_console)
 
-add_library(console STATIC console.c)
+add_library(sysconsole STATIC sys_console.c)
 
-install(TARGETS console DESTINATION lib)
-install(FILES console.h DESTINATION include)
+#install(TARGETS sysconsole DESTINATION lib)
+#install(FILES sys_console.h DESTINATION include)
