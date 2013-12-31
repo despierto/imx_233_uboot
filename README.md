@@ -35,9 +35,9 @@ Xboot features:
 
 ===========
 Xboot tree
-.
-├── buildit
-├── CMakeLists.txt
+. 
+├── buildit 
+├── CMakeLists.txt 
 ├── cross_compile.cmake
 ├── core                    <"Xboot OS: includes sys & drv libs">
 │   ├── CMakeLists.txt
