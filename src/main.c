@@ -13,7 +13,6 @@ void  main(voir)
         printf("i=%d\n", i);
     }
     
-    testit1();
 
     return;
 }
