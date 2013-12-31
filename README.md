@@ -32,3 +32,44 @@ This product is included in Freescale’s product longevity program, with assure
 Xboot features:
 - . ver 0.1
 - cmake based compilation
+
+===========
+Xboot tree
+.
+├── buildit
+├── CMakeLists.txt
+├── cross_compile.cmake
+├── core                    <"Xboot OS: includes sys & drv libs">
+│   ├── CMakeLists.txt
+│   ├── *.h
+│   └── *.c
+├── docs                    <"Documentation: common & mach specifics">
+│   └── mach
+│       └── imx-233
+│           └── ...
+├── drv                     <"Xboot drivers libdrv.a: dependency on Mach's HW layer">
+│   ├── CMakeLists.txt
+│   ├── *.c
+│   └── *.h
+├── include                 <"Common h files">
+│   └── *.h
+├── mach                    <"Collection of machines">
+│   ├── CMakeLists.txt
+│   └── imx-233             <"Pre-boot specific applications">
+│       ├── CMakeLists.txt
+│       ├── *.S
+│       ├── *.c
+│       ├── boot            <"Linker file depending on machine, boot entry point">
+│       │   └── ...
+│       └── include         <"Machine specific include files">
+│           ├── *.h
+│           └── registers
+│               └── *.h
+├── README.md
+└── sys                     <"Common independent libraries">
+    └── CMakeLists.txt
+        └── console         <"libconsole.a">
+                └── CMakeLists.txt
+                    ├── *.c
+                    └── *.h
+

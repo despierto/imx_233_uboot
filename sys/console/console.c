@@ -1,9 +1,9 @@
 /*************************************************
- *                   X-BOOT entry                *
+ *                   X-BOOT console              *
  *************************************************/
 #include <stdio.h>
 
-void  main(voir)
+int  sys_console_init(void)
 {
     unsigned int i, a;
 
@@ -12,8 +12,8 @@ void  main(voir)
         a = i;
         printf("i=%d\n", i);
     }
-    
 
-    return;
+    return 0;
 }
+
 

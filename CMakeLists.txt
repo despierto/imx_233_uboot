@@ -44,6 +44,8 @@ set(CMAKE_ASM_FLAGS_DEBUG "-g")
 set(CMAKE_ASM_FLAGS_RELEASE "--strip-local-absolute")
 
 
-add_subdirectory(libs)
-add_subdirectory(src) 
+add_subdirectory(sys)
+add_subdirectory(drv)
+add_subdirectory(mach)
+add_subdirectory(core)
 
