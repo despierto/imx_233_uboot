@@ -19,7 +19,7 @@
 
 #include "hw_power.h"
 #include "hw_digctl.h"
-#include "regspower.h"
+#include "registers/regspower.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Variables

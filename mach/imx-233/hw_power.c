@@ -15,14 +15,14 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Includes and external references
 ////////////////////////////////////////////////////////////////////////////////
-#include <types.h>
+#include "types.h"
 #include "error.h"
 
 #include "hw_power.h"
 #include "hw_lradc.h"
 #include "hw_power_errordefs.h"
 #include "hw_digctl.h"
-#include <registers/regspower.h>
+#include "registers/regspower.h"
 
 //------------------------------------------------------------------------------
 // Uncomment the following definition to display TSS messages about the

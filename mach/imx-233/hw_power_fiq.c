@@ -18,8 +18,8 @@
 #include "types.h"
 #include "error.h"
 
-#include "regspower.h"
-#include "regsdigctl.h"
+#include "registers/regspower.h"
+#include "registers/regsdigctl.h"
 #include "hw_power.h"
 #include "hw_icoll.h"
 

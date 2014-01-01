@@ -18,7 +18,7 @@
 #include "error.h"
 
 #include "hw_power.h"
-#include "regspower.h"
+#include "registers/regspower.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Code

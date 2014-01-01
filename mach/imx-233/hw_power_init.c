@@ -17,7 +17,7 @@
 #include "types.h"
 #include "error.h"
 
-#include "regspower.h"
+#include "registers/regspower.h"
 #include "hw_power.h"
 #include "hw_digctl.h"
 

@@ -2,7 +2,7 @@
  *               X-BOOT print Driver             *
  *************************************************/
 #include <stdio.h>
-#include <drv_print.h>
+#include "drv_print.h"
 
 int  drv_print_init(void)
 {

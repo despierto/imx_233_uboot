@@ -20,7 +20,7 @@
 #include "hw_power.h"
 #include "hw_lradc.h"
 #include "hw_power_errordefs.h"
-#include "regspower.h"
+#include "registers/regspower.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Variables
