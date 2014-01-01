@@ -4,3 +4,4 @@ message(STATUS "xboot: mach: imx-233")
 
 add_subdirectory(power)
 add_subdirectory(lradc)
+add_subdirectory(icoll)

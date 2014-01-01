@@ -27,6 +27,7 @@ make install
 cd ..
 echo ""
 echo "*** built results..."
-md5sum ./_install/*
+md5sum ./_install/bin/*
+md5sum ./_install/lib/*
 
 fi
