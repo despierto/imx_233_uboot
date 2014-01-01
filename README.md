@@ -30,7 +30,7 @@ This product is included in Freescale’s product longevity program, with assure
 
 ===========
 Xboot features:
-- . ver 0.1
+- ver 0.1
 - cmake based compilation
 
 ===========
