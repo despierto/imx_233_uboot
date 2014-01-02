@@ -1,20 +1,78 @@
-/*************************************************
- *               X-BOOT print Driver             *
- *************************************************/
-#include <stdio.h>
+/**
+ * HW Print Driver file
+ *
+ * Copyright (C) 2013 X-boot GITHUB team
+  *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+#include "registers/regsuartdbg.h"
 #include "drv_print.h"
 
-int  drv_print_init(void)
+void drv_print_putc(char ch)
 {
-    unsigned int i, a;
+    int loop = 0;
+    while (HW_UARTDBGFR_RD()&BM_UARTDBGFR_TXFF) {
+        loop++;
+        if (loop > 10000)
+            break;
+    };
 
-    for(i=0; i<10; i++)
-    {
-        a = i;
-        printf("i=%d\n", i);
-    }
-
-    return 0;
+    /* if(!(HW_UARTDBGFR_RD() &BM_UARTDBGFR_TXFF)) */
+    HW_UARTDBGDR_WR(ch);
 }
+void drv_print_printhex(int data)
+{
+    int i = 0;
+    char c;
+    for (i = sizeof(int)*2-1; i >= 0; i--) {
+        c = data>>(i*4);
+        c &= 0xf;
+        if (c > 9)
+            drv_print_putc(c-10+'A');
+        else
+            drv_print_putc(c+'0');
+    }
+}
+void drv_print_printf(char *fmt, ...)
+{
+    va_list args;
+    int one;
+    va_start(args, fmt);
+    
+    while (*fmt) {
+        if (*fmt == '%') {
+            fmt++;
+            switch (*fmt) {
 
+                case 'x':
+                case 'X':
+                    drv_print_printhex(va_arg(args, int));
+                    break;
+                case '%':
+                    drv_print_putc('%');
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            drv_print_putc(*fmt);
+        }
+
+        fmt++;
+    }
+    va_end(args);
+}
 

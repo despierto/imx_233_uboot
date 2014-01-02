@@ -3,7 +3,7 @@ cmake_minimum_required (VERSION 2.8)
 set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/cross_compile.cmake")
 
 set(PRJ_NAME xboot)
-set(BOOT_PRJ_NAME prep)
+set(BOOT_PRJ_NAME xinit)
 set(TARGET_MACH imx-233)
 set(TARGET_ARCH armv5te)
 set(TARGET_CPU arm926ej-s)
