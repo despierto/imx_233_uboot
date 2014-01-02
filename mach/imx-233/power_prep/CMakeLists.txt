@@ -6,7 +6,7 @@ message(STATUS "xboot: mach: imx-233: power_prep")
 #      "<CMAKE_ASM${ASM_DIALECT}_COMPILER> <FLAGS> -o <OBJECT> <SOURCE>")
 
 set(CMAKE_C_LINK_FLAGS "-A ${TARGET_ARCH} -nostdlib --gc-sections -static -T ${CMAKE_SOURCE_DIR}/mach/${TARGET_MACH}/boot/${BOOT_PRJ_NAME}_link.lds -Map ${BOOT_PRJ_NAME}.map --stats --print-gc-sections")
-set(CMAKE_C_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} -L${CROSS_COMPILER_PATH}/lib/gcc/${CROSS_COMPILER_PREFIX}/4.6.3")
+set(CMAKE_C_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} -L${CROSS_COMPILER_PATH}/lib/gcc/${CROSS_COMPILER_PREFIX}/4.5.1")
 
 set(CMAKE_LINKER "${CROSS_COMPILER_PATH}/bin/${CROSS_COMPILER_PREFIX}-ld")
 set(CMAKE_C_LINK_EXECUTABLE "<CMAKE_LINKER> <OBJECTS> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> -o <TARGET> <LINK_LIBRARIES>")
@@ -19,6 +19,8 @@ target_link_libraries(power_prep power)
 target_link_libraries(power_prep lradc)
 target_link_libraries(power_prep icall)
 target_link_libraries(power_prep digctl)
+
+target_link_libraries(power_prep gcc) # should be at the very end
 
 
 install(TARGETS power_prep DESTINATION bin)

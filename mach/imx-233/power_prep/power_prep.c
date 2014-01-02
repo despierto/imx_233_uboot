@@ -33,6 +33,13 @@
 #include "hw_lradc.h"
 #include "hw_digctl.h"
 #include "ddi_power.h"
+#include "registers/regsuartdbg.h"
+#include <stdarg.h>
+
+
+#define POWER_PREP_VERSION_R      1
+#define POWER_PREP_VERSION_RC     2
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Prototypes
@@ -168,6 +175,61 @@ bool IsBattLevelValidForBoot( void )
     return (bBattLevelValid);
 }
 
+void putc(char ch)
+{
+	int loop = 0;
+	while (HW_UARTDBGFR_RD()&BM_UARTDBGFR_TXFF) {
+		loop++;
+		if (loop > 10000)
+			break;
+	};
+
+	/* if(!(HW_UARTDBGFR_RD() &BM_UARTDBGFR_TXFF)) */
+	HW_UARTDBGDR_WR(ch);
+}
+void printhex(int data)
+{
+	int i = 0;
+	char c;
+	for (i = sizeof(int)*2-1; i >= 0; i--) {
+		c = data>>(i*4);
+		c &= 0xf;
+		if (c > 9)
+			putc(c-10+'A');
+		else
+			putc(c+'0');
+	}
+}
+void printf(char *fmt, ...)
+{
+	va_list args;
+	int one;
+	va_start(args, fmt);
+	while (*fmt) {
+
+		if (*fmt == '%') {
+			fmt++;
+			switch (*fmt) {
+
+			case 'x':
+			case 'X':
+				printhex(va_arg(args, int));
+				break;
+			case '%':
+				putc('%');
+				break;
+			default:
+				break;
+			}
+
+		} else {
+			putc(*fmt);
+		}
+		fmt++;
+	}
+	va_end(args);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //! \brief  Prepares the power block for the application.
@@ -179,10 +241,14 @@ int _start( void )
 {
 	int iRtn = SUCCESS;
 
+	printf("\r\n");
+	printf("--- IMX-233: HW initialization ---\r\n");
+	printf(__DATE__ __TIME__);
+	printf("\r\n");
+	printf("Version: %x.%x\r\n", POWER_PREP_VERSION_R, POWER_PREP_VERSION_RC);
+	
 	HW_DIGCTL_CTRL_SET(BM_DIGCTL_CTRL_USE_SERIAL_JTAG);
-
 	PowerPrep_ClearAutoRestart();
-
 	hw_power_SetPowerClkGate( false );
 
 	HW_POWER_VDDDCTRL.B.LINREG_OFFSET = HW_POWER_LINREG_OFFSET_STEP_BELOW;
@@ -196,7 +262,6 @@ int _start( void )
 	// Ensure the power source that turned on the device is sufficient to
 	// power the device.
 	PowerPrep_ConfigurePowerSource();
-
 	PowerPrep_EnableOutputRailProtection();
 
 	/* set up either handoff or brownout */
@@ -208,8 +273,11 @@ int _start( void )
 	/* 3.3V is necessary to achieve best power supply capability
 	* and best EMI I/O performance.
 	*/
+
 	ddi_power_SetVddio(3300, 3150);
 
+	printf("HW initialization: done\r\n\r\n");
+	
 	return iRtn;
 }
 

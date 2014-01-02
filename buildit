@@ -1,4 +1,3 @@
-% cat build
 #!/bin/sh
 
 echo "*************************************************"
@@ -17,7 +16,7 @@ mkdir -pv ./_build
 mkdir -pv ./_install
 
 cd _build
-cmake .. -DCMAKE_INSTALL_PREFIX=../_install
+cmake .. -DCMAKE_INSTALL_PREFIX=../_install -DCMAKE_BUILD_TYPE=RELEASE
 
 echo ""
 echo "*** building..."
