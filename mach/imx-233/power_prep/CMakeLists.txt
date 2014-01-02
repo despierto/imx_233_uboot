@@ -14,11 +14,11 @@ set(CMAKE_C_LINK_EXECUTABLE "<CMAKE_LINKER> <OBJECTS> <CMAKE_C_LINK_FLAGS> <LINK
 set(CMAKE_ASM_FLAGS "-march=${TARGET_ARCH} -mcpu=${TARGET_CPU} -mlittle-endian -EL --warn --fatal-warnings")
 
 add_executable(power_prep power_prep.c power_prep_eabi.S power_prep_interrupt.S)
-target_link_libraries(power_prep libddi_power.a)
-target_link_libraries(power_prep libpower.a)
-target_link_libraries(power_prep liblradc.a)
-target_link_libraries(power_prep libicall.a)
-target_link_libraries(power_prep libdigctl.a)
+target_link_libraries(power_prep ddi_power)
+target_link_libraries(power_prep power)
+target_link_libraries(power_prep lradc)
+target_link_libraries(power_prep icall)
+target_link_libraries(power_prep digctl)
 
 
 install(TARGETS power_prep DESTINATION bin)

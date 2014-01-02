@@ -844,3 +844,7 @@ bool PowerPrep_IsBatteryReady( void )
 
 // eof power_prep.c
 //! @}
+
+/* kiss gcc's ass to make it happy */
+//void __aeabi_unwind_cpp_pr0() {}
+void __aeabi_unwind_cpp_pr1() {}
