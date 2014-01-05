@@ -14,30 +14,30 @@
 #ifndef __ASSERT_H
 #define __ASSERT_H
 
-//! \brief TBD
-#if defined(_WIN32)
-    #ifdef __cplusplus
-        extern "C" {
-    #endif
-    void _assert(const char*, const char*, const int);
-    #ifdef __cplusplus
-        }
-    #endif
-    #define     SystemHalt() _assert(__FILE__, __FUNCTION__,__LINE__)
+#ifdef CODEPROTENA
+#if defined (__linux__)
+#include "drv_print.h"
+static inline void _assert(int rc, const char* filename, const char* funcname, const int nRow)
+{
+     printf("\r\n---- ASSERT---\r\n\r\n");
+     printf("       RC:         0x%08x\r\n", rc);
+     printf("       File:       %s\r\n", filename);
+     printf("       Function:   %s\r\n", filename);     
+     printf("       Row:        %d\r\n", nRow);
+ }
+
+    #define     SystemHalt(x) _assert(x, __FILE__, __FUNCTION__,__LINE__)
 #elif defined (__THUMB)
-    #define     SystemHalt() __asm(" .half 0xbebe")
+    #define     SystemHalt(x) __asm(" .half 0xdead")
 #else
-    #define     SystemHalt() __asm(" .word 0xbebebebe");
+    #define     SystemHalt(x) __asm(" .word 0xdeadc0de");
 #endif
 
+#define assert(x) do {if(!(x)) SystemHalt(x);} while(0)
 
-//! \brief TBD
-#ifndef DONT_DEFINE_ASSERT
-#ifdef DEBUG
-#define assert(x) do {if(!(x)) SystemHalt();} while(0)
-#else
+#else /*CODEPROTENA*/
 #define assert(x)
-#endif
-#endif
+
+#endif /*CODEPROTENA*/
 
 #endif //__ASSERT_H
