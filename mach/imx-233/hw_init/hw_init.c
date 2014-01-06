@@ -188,7 +188,10 @@ int _start( void )
 	printf("--- IMX-233: HW initialization ---\r\n");
 	printf(__DATE__ __TIME__);
 	printf("\r\n");
-	printf("Version: %x.%x\r\n", POWER_PREP_VERSION_R, POWER_PREP_VERSION_RC);
+	printf("Version: %d.%d\r\n", POWER_PREP_VERSION_R, POWER_PREP_VERSION_RC);
+
+	printf("Pass 0 to assert...\r\n");
+    assert(0);
 	
 	HW_DIGCTL_CTRL_SET(BM_DIGCTL_CTRL_USE_SERIAL_JTAG);
 	PowerPrep_ClearAutoRestart();

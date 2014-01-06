@@ -20,7 +20,7 @@
 #include "registers/regspower.h"
 #include "hw_power.h"
 #include "hw_digctl.h"
-
+#include "ddi_power.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Prototypes
@@ -219,7 +219,6 @@ RtStatus_t hw_power_InitPowerSupplies(void)
 RtStatus_t hw_power_InitFiq(void)
 {
     uint16_t u16SafeBattVolt;
-    extern uint8_t g_ddi_power_SafeBatteryVoltageCode;
 
     //--------------------------------------------------------------------------
     // Clear the brownout interrupts.

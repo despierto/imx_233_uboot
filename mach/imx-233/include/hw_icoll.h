@@ -64,10 +64,6 @@ IcollCtrlRegisterEnums_t;
 // Prototypes
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 
 //enable the ICOLL vector.  Return previous enable state.
 ////////////////////////////////////////////////////////////////////////////////
@@ -114,11 +110,6 @@ void hw_icoll_SetFiqMode(ICOLL_FIQ_enums_t eIrqVectorNumber, bool bEnable);
 ////////////////////////////////////////////////////////////////////////////////
 bool hw_icoll_CtrlRegisterUpdate(IcollCtrlRegisterEnums_t ControlRegisterField,
 	 bool bSet);
-
-
-#ifdef __cplusplus
-} // extern "C"
-#endif
 
 #endif //__HW_ICOLL_H
 

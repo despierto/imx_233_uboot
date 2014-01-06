@@ -30,8 +30,8 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-builtin")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-variadic-macros")
 
-set(CMAKE_C_FLAGS_DEBUG "-O0 -ggdb")
-set(CMAKE_C_FLAGS_RELEASE "-Os -DNDEBUG")
+set(CMAKE_C_FLAGS_DEBUG "-O0 -ggdb -DCODEPROTENA")
+set(CMAKE_C_FLAGS_RELEASE "-Os -DNDEBUG -DCODEPROTENA")
 
 set(CMAKE_ASM_FLAGS_DEBUG "-g")
 set(CMAKE_ASM_FLAGS_RELEASE "--strip-local-absolute")

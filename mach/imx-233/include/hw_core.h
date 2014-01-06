@@ -52,10 +52,6 @@ typedef enum
 //! \brief TBD
 typedef void (*pvoid_void_t)(void);
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 //!     \brief       Enable or disable the IRQ Interrupt.
 //!     \fntype:     Non-reentrant.
@@ -72,11 +68,6 @@ bool hw_core_EnableIrqInterrupt(bool bEnable);
 ////////////////////////////////////////////////////////////////////////////////
 bool hw_core_EnableFiqInterrupt(bool bEnable);
 
-
-
-#ifdef __cplusplus
-} // extern "C"
-#endif
 
 #endif //__CORE_H
 

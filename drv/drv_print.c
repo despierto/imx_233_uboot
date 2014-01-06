@@ -21,6 +21,17 @@
 #include "registers/regsuartdbg.h"
 #include "drv_print.h"
 
+ 
+int strnlen(const char *s, unsigned int len)
+{
+    int n;
+    n = 0;
+    while (*s++ && n < len)
+        n++;
+
+    return (n);
+}
+
 void drv_print_putc(char ch)
 {
     int loop = 0;
@@ -46,23 +57,48 @@ void drv_print_printhex(int data)
             drv_print_putc(c+'0');
     }
 }
-void drv_print_printf(char *fmt, ...)
+void drv_print_printdec(int data)
+{
+    int i = 0;
+    char c;
+    for (i = sizeof(int)*2-1; i >= 0; i--) {
+        c = data>>(i*4);
+        c &= 0xf;
+        drv_print_putc(c+'0');
+    }
+}
+void drv_print_printstr(const char *s, int precision)
+{
+    int i;
+    int len = strnlen(s, precision);
+
+    for (i = 0; i < len; ++i)
+        drv_print_putc(*s++);
+
+}
+void drv_print_printf(const char *fmt, ...)
 {
     va_list args;
     int one;
     va_start(args, fmt);
     
     while (*fmt) {
+
         if (*fmt == '%') {
             fmt++;
             switch (*fmt) {
-
+                case 'd':
+                    drv_print_printdec(va_arg(args, int));
+                    break;
                 case 'x':
                 case 'X':
                     drv_print_printhex(va_arg(args, int));
                     break;
                 case '%':
                     drv_print_putc('%');
+                    break;
+                case 's':
+                    drv_print_printstr(va_arg(args, char *), 255);
                     break;
                 default:
                     break;
