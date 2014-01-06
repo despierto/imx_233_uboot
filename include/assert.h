@@ -16,20 +16,12 @@
 
 #ifdef CODEPROTENA
 #if defined (__linux__)
-#include "drv_print.h"
-static inline void _assert(const char* filename, const char* funcname, const int nrow)
-{
-     printf("\r\n---- ASSERT----\r\n\r\n");
-     printf("       File:       %s\r\n", filename);
-     printf("       Function:   %s\r\n", funcname);     
-     printf("       Row:        %x\r\n", nrow);
- }
-
-    #define     SystemHalt(fl, fn, ln) _assert(fl, fn, ln)
+    #include "sys_utils.h"
+    #define     SystemHalt sys_utils_assert
 #elif defined (__THUMB)
     #define     SystemHalt(fl, fn, ln) __asm(" .half 0xdead")
 #else
-    #define     SystemHalt(fl, fn, ln) __asm(" .word 0xdeadc0de");
+    #define     SystemHalt(fl, fn, ln) __asm(" .word 0xdeadc0de")
 #endif
 
 #define assert(x) if (!(x)) {SystemHalt(__FILE__, __FUNCTION__, __LINE__); while(1);}

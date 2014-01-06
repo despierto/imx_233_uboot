@@ -1,5 +1,5 @@
 /**
- * HW Print Driver header file
+ * SW Sys utils file
  *
  * Copyright (C) 2013 X-boot GITHUB team
   *
@@ -18,20 +18,17 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef _DRV_PRINT_H_
-#define _DRV_PRINT_H_
-
 #include <stdio.h>
-#include <stdarg.h>
-#include "types.h"
-#include "error.h"
+#include "sys_utils.h"
+#include "drv_print.h"
 
 
-void drv_print_printf(const char *fmt, ...);
+void sys_utils_assert(const char* filename, const char* funcname, const int nrow)
+{
+    printf("\r\n---- ASSERT----\r\n\r\n");
+    printf("       File:       %s\r\n", filename);
+    printf("       Function:   %s\r\n", funcname);     
+    printf("       Row:        %x\r\n", nrow);
 
-#undef  printf
-#define printf  drv_print_printf
-
-
-
-#endif /*_DRV_PRINT_H_*/
+    return;
+}

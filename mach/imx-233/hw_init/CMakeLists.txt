@@ -20,6 +20,8 @@ target_link_libraries(hw_init lradc)
 target_link_libraries(hw_init icall)
 target_link_libraries(hw_init digctl)
 target_link_libraries(hw_init drv)
+target_link_libraries(hw_init sysutils)
+
 
 target_link_libraries(hw_init gcc) # should be at the very end
 

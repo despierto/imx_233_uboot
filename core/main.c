@@ -9,8 +9,6 @@ void  main(void)
 {
     unsigned int i, a;
 
-    sys_console_init();
-    drv_print_init();
 
     for(i=0; i<10; i++)
     {

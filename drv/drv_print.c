@@ -110,5 +110,7 @@ void drv_print_printf(const char *fmt, ...)
         fmt++;
     }
     va_end(args);
+    
+    return;
 }
 
