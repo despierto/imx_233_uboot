@@ -19,8 +19,7 @@
  */
 
 ////////////////////////////////////////////////////////////////////////////////
-#include "types.h"
-#include "error.h"
+#include "global.h"
 
 #include "registers/regsrtc.h"
 #include "registers/regspower.h"
@@ -33,7 +32,6 @@
 #include "hw_lradc.h"
 #include "hw_digctl.h"
 #include "ddi_power.h"
-#include "drv_print.h"
 
 
 #define POWER_PREP_VERSION_R      1

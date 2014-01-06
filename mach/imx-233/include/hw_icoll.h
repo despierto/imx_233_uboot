@@ -93,6 +93,7 @@ bool hw_icoll_EnableVector(ICOLL_IRQ_enums_t eIrqVectorNumber, bool bEnable);
 //! \note This only applies to Interrupts 32-35.
 ////////////////////////////////////////////////////////////////////////////////
 void hw_icoll_SetFiqMode(ICOLL_FIQ_enums_t eIrqVectorNumber, bool bEnable);
+void hw_icoll_SoftTrigger(ICOLL_IRQ_enums_t eIrqVectorNumber, bool bEnable);
 
 //use this function to update the bits in the HW_ICOLL_CTRL register.
 ////////////////////////////////////////////////////////////////////////////////

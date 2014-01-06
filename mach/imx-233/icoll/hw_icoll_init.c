@@ -23,25 +23,23 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Code
 ////////////////////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////////////////
-//! See hw_icoll.h for details.
-///////////////////////////////////////////////////////////////////////////////
+void hw_icoll_SoftTrigger(ICOLL_IRQ_enums_t eIrqVectorNumber, bool bEnable)   
+{
+    if(bEnable)
+        HW_ICOLL_INTERRUPTn_SET(eIrqVectorNumber, BM_ICOLL_INTERRUPTn_SOFTIRQ);
+    else
+        HW_ICOLL_INTERRUPTn_CLR(eIrqVectorNumber, BM_ICOLL_INTERRUPTn_SOFTIRQ);
+}   
+      
 void hw_icoll_SetFiqMode(ICOLL_FIQ_enums_t eIrqVectorNumber, bool bEnable)
 {
-	if(bEnable)
-            HW_ICOLL_INTERRUPTn_SET(eIrqVectorNumber,
-		BM_ICOLL_INTERRUPTn_ENFIQ);
-        else
-            HW_ICOLL_INTERRUPTn_CLR(eIrqVectorNumber,
-		 BM_ICOLL_INTERRUPTn_ENFIQ);
+    if(bEnable)
+        HW_ICOLL_INTERRUPTn_SET(eIrqVectorNumber, BM_ICOLL_INTERRUPTn_ENFIQ);
+    else
+        HW_ICOLL_INTERRUPTn_CLR(eIrqVectorNumber, BM_ICOLL_INTERRUPTn_ENFIQ);
 }
 
-///////////////////////////////////////////////////////////////////////////////
-//! See hw_icoll.h for details.
-///////////////////////////////////////////////////////////////////////////////
-bool hw_icoll_CtrlRegisterUpdate(
-            IcollCtrlRegisterEnums_t ControlRegisterField, bool bSet)
+bool hw_icoll_CtrlRegisterUpdate(IcollCtrlRegisterEnums_t ControlRegisterField, bool bSet)
 {
     uint32_t u32_icollControl = HW_ICOLL_CTRL_RD();
 
@@ -52,8 +50,6 @@ bool hw_icoll_CtrlRegisterUpdate(
 
     return (u32_icollControl >> ControlRegisterField) & 0x00000001;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // End of file

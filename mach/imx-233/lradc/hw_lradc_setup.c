@@ -21,6 +21,7 @@
 #include "registers/regslradc.h"
 #include "hw_power.h"
 #include "error.h"
+#include "hw_digctl.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Code

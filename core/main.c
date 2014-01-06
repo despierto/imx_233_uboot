@@ -1,9 +1,7 @@
 /*************************************************
  *                   X-BOOT entry                *
  *************************************************/
-#include <stdio.h>
-#include "sys_console.h"
-#include "drv_print.h"
+#include "global.h"
 
 void  main(void)
 {
