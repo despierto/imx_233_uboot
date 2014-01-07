@@ -22,9 +22,6 @@
 #ifndef __SYS_UTILS_H__
 #define __SYS_UTILS_H__
 
-void sys_utils_assert(const char* filename, const char* funcname, const int nrow);
-
-
 
 #endif /*__SYS_UTILS_H__*/
 

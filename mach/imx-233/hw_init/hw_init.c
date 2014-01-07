@@ -180,52 +180,57 @@ bool IsBattLevelValidForBoot( void )
 //int PowerPrep( void )
 int _start( void )
 {
-	int iRtn = SUCCESS;
+    int iRtn = SUCCESS;
 
-	printf("\r\n");
-	printf("--- IMX-233: HW initialization ---\r\n");
-	printf(__DATE__ __TIME__);
-	printf("\r\n");
-	printf("Version: %d.%d\r\n", POWER_PREP_VERSION_R, POWER_PREP_VERSION_RC);
+    printf("\r\n");
+    printf("--- IMX-233: HW initialization ---\r\n");
+    printf(__DATE__ __TIME__);
+    printf("\r\n");
+    printf("Version: %d.%d\r\n", POWER_PREP_VERSION_R, POWER_PREP_VERSION_RC);
 
-	printf("Pass 0 to assert...\r\n");
+    print_log("Test: %s%d", "value=", 123);
+    print_dbg("Test: %s%d", "value=", 123);    
+    print_err("Test: %s%d", "value=", 123);    
+    print_inf("Test: %s%d\r\n", "value=", 123);        
+
+    print_log("Test assert <%d>", 0);
     assert(0);
-	
-	HW_DIGCTL_CTRL_SET(BM_DIGCTL_CTRL_USE_SERIAL_JTAG);
-	PowerPrep_ClearAutoRestart();
-	hw_power_SetPowerClkGate( false );
 
-	HW_POWER_VDDDCTRL.B.LINREG_OFFSET = HW_POWER_LINREG_OFFSET_STEP_BELOW;
-	HW_POWER_VDDACTRL.B.LINREG_OFFSET = HW_POWER_LINREG_OFFSET_STEP_BELOW;
-	HW_POWER_VDDIOCTRL.B.LINREG_OFFSET = HW_POWER_LINREG_OFFSET_STEP_BELOW;
+    HW_DIGCTL_CTRL_SET(BM_DIGCTL_CTRL_USE_SERIAL_JTAG);
+    PowerPrep_ClearAutoRestart();
+    hw_power_SetPowerClkGate( false );
 
-	// Ready the power block for 5V detection.
-	PowerPrep_Setup5vDetect();
-	PowerPrep_SetupBattDetect();
+    HW_POWER_VDDDCTRL.B.LINREG_OFFSET = HW_POWER_LINREG_OFFSET_STEP_BELOW;
+    HW_POWER_VDDACTRL.B.LINREG_OFFSET = HW_POWER_LINREG_OFFSET_STEP_BELOW;
+    HW_POWER_VDDIOCTRL.B.LINREG_OFFSET = HW_POWER_LINREG_OFFSET_STEP_BELOW;
 
-	// Ensure the power source that turned on the device is sufficient to
-	// power the device.
-	PowerPrep_ConfigurePowerSource();
-	PowerPrep_EnableOutputRailProtection();
+    // Ready the power block for 5V detection.
+    PowerPrep_Setup5vDetect();
+    PowerPrep_SetupBattDetect();
 
-	/* set up either handoff or brownout */
-	if(bBatteryReady)
-	{
-		/* disable hardware shutdown on loss of 5V */
-		HW_POWER_5VCTRL_CLR(BM_POWER_5VCTRL_PWDN_5VBRNOUT);
-	}
-	/* 3.3V is necessary to achieve best power supply capability
-	* and best EMI I/O performance.
-	*/
+    // Ensure the power source that turned on the device is sufficient to
+    // power the device.
+    PowerPrep_ConfigurePowerSource();
+    PowerPrep_EnableOutputRailProtection();
 
-	ddi_power_SetVddio(3300, 3150);
+    /* set up either handoff or brownout */
+    if(bBatteryReady)
+    {
+    	/* disable hardware shutdown on loss of 5V */
+    	HW_POWER_5VCTRL_CLR(BM_POWER_5VCTRL_PWDN_5VBRNOUT);
+    }
+    /* 3.3V is necessary to achieve best power supply capability
+    * and best EMI I/O performance.
+    */
 
-	printf("HW initialization: done\r\n\r\n");
+    ddi_power_SetVddio(3300, 3150);
 
-	printf("> in the loop...\r\n");
-	while(1);
-	
-	return iRtn;
+    printf("HW initialization: done\r\n\r\n");
+
+    printf("> in the loop...\r\n");
+    while(1);
+
+    return iRtn;
 }
 
 /* clear RTC ALARM wakeup or AUTORESTART bits here. */

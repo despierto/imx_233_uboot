@@ -23,12 +23,4 @@
 #include "drv_print.h"
 
 
-void sys_utils_assert(const char* filename, const char* funcname, const int nrow)
-{
-    printf("\r\n---- ASSERT----\r\n\r\n");
-    printf("       File:       %s\r\n", filename);
-    printf("       Function:   %s\r\n", funcname);     
-    printf("       Row:        %d\r\n", nrow);    
 
-    return;
-}

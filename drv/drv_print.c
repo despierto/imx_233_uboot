@@ -64,12 +64,16 @@ void drv_print_printdec(int data)
     int i = 0;
     char s[10]; //max length of U32 dec value
 
-    while(data) {
-        s[i++]= (char)data%10 +'0';
-        data = data/10;
-    }
-    while(i) {
-        drv_print_putc(s[--i]);
+    if (!data) {
+        drv_print_putc('0');
+    } else {
+        while(data) {
+            s[i++]= (char)data%10 +'0';
+            data = data/10;
+        }
+        while(i) {
+            drv_print_putc(s[--i]);
+        }
     }
     return;
 }
@@ -117,6 +121,27 @@ void drv_print_printf(const char *fmt, ...)
     }
     va_end(args);
     
+    return;
+}
+
+void drv_print_assert(const char* filename, const char* funcname, const int nrow)
+{
+    printf("\r\n  ---- ASSERT ----\r\n\r\n");
+    printf("       File:       %s\r\n", filename);
+    printf("       Function:   %s\r\n", funcname);     
+    printf("       Row:        %d\r\n\r\n", nrow);    
+
+    return;
+}
+
+void drv_print_error(const char* filename, const char* funcname, const int nrow)
+{
+    printf("\r\n  ---- ERROR ----\r\n\r\n");
+    printf("       File:       %s\r\n", filename);
+    printf("       Function:   %s\r\n", funcname);     
+    printf("       Row:        %d\r\n", nrow);    
+    printf("       Caption:    ");    
+
     return;
 }
 

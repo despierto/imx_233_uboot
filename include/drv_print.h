@@ -26,12 +26,42 @@
 #include "types.h"
 #include "error.h"
 
-
 void drv_print_printf(const char *fmt, ...);
+void drv_print_assert(const char* filename, const char* funcname, const int nrow);
+void drv_print_error(const char* filename, const char* funcname, const int nrow);
+
 
 #undef  printf
 #define printf  drv_print_printf
 
+#define PRINTF_LOG_OK
+#define PRINTF_ERR_OK
+#define PRINTF_DBG_OK
+#define PRINTF_INF_OK
+
+#ifdef PRINTF_LOG_OK
+#define print_log(fmt, args...) printf("%s: " fmt "\r\n", __FUNCTION__, ## args)
+#else  /* PRINTF_LOG_OK */
+#define print_log(fmt, args...)
+#endif  /* PRINTF_LOG_OK */
+
+#ifdef PRINTF_DBG_OK
+#define print_dbg(fmt, args...) printf("[dbg] %s: " fmt "\r\n", __FUNCTION__, ## args)
+#else  /* PRINTF_DBG_OK */
+#define print_dbg(fmt, args...)
+#endif  /* PRINTF_DBG_OK */
+
+#ifdef PRINTF_ERR_OK
+#define print_err(fmt, args...) {drv_print_error(__FILE__, __FUNCTION__, __LINE__); printf(fmt "\r\n\r\n", ## args);}
+#else  /* PRINTF_ERR_OK */
+#define print_err(fmt, args...)
+#endif  /* PRINTF_ERR_OK */
+
+#ifdef PRINTF_INF_OK
+#define print_inf   printf
+#else  /* PRINTF_INF_OK */
+#define print_inf
+#endif  /* PRINTF_INF_OK */
 
 
 #endif /*_DRV_PRINT_H_*/

@@ -17,7 +17,7 @@
 #ifdef CODEPROTENA
 #if defined (__linux__)
     #include "sys_utils.h"
-    #define     SystemHalt sys_utils_assert
+    #define     SystemHalt drv_print_assert
 #elif defined (__THUMB)
     #define     SystemHalt(fl, fn, ln) __asm(" .half 0xdead")
 #else
