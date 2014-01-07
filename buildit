@@ -16,6 +16,12 @@ mkdir -pv ./_build
 mkdir -pv ./_install
 
 cd _build
+
+if [ "x$CC" = "x" ]; then
+    echo Guessing CC
+    export CC=/opt/arm-2010.09/bin/arm-none-linux-gnueabi-gcc
+fi
+
 cmake .. -DCMAKE_INSTALL_PREFIX=../_install -DCMAKE_BUILD_TYPE=RELEASE
 
 echo ""
