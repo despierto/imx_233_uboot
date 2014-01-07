@@ -43,6 +43,7 @@ void drv_print_putc(char ch)
 
     /* if(!(HW_UARTDBGFR_RD() &BM_UARTDBGFR_TXFF)) */
     HW_UARTDBGDR_WR(ch);
+    return;
 }
 void drv_print_printhex(int data)
 {
@@ -56,16 +57,21 @@ void drv_print_printhex(int data)
         else
             drv_print_putc(c+'0');
     }
+    return;
 }
 void drv_print_printdec(int data)
 {
     int i = 0;
-    char c;
-    for (i = sizeof(int)*2-1; i >= 0; i--) {
-        c = data>>(i*4);
-        c &= 0xf;
-        drv_print_putc(c+'0');
+    char s[10]; //max length of U32 dec value
+
+    while(data) {
+        s[i++]= (char)data%10 +'0';
+        data = data/10;
     }
+    while(i) {
+        drv_print_putc(s[--i]);
+    }
+    return;
 }
 void drv_print_printstr(const char *s, int precision)
 {
