@@ -44,7 +44,9 @@
 bool IsVbusValid( void );
 bool IsVdd5vGtVddio( void );
 bool Is5vPresent( void );
+#if 0
 bool IsBattLevelValidForBoot( void );
+#endif
 void PowerPrep_ClearAutoRestart( void );
 int PowerPrep_ConfigurePowerSource( void );
 void PowerPrep_PowerDown( void );
@@ -55,14 +57,18 @@ void PowerPrep_Enable4p2( void );
 void PowerPrep_Init4p2Parameters( void );
 void PowerPrep_Init4p2Regulator( void );
 void PowerPrep_Enable4p2BoShutdown( void );
+#if 0
 void PowerPrep_Handle5vDisconnectErrata( void );
+#endif
 void PowerPrep_Enable4p2Fiq( void );
 void PowerPrep_InitDcdc4p2Source( void );
 int PowerPrep_Handle5vConflict( void );
 int PowerPrep_InitBattBoFiq( void );
 int PowerPrep_InitBattBo( void );
+#if 0
 int PowerPrep_Init4p2Bo( void );
 int PowerPrep_Init4p2BoFiq( void );
+#endif
 int PowerPrep_5vBoot( void );
 int PowerPrep_BattBoot( void );
 void PowerPrep_SwitchVdddToDdcdcSource( void );
@@ -159,6 +165,7 @@ bool Is5vPresent( void )
     return ( IsVbusValid() || IsVdd5vGtVddio() );
 }
 
+#if 0
 bool IsBattLevelValidForBoot( void )
 {
 	bool bBattLevelValid=false;
@@ -171,6 +178,7 @@ bool IsBattLevelValidForBoot( void )
 
     return (bBattLevelValid);
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //! \brief  Prepares the power block for the application.
@@ -182,50 +190,66 @@ int _start( void )
 {
     int iRtn = SUCCESS;
 
-    printf("\r\n");
-    printf("--- IMX-233: HW initialization ---\r\n");
-    printf(__DATE__ __TIME__);
-    printf("\r\n");
-    printf("Version: %d.%d\r\n", POWER_PREP_VERSION_R, POWER_PREP_VERSION_RC);
+    print_inf(" ");
+    print_inf("--- IMX-233: HW initialization ---");
+    print_inf(__DATE__ __TIME__);
+    print_inf("Version: %d.%d", POWER_PREP_VERSION_R, POWER_PREP_VERSION_RC);
+    print_inf(" ");
 
-    print_log("Test: %s%d", "value=", 123);
-    print_dbg("Test: %s%d", "value=", 123);    
-    print_err("Test: %s%d", "value=", 123);    
-    print_inf("Test: %s%d\r\n", "value=", 123);        
-
-    print_log("Test assert <%d>", 0);
-    assert(0);
-
+    print_hw("Serial JTAG: %s", "enable");
     HW_DIGCTL_CTRL_SET(BM_DIGCTL_CTRL_USE_SERIAL_JTAG);
+
     PowerPrep_ClearAutoRestart();
     hw_power_SetPowerClkGate( false );
 
+    //set cause the linear regulators to regulate to a lower target voltage than the switching converter 
+    //and prevent unwanted interaction between the two power supplies
+    print_hw("Power CTRL: %s", "setup linear regulator");
     HW_POWER_VDDDCTRL.B.LINREG_OFFSET = HW_POWER_LINREG_OFFSET_STEP_BELOW;
     HW_POWER_VDDACTRL.B.LINREG_OFFSET = HW_POWER_LINREG_OFFSET_STEP_BELOW;
     HW_POWER_VDDIOCTRL.B.LINREG_OFFSET = HW_POWER_LINREG_OFFSET_STEP_BELOW;
 
     // Ready the power block for 5V detection.
+    print_hw("Power CTRL: %s", "setup 5V detection");
     PowerPrep_Setup5vDetect();
+    print_hw("Power CTRL: %s", "setup Battery detection");
     PowerPrep_SetupBattDetect();
 
     // Ensure the power source that turned on the device is sufficient to
     // power the device.
+    print_hw("Power CTRL: %s", "configure power source");
     PowerPrep_ConfigurePowerSource();
+    print_hw("Power CTRL: %s", "enable output rail protection");
     PowerPrep_EnableOutputRailProtection();
 
     /* set up either handoff or brownout */
     if(bBatteryReady)
     {
     	/* disable hardware shutdown on loss of 5V */
+        print_hw("Power CTRL: %s", "battary in use, configure power");
     	HW_POWER_5VCTRL_CLR(BM_POWER_5VCTRL_PWDN_5VBRNOUT);
     }
-    /* 3.3V is necessary to achieve best power supply capability
-    * and best EMI I/O performance.
-    */
+    else
+    {
+        print_hw("Power CTRL: %s", "battary not in use");
+    }
 
+    //3.3V is necessary to achieve best power supply capability
+    // and best EMI I/O performance.
+    print_hw("Power CTRL: %s", "setup voltage level");
     ddi_power_SetVddio(3300, 3150);
 
-    printf("HW initialization: done\r\n\r\n");
+    print_inf(" ");
+    print_inf("HW initialization: done");
+    print_inf(" ");
+
+    //dummy code
+    if (iRtn == ERROR_GENERIC)
+    {
+        print_log("%s", "dummy code");
+        print_err("%s", "dummy code");
+        assert(0);
+    }
 
     printf("> in the loop...\r\n");
     while(1);
@@ -236,21 +260,30 @@ int _start( void )
 /* clear RTC ALARM wakeup or AUTORESTART bits here. */
 void PowerPrep_ClearAutoRestart( void )
 {
+    print_hw("Interrupt Collector: %s", "enable");
 	HW_RTC_CTRL_CLR( BM_ICOLL_CTRL_SFTRST );
+
+    print_hw("RTC: %s", "remove the soft reset condition");    
 	while( HW_RTC_CTRL.B.SFTRST == 1 );
+
+    print_hw("Interrupt Collector: %s", "enable all clocks");    
 	HW_RTC_CTRL_CLR( BM_ICOLL_CTRL_CLKGATE );
+
+    print_hw("RTC: %s", "enable all clocks at crystal oscillator domain");    
 	while( HW_RTC_CTRL.B.CLKGATE == 1 );
 
 	if(HW_RTC_PERSISTENT0.B.AUTO_RESTART==1)
 	{
-		while( BF_RD( RTC_STAT, NEW_REGS ) );
+        while( BF_RD( RTC_STAT, NEW_REGS ) ); //Wait for previous write to this register to complete 
+        print_hw("RTC: %s", "disable AUTO restart in 180ms after power down");  
 		HW_RTC_PERSISTENT0.B.AUTO_RESTART = 0;
-		BF_SET(RTC_CTRL, FORCE_UPDATE);
-		BF_CLR(RTC_CTRL, FORCE_UPDATE);
+        BF_SET(RTC_CTRL, FORCE_UPDATE); //force update of all eight of the shadow registers in RTC
+        BF_CLR(RTC_CTRL, FORCE_UPDATE); //non needed due HW will do clean automatically
 		while( BF_RD( RTC_STAT, NEW_REGS ) );
-		while( BF_RD( RTC_STAT, STALE_REGS ) );
+        while( BF_RD( RTC_STAT, STALE_REGS ) ); //wait for force update completion
 	}
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 //! \brief
 //!
@@ -341,7 +374,6 @@ bool PowerPrep_BatteryDischargeTest( void )
 	uint32_t counter, loaded_voltage;
 	bool bTimedOut = false;
 
-
 	HW_POWER_CHARGE.B.ENABLE_LOAD = 1;
 
 	counter = hw_digctl_GetCurrentTime();
@@ -427,13 +459,11 @@ int PowerPrep_BootValid5v( void )
 
 }
 
-
+#if 0
 void PowerPrep_CheckBatteryConnection( void )
 {
-
-
-
 }
+#endif
 
 void PowerPrep_Enable4p2( void )
 {
@@ -574,11 +604,13 @@ void PowerPrep_Enable4p2BoShutdown( void )
  * parameters affect the behavior), using a 12-ohm load on VDDIO, the VDDIO
  * voltage drop was less than 150mV.
  */
+#if 0
 void PowerPrep_Handle5vDisconnectErrata( void )
 {
 	HW_POWER_DCDC4P2.B.BO=0;
 	HW_POWER_DCDC4P2.B.TRG=4;
 }
+#endif
 
 
 void PowerPrep_Enable4p2Fiq( void )
@@ -740,6 +772,7 @@ int PowerPrep_InitBattBo( void )
 
 }
 
+#if 0
 int PowerPrep_Init4p2Bo( void )
 {
 	// Set up 4p2 rail brownout
@@ -780,6 +813,7 @@ int PowerPrep_Init4p2BoFiq( void )
 
     return SUCCESS;
 }
+#endif
 
 int PowerPrep_BattBoot( void )
 {

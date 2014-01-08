@@ -70,6 +70,7 @@ RtStatus_t (*ddi_power_UnlockRailCallback)(uint32_t) = NULL;
 //! \return SUCCESS.
 //!
 ////////////////////////////////////////////////////////////////////////////////
+#if 0
 RtStatus_t  ddi_power_SetVddd(uint16_t  u16NewTarget, uint16_t  u16NewBrownout)
 {
     uint16_t    u16CurrentTarget, u16StepTarget, u16TargetDifference;
@@ -305,7 +306,7 @@ uint16_t ddi_power_GetVdddBrownout(void)
 
     return VdddBo;
 }
-
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //!
@@ -349,6 +350,7 @@ void ddi_power_WaitForVdddStable(void)
     }
 }
 
+#if 0
 ////////////////////////////////////////////////////////////////////////////////
 //! See ddi_power.h for details.
 ////////////////////////////////////////////////////////////////////////////////
@@ -401,6 +403,7 @@ RtStatus_t ddi_power_LimitVdddAndBo(uint16_t *pu16Vddd_mV, uint16_t *pu16Bo_mV)
     *pu16Bo_mV = u16Bo_mV;
     return rtn;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // VDDIO
@@ -612,6 +615,7 @@ RtStatus_t  ddi_power_SetVddio(uint16_t u16NewTarget, uint16_t u16NewBrownout)
 //!
 //! \return     VDDIO voltage in millivolts
 ////////////////////////////////////////////////////////////////////////////////
+#if 0
 uint16_t ddi_power_GetVddio(void)
 {
     //--------------------------------------------------------------------------
@@ -655,6 +659,7 @@ uint16_t ddi_power_GetVddioBrownout(void)
 
     return VddioBo;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //!
@@ -766,6 +771,7 @@ RtStatus_t ddi_power_LimitVddioAndBo(uint16_t *pu16Vddio_mV, uint16_t *pu16Bo_mV
     return rtn;
 }
 
+#if 0
 void ddi_power_EnableVddioSafetyLimits(bool bEnable)
 {
     bEnableVddioSafetyLimits = bEnable;
@@ -1026,6 +1032,7 @@ uint16_t ddi_power_GetVddaBrownout(void)
 
     return VddaBo;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //!
@@ -1069,7 +1076,7 @@ void ddi_power_WaitForVddaStable(void)
     }
 }
 
-
+#if 0
 ////////////////////////////////////////////////////////////////////////////////
 //! See ddi_power.h for details.
 ////////////////////////////////////////////////////////////////////////////////
@@ -1138,6 +1145,7 @@ RtStatus_t ddi_power_LimitVddaAndBo(uint16_t *pu16Vdda_mV, uint16_t *pu16Bo_mV)
     *pu16Bo_mV = u16Bo_mV;
     return rtn;
 }
+#endif
 
 void ddi_power_EnableVddaSafetyLimits(bool bEnable)
 {

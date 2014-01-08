@@ -453,8 +453,9 @@ uint16_t hw_lradc_MeasureInternalDieTemperature(hw_lradc_Channel_t eChannel0,
 //!
 //! \retval     battery temperature
 ////////////////////////////////////////////////////////////////////////////////
+#if 0
 uint16_t hw_lradc_MeasureBatteryTemperature(hw_lradc_Channel_t BattTempChannel);
-
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //! \brief      Sets the temperature sensor current.
@@ -475,8 +476,9 @@ void hw_lradc_SetTempSensorCurrent(hw_lradc_TempSensor_t TempSensor,
 //!
 //! \param[in]  bEnable True to enable the block, false to disable
 ////////////////////////////////////////////////////////////////////////////////
+#if 0
 void hw_lradc_EnableTempSensor(bool bEnable);
-
+#endif
 
 void hw_lradc_EnableAutomaticBatteryUpdate(void);
 void hw_lradc_DisableAutomaticBatteryUpdate(void);

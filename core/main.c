@@ -3,7 +3,7 @@
  *************************************************/
 #include "global.h"
 
-void  main(void)
+void  _start(void)
 {
     unsigned int i, a;
 
@@ -12,6 +12,16 @@ void  main(void)
     {
         a = i;
         printf("i=%d\n", i);
+    }
+    
+    //add dummy code
+    assert(1);
+    if (1)
+    {
+        print_inf("%s", "dummy code");
+        print_log("%s", "dummy code");
+        print_err("%s", "dummy code");
+        assert(0);
     }
     
     return;

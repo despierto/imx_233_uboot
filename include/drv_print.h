@@ -38,6 +38,7 @@ void drv_print_error(const char* filename, const char* funcname, const int nrow)
 #define PRINTF_ERR_OK
 #define PRINTF_DBG_OK
 #define PRINTF_INF_OK
+#define PRINTF_HW_OK
 
 #ifdef PRINTF_LOG_OK
 #define print_log(fmt, args...) printf("%s: " fmt "\r\n", __FUNCTION__, ## args)
@@ -50,6 +51,12 @@ void drv_print_error(const char* filename, const char* funcname, const int nrow)
 #else  /* PRINTF_DBG_OK */
 #define print_dbg(fmt, args...)
 #endif  /* PRINTF_DBG_OK */
+
+#ifdef PRINTF_HW_OK
+#define print_hw(fmt, args...) printf("[hw] " fmt "\r\n", ## args)
+#else  /* PRINTF_HW_OK */
+#define print_hw(fmt, args...)
+#endif  /* PRINTF_HW_OK */
 
 #ifdef PRINTF_ERR_OK
 #define print_err(fmt, args...) {drv_print_error(__FILE__, __FUNCTION__, __LINE__); printf(fmt "\r\n\r\n", ## args);}

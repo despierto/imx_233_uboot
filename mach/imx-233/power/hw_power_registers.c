@@ -16,6 +16,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include "types.h"
 #include "error.h"
+#include "drv_print.h"
 
 #include "hw_power.h"
 #include "hw_digctl.h"
@@ -39,12 +40,15 @@ void hw_power_SetPowerClkGate(bool bGate)
     // Gate/Ungate the clock to the power block
     if(bGate)
     {
+        print_hw("Power CTRL: %s", "disable clocks gates");
         BF_SET(POWER_CTRL, CLKGATE);
     }
     else
     {
+        print_hw("Power CTRL: %s", "enabled clocks gates");
         BF_CLR(POWER_CTRL, CLKGATE);
     }
+    return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
