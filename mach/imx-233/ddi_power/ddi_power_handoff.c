@@ -94,7 +94,7 @@ void ddi_power_Enable5VoltsToBatteryHandoff(void)
     hw_power_Enable5vBrownoutPowerdown( false );
 }
 
-
+#if 0
 ////////////////////////////////////////////////////////////////////////////////
 //! \brief Transfers the power source from 5V to the battery.
 //!
@@ -174,6 +174,7 @@ void ddi_power_Execute5VoltsToBatteryHandoff(void)
 
 
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //! \brief Enable battery-to-5V handoff
