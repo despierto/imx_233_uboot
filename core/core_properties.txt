@@ -1,0 +1,36 @@
+-------------------------------------------------------------------------------
+|                                                                             |
+|                            XBOOT Real Time OS                               |
+|                                Version 0.1                                  |
+|                               January 2014                                  | 
+|                                                                             |
+-------------------------------------------------------------------------------
+1. Concepts
+    - processes are separating for upper layer and bottom layer
+    - upper layer
+        -- all hw/sw interrupts has same priority in single round robin  FIFO
+        -- every upper layer process pre-empts bottom layer process for only
+           scheduling new bottom layer process with appropriate priority 
+    - bottom later
+        -- multithreaded processes
+        -- threads' priorities 1..99
+        -- thread with priority 0 is never processing
+        -- no threads' pre-emption
+        -- threads with same priority are processing step by step, 
+           no threads' pre-emption
+        -- threads insidei evey priority level are placing round robin
+
+2. Features
+    - Tasks         registration/deregistration/priorities setup
+    - Semaphores    create/wait/wake up/destroy
+    - Queues        create/put/get/destroy
+    - Lists         
+    - Timers        periodical/continuous: registration/deregistration
+    - Partitions    create/alloc/free/destroy
+
+
+-------
+Info
+ - http://www.cs.columbia.edu/~krj/os/lectures/L07-LinuxEvents.pdf
+ - http://linux.linti.unlp.edu.ar/images/0/0c/ULK3-CAPITULO4-UNNOBA.pdf
+ - 
