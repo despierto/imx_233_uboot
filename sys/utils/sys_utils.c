@@ -22,5 +22,13 @@
 #include "sys_utils.h"
 #include "drv_print.h"
 
+void memset(void * base, unsigned int c, unsigned int count)
+{
+    char *ptr = (char *) base;
 
+    while (count--)
+        *ptr++ = c;
+
+    return;
+}
 

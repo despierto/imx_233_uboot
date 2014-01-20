@@ -32,10 +32,10 @@
 #include "hw_lradc.h"
 #include "hw_digctl.h"
 #include "ddi_power.h"
-
+#include "hw_mem.h"
 
 #define POWER_PREP_VERSION_R      1
-#define POWER_PREP_VERSION_RC     3
+#define POWER_PREP_VERSION_RC     4
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -190,11 +190,10 @@ int _start( void )
 {
     int iRtn = SUCCESS;
 
-    print_inf(" ");
-    print_inf("--- IMX-233: HW initialization ---");
-    print_inf(__DATE__ __TIME__);
-    print_inf("Version: %d.%d", POWER_PREP_VERSION_R, POWER_PREP_VERSION_RC);
-    print_inf(" ");
+    print_inf(" \r\n");
+    print_inf("--- IMX-233: HW initialization ---\r\n");
+    print_inf("%s %s\r\n", __DATE__, __TIME__);
+    print_inf("Version: %d.%d\r\n\r\n", POWER_PREP_VERSION_R, POWER_PREP_VERSION_RC);
 
     print_hw("Serial JTAG: %s", "enable");
     HW_DIGCTL_CTRL_SET(BM_DIGCTL_CTRL_USE_SERIAL_JTAG);
@@ -204,40 +203,43 @@ int _start( void )
 
     //set cause the linear regulators to regulate to a lower target voltage than the switching converter 
     //and prevent unwanted interaction between the two power supplies
-    print_hw("Power CTRL: %s", "setup linear regulator");
+    print_hw("%s", "Power CTRL");
+    print_hw(" - %s", "setup linear regulator");
     HW_POWER_VDDDCTRL.B.LINREG_OFFSET = HW_POWER_LINREG_OFFSET_STEP_BELOW;
     HW_POWER_VDDACTRL.B.LINREG_OFFSET = HW_POWER_LINREG_OFFSET_STEP_BELOW;
     HW_POWER_VDDIOCTRL.B.LINREG_OFFSET = HW_POWER_LINREG_OFFSET_STEP_BELOW;
 
     // Ready the power block for 5V detection.
-    print_hw("Power CTRL: %s", "setup 5V detection");
+    print_hw(" - %s", "setup 5V detection");
     PowerPrep_Setup5vDetect();
-    print_hw("Power CTRL: %s", "setup Battery detection");
+    print_hw(" - %s", "setup Battery detection");
     PowerPrep_SetupBattDetect();
 
     // Ensure the power source that turned on the device is sufficient to
     // power the device.
-    print_hw("Power CTRL: %s", "configure power source");
+    print_hw(" - %s", "configure power source");
     PowerPrep_ConfigurePowerSource();
-    print_hw("Power CTRL: %s", "enable output rail protection");
+    print_hw(" - %s", "enable output rail protection");
     PowerPrep_EnableOutputRailProtection();
 
     /* set up either handoff or brownout */
     if(bBatteryReady)
     {
     	/* disable hardware shutdown on loss of 5V */
-        print_hw("Power CTRL: %s", "battary in use, configure power");
+        print_hw(" - %s", "battary in use, configure power");
     	HW_POWER_5VCTRL_CLR(BM_POWER_5VCTRL_PWDN_5VBRNOUT);
     }
     else
     {
-        print_hw("Power CTRL: %s", "battary not in use");
+        print_hw(" - %s", "battary not in use");
     }
 
     //3.3V is necessary to achieve best power supply capability
     // and best EMI I/O performance.
-    print_hw("Power CTRL: %s", "setup voltage level");
+    print_hw(" - %s", "setup voltage level");
     ddi_power_SetVddio(3300, 3150);
+
+    hw_mem_init();
 
     print_inf(" ");
     print_inf("HW initialization: done");

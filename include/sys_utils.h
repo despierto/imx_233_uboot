@@ -22,6 +22,7 @@
 #ifndef __SYS_UTILS_H__
 #define __SYS_UTILS_H__
 
+void memset(void * s, unsigned int c, unsigned int count);
 
 #endif /*__SYS_UTILS_H__*/
 

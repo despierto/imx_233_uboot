@@ -40,12 +40,12 @@ void hw_power_SetPowerClkGate(bool bGate)
     // Gate/Ungate the clock to the power block
     if(bGate)
     {
-        print_hw("Power CTRL: %s", "disable clocks gates");
+        print_hw(" - %s", "disable clocks gates");
         BF_SET(POWER_CTRL, CLKGATE);
     }
     else
     {
-        print_hw("Power CTRL: %s", "enabled clocks gates");
+        print_hw(" - %s", "enabled clocks gates");
         BF_CLR(POWER_CTRL, CLKGATE);
     }
     return;

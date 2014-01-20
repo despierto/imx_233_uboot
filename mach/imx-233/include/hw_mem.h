@@ -1,5 +1,5 @@
 /**
- * HW Print Driver header file
+ * HW memory header file
  *
  * Copyright (C) 2013 X-boot GITHUB team
   *
@@ -18,16 +18,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef _GLOBAL_H_
-#define _GLOBAL_H_
 
-#include "types.h"
-#include "error.h"
-#include "drv_print.h"
-#include "sys_console.h"
-#include "platform.h"
+#ifndef __HW_MEM__
+#define __HW_MEM__
 
+int hw_mem_init(void);
 
+#endif /*__HW_MEM__*/
 
-
-#endif /*_GLOBAL_H_*/

@@ -38,9 +38,8 @@ echo ./elftosb2 -z -c ./imx233_uboot.db -o ./_install/bin/uboot.sb
 
 echo ""
 echo "*** built results..."
-ls -l ./_install/bin/*
 md5sum ./_install/bin/*
 md5sum ./_install/lib/*
-
+ls -la ./_install/bin/*
 
 fi
