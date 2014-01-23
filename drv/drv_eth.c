@@ -1,7 +1,7 @@
 /**
  * Top layer ethernel driver file
  *
- * Copyright (C) 2013 X-boot GITHUB team
+ * Copyright (c) 2013 X-boot GITHUB team
   *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,37 +19,39 @@
  */
 
 #include "global.h"
+#include "net_ks8851.h"
 
-int eth_init(void * ptr)
+
+int drv_eth_init(void * ptr)
 {
     int ret = 0;
 
     printf("--> %s -> %s : %d\r\n", __FILE__, __FUNCTION__, __LINE__);
 
-    //ret = ks_init();
+    ret = net_init(ptr);
     return ret;
 }
 
-void eth_halt(void)
+void drv_eth_halt(void)
 {
     printf("--> %s -> %s : %d\r\n", __FILE__, __FUNCTION__, __LINE__);
     
-    //ks_disable();
+    net_halt();
 }
 
-int eth_rx(void)
+int drv_eth_rx(void)
 {
     printf("--> %s -> %s : %d\r\n", __FILE__, __FUNCTION__, __LINE__);
     
-    //ks_rx_pkts();
+    net_rx();
     return 0;
 }
 
-int eth_send(volatile void *packet, int length)
+int drv_eth_tx(volatile void *packet, int length)
 {
     printf("--> %s -> %s : %d\r\n", __FILE__, __FUNCTION__, __LINE__);
     
-    //ks_tx_pkt((uchar *)packet, length);
+    net_tx(packet, length);
     return 0;
 }
 

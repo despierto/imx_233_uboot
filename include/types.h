@@ -96,6 +96,12 @@ typedef uint128_t   UINT128;
 typedef float       FLOAT;
 
 //! \brief TBD
+typedef unsigned int    IPaddr_t;
+
+//! \brief TBD
+typedef unsigned char   uchar;
+
+//! \brief TBD
 #define FRACT       _fract
 //! \brief TBD
 #define CIRC        _circ

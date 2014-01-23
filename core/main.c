@@ -1,3 +1,23 @@
+/**
+ * X-Boot Operation System Entry
+ *
+ * Copyright (c) 2013 X-boot GITHUB team
+  *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
 /*************************************************
  *                   X-BOOT entry                *
  *************************************************/
@@ -62,10 +82,6 @@ void  _start(void)
 #define PKTBUFSRX               4
 #define PKTBUFSTX               1
 
-//types definitions
-typedef unsigned int    IPaddr_t;
-typedef unsigned char   uchar;
-
 //declarations
 char            BootFile[128];
 unsigned int    linux_load_addr;
@@ -83,6 +99,7 @@ volatile uchar  PktBuf[(PKTBUFSRX+PKTBUFSTX) * PKTSIZE_ALIGN + PKTALIGN];
 volatile uchar *NetTxPackets[PKTBUFSTX];                        /* Transmit packets */
 volatile uchar *NetRxPackets[PKTBUFSRX];                        /* Receive packets */
 
+unsigned int	gStatusEthernet = 0;                            /* disabled */
 
 
 static void initialization(void)
@@ -116,12 +133,20 @@ static void initialization(void)
 
     print_log(" - Net Arp Tx packet: base_0x%x count_%d", (unsigned int)NetArpWaitTxPacket, 1);
 
-    print_log("%s", " Halt Ethernel driver whatever its condition...");
-//    eth_halt();                                             /* do call of common interface function */
-//    if (eth_init(bd) < 0) {
-//        eth_halt();
-//        return(-1);
-//    }
+    print_log("%s", "Halt Ethernel driver whatever its condition...");
+    drv_eth_halt();                                             /* do call of common interface function */
+
+    if (drv_eth_init(NULL)) {                                    /* do call of common interface function */
+        drv_eth_halt();                                         /* do call of common interface function */
+        gStatusEthernet = 0;
+        print_err("%s", "ethernet initialization wasn't completed");
+    } else {
+        print_log("%s", "Ethernel was successfully started");
+        gStatusEthernet = 1;
+    }
+
+
+
 
     return;
 }
@@ -136,7 +161,8 @@ static void rt_process(void)
 static void termination(void)
 {
     //net driver termination
-    
+    print_log("%s", "Halt Ethernel driver");
+    drv_eth_halt();                                             /* do call of common interface function */
 
     return;
 }

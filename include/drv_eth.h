@@ -1,7 +1,7 @@
 /**
  * Top layer ethernel driver header file
  *
- * Copyright (C) 2013 X-boot GITHUB team
+ * Copyright (c) 2013 X-boot GITHUB team
   *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,9 +21,10 @@
  #ifndef __DRV_ETH_H__
  #define __DRV_ETH_H__
 
-int eth_init(void * ptr);
-void eth_halt(void);
-int eth_rx(void);
-int eth_send(volatile void *packet, int length);
+int drv_eth_init(void * ptr);
+void drv_eth_halt(void);
+int drv_eth_rx(void);
+int drv_eth_tx(volatile void *packet, int length);
+
 
 #endif /* __DRV_ETH_H__ */

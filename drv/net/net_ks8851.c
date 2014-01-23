@@ -1,7 +1,7 @@
 /**
  * Driver for Ethernet PHY KS8851
  *
- * Copyright (C) 2013 X-boot GITHUB team
+ * Copyright (c) 2013 X-boot GITHUB team
   *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,5 +19,35 @@
  */
 
 #include "global.h"
+#include "net_ks8851.h"
+
+int     net_ks8851_init(void * ptr)
+{
+    int ret = 0;
+    printf("--> %s -> %s : %d\r\n", __FILE__, __FUNCTION__, __LINE__);
+
+    return ret;
+}
+
+void    net_ks8851_halt(void)
+{
+    printf("--> %s -> %s : %d\r\n", __FILE__, __FUNCTION__, __LINE__);
+
+    return;
+}
+
+int     net_ks8851_rx(void)
+{
+    printf("--> %s -> %s : %d\r\n", __FILE__, __FUNCTION__, __LINE__);
+    
+    return 0;
+}
+
+int     net_ks8851_tx(volatile void *packet, int length)
+{
+    printf("--> %s -> %s : %d\r\n", __FILE__, __FUNCTION__, __LINE__);
+    
+    return 0;
+}
 
 
