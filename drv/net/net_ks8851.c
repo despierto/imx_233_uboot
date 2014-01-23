@@ -20,6 +20,8 @@
 
 #include "global.h"
 #include "net_ks8851.h"
+#include "drv/regs_ks8851.h"
+
 
 int     net_ks8851_init(void * ptr)
 {
