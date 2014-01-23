@@ -1,0 +1,23 @@
+// STMP378x ROM command script to load and run X-Boot
+
+sources {
+	hw_init="./_install/bin/hw_init";
+	xboot="./_install/bin/xboot";
+}
+
+section (0) {
+
+	//----------------------------------------------------------
+	// HW initialization
+	//----------------------------------------------------------
+
+	load hw_init;
+	call hw_init;
+
+	//----------------------------------------------------------
+	//  Load and call X-BOOT - ELF ARM image
+	//----------------------------------------------------------
+
+    load xboot;
+    call xboot;
+}

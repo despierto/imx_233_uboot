@@ -1,5 +1,5 @@
 /**
- * SW Sys utils file
+ * Driver for Ethernet PHY KS8851: header file
  *
  * Copyright (C) 2013 X-boot GITHUB team
   *
@@ -18,33 +18,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <stdio.h>
-#include "sys_utils.h"
-#include "drv_print.h"
+ #ifndef __NET_KS8851_H__
+ #define __NET_KS8851_H__
 
-void memset(void * base, unsigned int c, unsigned int count)
-{
-    char *ptr = (char *) base;
 
-    while (count--)
-        *ptr++ = c;
 
-    return;
-}
 
-void copy_filename (char *dst, char *src, int size)
-{
-    if (*src && (*src == '"')) {
-        ++src;
-        --size;
-    }
 
-    while ((--size > 0) && *src && (*src != '"')) {
-        *dst++ = *src++;
-    }
-    *dst = '\0';
-
-    return;
-}
-
+#endif /* __NET_KS8851_H__ */
 

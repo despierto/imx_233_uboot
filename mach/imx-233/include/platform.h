@@ -39,8 +39,8 @@
 #define DEFAULT_SLAVE2_BASE 0x80100000
 #define DEFAULT_SLAVE2_SIZE 0x3FF00000
 
-#define OCRAM_BASE          0xC0000000
-#define OCRAM_SIZE          0x00010000              /* 64KB */
+#define OCROM_BASE          0xC0000000
+#define OCROM_SIZE          0x00010000              /* 64KB */
 
 #define OCROM_ALIAS_BASE    0xC0010000
 #define OCROM_ALIAS_SIZE    0xFFFFFFFF

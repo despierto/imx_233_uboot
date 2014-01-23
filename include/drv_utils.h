@@ -25,7 +25,10 @@
 void drv_delay(unsigned int us);
 
 #undef  delay
-#define delay  drv_delay
+#define delay       drv_delay
+#define sleep(s)    drv_delay(s*1000000)
+#define sleep_ms(ms)    drv_delay(ms*1000)
+#define sleep_us(us)    drv_delay(us)
 
 #endif /*__DRV_UTILS_H__*/
 

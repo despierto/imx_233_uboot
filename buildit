@@ -33,8 +33,8 @@ cd ..
 
 echo ""
 echo "*** conversion..."
-echo ./elftosb2 -z -c ./imx233_uboot.db -o ./_install/bin/uboot.sb
-./elftosb2 -z -c ./imx233_uboot.db -o ./_install/bin/uboot.sb
+echo ./elftosb2 -z -c ./imx233_xboot.db -o ./_install/bin/xboot.sb
+./elftosb2 -z -c ./imx233_xboot.db -o ./_install/bin/xboot.sb
 
 echo ""
 echo "*** built results..."

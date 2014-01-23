@@ -23,6 +23,7 @@
 #define __SYS_UTILS_H__
 
 void memset(void * s, unsigned int c, unsigned int count);
+void copy_filename(char *dst, char *src, int size);
 
 #endif /*__SYS_UTILS_H__*/
 

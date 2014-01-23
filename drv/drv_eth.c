@@ -1,5 +1,5 @@
 /**
- * SW Sys utils file
+ * Top layer ethernel driver file
  *
  * Copyright (C) 2013 X-boot GITHUB team
   *
@@ -18,33 +18,38 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <stdio.h>
-#include "sys_utils.h"
-#include "drv_print.h"
+#include "global.h"
 
-void memset(void * base, unsigned int c, unsigned int count)
+int eth_init(void * ptr)
 {
-    char *ptr = (char *) base;
+    int ret = 0;
 
-    while (count--)
-        *ptr++ = c;
+    printf("--> %s -> %s : %d\r\n", __FILE__, __FUNCTION__, __LINE__);
 
-    return;
+    //ret = ks_init();
+    return ret;
 }
 
-void copy_filename (char *dst, char *src, int size)
+void eth_halt(void)
 {
-    if (*src && (*src == '"')) {
-        ++src;
-        --size;
-    }
-
-    while ((--size > 0) && *src && (*src != '"')) {
-        *dst++ = *src++;
-    }
-    *dst = '\0';
-
-    return;
+    printf("--> %s -> %s : %d\r\n", __FILE__, __FUNCTION__, __LINE__);
+    
+    //ks_disable();
 }
 
+int eth_rx(void)
+{
+    printf("--> %s -> %s : %d\r\n", __FILE__, __FUNCTION__, __LINE__);
+    
+    //ks_rx_pkts();
+    return 0;
+}
+
+int eth_send(volatile void *packet, int length)
+{
+    printf("--> %s -> %s : %d\r\n", __FILE__, __FUNCTION__, __LINE__);
+    
+    //ks_tx_pkt((uchar *)packet, length);
+    return 0;
+}
 

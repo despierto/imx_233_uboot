@@ -425,7 +425,7 @@ void init_emi_pin(int pin_voltage, int pin_drive )
 }
 void exit_selfrefresh(void)
 {
-    unsigned int start;
+    unsigned int start, curr;
     unsigned int value;
     value = HW_DRAM_CTL16_RD();
     value &= ~(1<<17);
@@ -435,13 +435,13 @@ void exit_selfrefresh(void)
 
     while ((HW_EMI_STAT_RD()&BM_EMI_STAT_DRAM_HALTED)) {
 
-        if (HW_DIGCTL_MICROSECONDS_RD() > (start + 1000000)) {
-            print_err("exit self refresh timeout\r\n");
+        if ((curr = HW_DIGCTL_MICROSECONDS_RD()) > (start + 1000000)) {
+            print_err("exit self refresh timeout (diff 0x%x)\r\n", curr - (start + 1000000) );
             return;
         }
     }
 
-    print_hw(" - DDR selfrefresh successfully completed");
+    print_hw("%s", " - DDR selfrefresh successfully completed");
     
     return;
 }
@@ -566,7 +566,7 @@ int hw_mem_test(void)
     if (j || k)
         printf("completed with errors: i%d z%d 32bit words are broken from %d tested\r\n", j, k, (mem_test_size/4));
     else
-        printf("done\r\n\r\n");
+        printf("done\r\n");
 
 #if 0
     printf("\r\n\r\n---------------------------\r\n");
@@ -578,7 +578,7 @@ int hw_mem_test(void)
     }
 #endif
 
-    return;    
+    return 0;    
 }
     
 int hw_mem_init(void)
@@ -627,7 +627,7 @@ int hw_mem_init(void)
     turnon_mem_rail(2500);
     delay(11000);
 
-    print_hw(" - Init EMI pins");
+    print_hw("%s", " - Init EMI pins");
     init_emi_pin(0, PIN_DRIVE_12mA);
 
     disable_emi_padkeepers();
@@ -637,7 +637,7 @@ int hw_mem_init(void)
     delay(10000);
 
     init_ddr_mt46v32m16_133Mhz(CE);
-    print_hw(" - DDR mt46v32m16 configured for 133Mhz");
+    print_hw("%s", " - DDR mt46v32m16 configured for 133Mhz");
 
     print_hw("%s", " - Initiate active mode for the memory controller");
     value = HW_DRAM_CTL08_RD();

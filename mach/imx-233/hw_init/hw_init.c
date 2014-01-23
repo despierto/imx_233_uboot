@@ -34,8 +34,8 @@
 #include "ddi_power.h"
 #include "hw_mem.h"
 
-#define POWER_PREP_VERSION_R      1
-#define POWER_PREP_VERSION_RC     4
+#define HW_INIT_VERSION_R      1
+#define HW_INIT_VERSION_RC     4
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -193,7 +193,7 @@ int _start( void )
     print_inf(" \r\n");
     print_inf("--- IMX-233: HW initialization ---\r\n");
     print_inf("%s %s\r\n", __DATE__, __TIME__);
-    print_inf("Version: %d.%d\r\n\r\n", POWER_PREP_VERSION_R, POWER_PREP_VERSION_RC);
+    print_inf("Version: %d.%d\r\n\r\n", HW_INIT_VERSION_R, HW_INIT_VERSION_RC);
 
     print_hw("Serial JTAG: %s", "enable");
     HW_DIGCTL_CTRL_SET(BM_DIGCTL_CTRL_USE_SERIAL_JTAG);
@@ -225,9 +225,9 @@ int _start( void )
     /* set up either handoff or brownout */
     if(bBatteryReady)
     {
-    	/* disable hardware shutdown on loss of 5V */
+        /* disable hardware shutdown on loss of 5V */
         print_hw(" - %s", "battary in use, configure power");
-    	HW_POWER_5VCTRL_CLR(BM_POWER_5VCTRL_PWDN_5VBRNOUT);
+        HW_POWER_5VCTRL_CLR(BM_POWER_5VCTRL_PWDN_5VBRNOUT);
     }
     else
     {
@@ -241,20 +241,12 @@ int _start( void )
 
     hw_mem_init();
 
-    print_inf(" ");
+    print_inf("\r\n");
     print_inf("HW initialization: done");
-    print_inf(" ");
+    print_inf("\r\n\r\n");
 
-    //dummy code
-    if (iRtn == ERROR_GENERIC)
-    {
-        print_log("%s", "dummy code");
-        print_err("%s", "dummy code");
-        assert(0);
-    }
-
-    printf("> in the loop...\r\n");
-    while(1);
+    //printf("> in the loop...\r\n");
+    //while(1);
 
     return iRtn;
 }
