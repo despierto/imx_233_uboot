@@ -21,10 +21,12 @@
 #ifndef __NET_KS8851_H__
 #define __NET_KS8851_H__
 
-int     net_ks8851_init(void * ptr); 
-void    net_ks8851_halt(void);
-int     net_ks8851_rx(void);
-int     net_ks8851_tx(volatile void *packet, int length);
+#include "types.h"
+
+RESULTCODE  net_ks8851_init(PTR ptr); 
+void        net_ks8851_halt(void);
+RESULTCODE  net_ks8851_rx(void);
+RESULTCODE  net_ks8851_tx(VPTR packet, U32 length);
 
 #define net_init(ptr)           net_ks8851_init(ptr)
 #define net_halt()              net_ks8851_halt()

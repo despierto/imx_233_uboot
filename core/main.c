@@ -79,8 +79,8 @@ void  _start(void)
 #define PKTSIZE                 1518
 #define PKTSIZE_ALIGN           1536
 #define PKTALIGN                32
-#define PKTBUFSRX               4
-#define PKTBUFSTX               1
+#define PKTBUFSRX               4                               /* Rx MAX supported by ks8851 is 12KB */
+#define PKTBUFSTX               1                               /* Tx MAX supported by ks8851 is 6KB */
 
 //declarations
 char            BootFile[128];
@@ -107,7 +107,7 @@ static void initialization(void)
     unsigned int i;
     
     //net driver initialization
-    print_log("%s", "Net environment initialization");
+    print_eth("%s", "Net environment initialization");
     linux_load_addr = CONFIG_SYS_LOAD_ADDR;
     NetArpWaitPacketMAC = NULL;
     NetArpWaitPacketIP = 0;
@@ -124,16 +124,16 @@ static void initialization(void)
         NetRxPackets[i] = (volatile uchar *)((unsigned int)NetTxPackets[0] + (i+PKTBUFSTX)*PKTSIZE_ALIGN);
     }
 
-    print_log(" - Net Tx packet: base_0x%x count_%d", (unsigned int)NetTxPackets[0], PKTBUFSTX);
-    print_log(" - Net Rx packet: base_0x%x count_%d", (unsigned int)NetRxPackets[0], PKTBUFSRX);    
+    print_eth(" - Net Tx packet: base_0x%x count_%d", (unsigned int)NetTxPackets[0], PKTBUFSTX);
+    print_eth(" - Net Rx packet: base_0x%x count_%d", (unsigned int)NetRxPackets[0], PKTBUFSRX);    
     
     NetArpWaitTxPacket = (uchar *)((unsigned int)&NetArpWaitPacketBuf[0] + (PKTALIGN - 1));
     NetArpWaitTxPacket = (uchar *)((unsigned int)NetArpWaitTxPacket - (unsigned int)NetArpWaitTxPacket % PKTALIGN);
     NetArpWaitTxPacketSize = 0;
 
-    print_log(" - Net Arp Tx packet: base_0x%x count_%d", (unsigned int)NetArpWaitTxPacket, 1);
+    print_eth(" - Net Arp Tx packet: base_0x%x count_%d", (unsigned int)NetArpWaitTxPacket, 1);
 
-    print_log("%s", "Halt Ethernel driver whatever its condition...");
+    print_eth("%s", "Halt Ethernel driver whatever its condition...");
     drv_eth_halt();                                             /* do call of common interface function */
 
     if (drv_eth_init(NULL)) {                                    /* do call of common interface function */
@@ -141,7 +141,7 @@ static void initialization(void)
         gStatusEthernet = 0;
         print_err("%s", "ethernet initialization wasn't completed");
     } else {
-        print_log("%s", "Ethernel was successfully started");
+        print_eth("%s", "Ethernel was successfully started");
         gStatusEthernet = 1;
     }
 

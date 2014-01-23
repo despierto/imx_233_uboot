@@ -26,7 +26,7 @@ int drv_eth_init(void * ptr)
 {
     int ret = 0;
 
-    printf("--> %s -> %s : %d\r\n", __FILE__, __FUNCTION__, __LINE__);
+    print_eth("--> %s -> %s : %d", __FILE__, __FUNCTION__, __LINE__);
 
     ret = net_init(ptr);
     return ret;
@@ -34,14 +34,14 @@ int drv_eth_init(void * ptr)
 
 void drv_eth_halt(void)
 {
-    printf("--> %s -> %s : %d\r\n", __FILE__, __FUNCTION__, __LINE__);
+    print_eth("--> %s -> %s : %d", __FILE__, __FUNCTION__, __LINE__);
     
     net_halt();
 }
 
 int drv_eth_rx(void)
 {
-    printf("--> %s -> %s : %d\r\n", __FILE__, __FUNCTION__, __LINE__);
+    print_eth("--> %s -> %s : %d", __FILE__, __FUNCTION__, __LINE__);
     
     net_rx();
     return 0;
@@ -49,7 +49,7 @@ int drv_eth_rx(void)
 
 int drv_eth_tx(volatile void *packet, int length)
 {
-    printf("--> %s -> %s : %d\r\n", __FILE__, __FUNCTION__, __LINE__);
+    print_eth("--> %s -> %s : %d", __FILE__, __FUNCTION__, __LINE__);
     
     net_tx(packet, length);
     return 0;

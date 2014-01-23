@@ -16,16 +16,7 @@
 
 #include "types.h"
 
-#if defined(HW_TARGET_BRAZOS)
-//! \brief TBD
-#define VECTOR_OFFSET 0x0000
-#elif defined(HW_TARGET_SIMULATOR)
-//! \brief TBD
-#define VECTOR_OFFSET 0x0000
-#else
-//! \brief TBD
-#define VECTOR_OFFSET 0x80000000
-#endif
+#define VECTOR_OFFSET 0x00000000
 
 //! \brief TBD
 typedef enum

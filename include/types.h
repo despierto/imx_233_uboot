@@ -12,12 +12,157 @@
  */
 
 
-#ifndef _TYPES_H
-#define _TYPES_H
+#ifndef __TYPES_H__
+#define __TYPES_H__
 
 #include <stdint.h>
 #include <stdbool.h>
 #include "assert.h"
+
+
+/************************************************
+ *              COMMON  TYPES DEFINITIONS                       *
+ ************************************************/
+
+//***** Define unsigned 8-bit byte type *****
+#ifndef _U8_
+#define _U8_
+   typedef unsigned char                    U8, *PU8;
+   typedef volatile unsigned char           V8, *PV8;
+#endif
+
+//***** Define signed 8-bit byte type *****
+#ifndef _S8_
+    #define _S8_
+    typedef signed char                     S8, *PS8;
+#endif
+
+//***** Define unsigned 16-bit word type *****
+#ifndef _U16_
+    #define _U16_
+    typedef unsigned short                  U16, *PU16;
+    typedef volatile unsigned short         V16, *PV16;
+#endif
+
+//***** Define signed 16-bit word type *****
+#ifndef _S16_
+    #define _S16_
+    typedef signed short                    S16, *PS16;
+#endif
+
+//***** Define unsigned 32-bit word type *****
+#ifndef _U32_
+    #define _U32_
+    typedef unsigned int                    U32, *PU32;
+    typedef volatile unsigned int           V32, *PV32;
+#endif
+
+//***** Define signed 32-bit word type *****
+#ifndef _S32_
+    #define _S32_
+    typedef signed int                      S32, *PS32;
+#endif
+
+//***** Define unsigned 64-bit word type *****
+#ifndef _U64_
+    #define _U64_
+    typedef unsigned long long              U64, *PU64;
+    typedef volatile unsigned long long     V64, *PV64;
+#endif
+
+//***** Define signed 64-bit word type *****
+#ifndef _S64_
+    #define _S64_
+    typedef signed long long                S64, *PS64;
+#endif
+
+//***** Define unsigned 40-bit word type *****
+#ifndef _U40_
+    #define _U40_
+    typedef double                          U40, *PU40;
+#endif
+
+//***** Define signed 40-bit word type *****
+#ifndef _S40_
+    #define _S40_
+    typedef double                          S40, *PS40;
+#endif
+
+#ifndef _PTR_
+    #define _PTR_
+    typedef void                            *PTR;
+    typedef volatile void                   *VPTR;    
+#endif
+
+
+
+/************************************************
+ *              EXTENDED  TYPES DEFINITIONS                     *
+ ************************************************/
+
+//***** Define bit field *****
+#ifndef _BIT_FIELD_
+    #define _BIT_FIELD_
+    typedef unsigned int                    BIT_FIELD;
+#endif
+
+//***** Define NULL PTR *****
+#ifndef NULL
+    #define NULL   (void*)0
+#endif
+
+//***** Define Inlide *****
+#ifndef __INLINE__
+    #define __INLINE__
+    #define INLINE                          inline
+#endif
+
+//***** Define boolean *****
+#ifndef _BOOL_
+    #define _BOOL_
+    typedef U32                             BOOL;
+    //typedef bool                                                  BOOL;
+#endif
+
+#ifndef _BOOLEAN_
+    #define _BOOLEAN_
+    typedef U8                              BOOLEAN;
+#endif
+
+//***** Define handle *****
+#ifndef _HANDLE_
+    #define _HANDLE_
+    typedef void                            *HANDLE;
+#endif
+
+//***** Result code *****
+#ifndef _RESULTCODE_
+    #define _RESULTCODE_
+    typedef int                             RESULTCODE;
+#endif
+
+
+
+
+/************************************************
+ *              SPECIAL  TYPES DEFINITIONS                     *
+ ************************************************/
+    
+//***** Define IP address type *****
+#ifndef _IPADDR_
+    #define _IPADDR_
+    typedef unsigned int                    IPaddr_t;
+#endif
+
+
+
+
+
+
+/************************************************
+ *              ALTERNATIVE  TYPES DEFINITIONS                     *
+ ************************************************/
+
 //! \brief TBD
 //! \todo [PUBS] Add definition(s)...
 //! \todo Where does this really go?
@@ -51,9 +196,6 @@ typedef struct
 #if !defined(NULL)
 #define NULL 0
 #endif
-
-//! \brief TBD
-typedef bool        BOOL;
 
 //! \brief TBD
 typedef uint8_t     UINT8;
@@ -96,71 +238,15 @@ typedef uint128_t   UINT128;
 typedef float       FLOAT;
 
 //! \brief TBD
-typedef unsigned int    IPaddr_t;
-
-//! \brief TBD
 typedef unsigned char   uchar;
 
-//! \brief TBD
-#define FRACT       _fract
-//! \brief TBD
-#define CIRC        _circ
+/* sysv */
+typedef unsigned char   unchar;
+typedef unsigned short  ushort;
+typedef unsigned int    uint;
+typedef unsigned long   ulong;
 
-//! \brief Provides a default of 16 bytes (128 bits / 8 bits per byte)
-#ifndef MAX_NUM_RAW_SERIAL_NUMBER_BYTES
-    #define MAX_NUM_RAW_SERIAL_NUMBER_BYTES (16)
-#endif
 
-//! \brief Provides a default value that allows each nibble of raw to be
-//! converted to its
-//! ASCII hex character (1 extra for NULL termination)
-#ifndef MAX_NUM_ASCII_SERIAL_NUMBER_CHARS
-   #define MAX_NUM_ASCII_SERIAL_NUMBER_CHARS (2*MAX_NUM_RAW_SERIAL_NUMBER_BYTES)
-#endif
 
-//! \brief Serial number.
-typedef struct SerialNumber
-{
-    //! \brief TBD
-    uint8_t rawSizeInBytes;
-    //! \brief TBD
-    uint8_t asciiSizeInChars;
-    //! \brief TBD
-    uint8_t raw[MAX_NUM_RAW_SERIAL_NUMBER_BYTES];
-    // One extra for NULL termination
-    char ascii[MAX_NUM_ASCII_SERIAL_NUMBER_CHARS+1];
-} SerialNumber_t;
+#endif /* __TYPES_H__ */
 
-//------------------------------------------------------------------------------
-// Huh?
-//------------------------------------------------------------------------------
-
-//! \brief TBD
-#define REENTRANT
-
-//------------------------------------------------------------------------------
-// Debug macros in types.h?
-//------------------------------------------------------------------------------
-
-//! \brief TBD
-#ifdef DEBUG
-#define IFDEBUG(x) x
-#else
-#define IFDEBUG(x)
-#endif
-
-//------------------------------------------------------------------------------
-// This sets the default build of the target
-//------------------------------------------------------------------------------
-
-//! \brief TBD
-#if !defined(HW_TARGET_ASIC) && !defined(HW_TARGET_SIMULATOR)
-#define HW_TARGET_BRAZOS 1
-#endif
-
-#endif // #ifndef _TYPES_H
-
-///////////////////////////////////////////////////////////////////////////////
-// End of file
-///////////////////////////////////////////////////////////////////////////////
-//! @}
