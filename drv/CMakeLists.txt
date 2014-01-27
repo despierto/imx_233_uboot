@@ -8,5 +8,6 @@ add_library(drv STATIC 	drv_print.c
 
 install(TARGETS drv DESTINATION lib)
 
+add_subdirectory(spi)
 add_subdirectory(net)
 

@@ -1,19 +1,23 @@
-/*
- * STMP37XX specific definitions
+/**
+ * Driver for Ethernet PHY KS8851
  *
- * Vladislav Buzov <vbuzov@embeddedalley.com>
+ * Copyright (c) 2013 X-boot GITHUB team
+  *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- * Copyright 2008 SigmaTel, Inc
- * Copyright 2008 Embedded Alley Solutions, Inc
- * Copyright 2009 Freescale Semiconductor, Inc. All Rights Reserved.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * This file is licensed under the terms of the GNU General Public License
- * version 2.  This program  is licensed "as is" without any warranty of any
- * kind, whether express or implied.
- *
- * http://www.opensource.org/licenses/gpl-license.html
- * http://www.gnu.org/copyleft/gpl.html
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
 #ifndef __PLATFORM_H__
 #define __PLATFORM_H__
 
@@ -67,5 +71,59 @@
 #define SLEEP_STATE_FINGERPRINT 0xdeadbeef
 #define FINGERPRINT             0x00                /* fingerprint offset */
 
+
+/*******************************************************************************/
+/*                                              64MB SDRAM INTERNAL MAPPING                                        */
+/*******************************************************************************/
+
+/* MAP: 0 - base of system RAM*/
+#define SYS_RAM_BASE            (SDRAM_BASE)                            /* 0x40000000 */
+#define SYS_RAM_SIZE            (SDRAM_SIZE)                            /* 0x04000000 */
+
+#define SYS_RAM_LINUX_BOOT_PARAM_ADDR   (SDRAM_BASE + 0x100)            /* 0x40000100 */
+
+
+
+
+/* MAP: 32 KB - offset for kernel image loading */
+#define SYS_RAM_LOAD_ADDR       (SDRAM_BASE + 0x8000)                   /* 0x40008000 */
+#define SYS_RAM_LOAD_SIZE       (0x7F8000)                              /* 8MB - 32KB */
+#define SYS_RAM_LOAD_END        (SYS_RAM_LOAD_ADDR+SYS_RAM_LOAD_SIZE)   /* 0x40808000 */               
+
+//GAP: 0x40808000...0x41FFFFFF: ~25MB
+
+/* MAP: 32 MB - offset for devices queues */
+#define SYS_RAM_ETH_ADDR        (SDRAM_BASE + 0x2000000)                /* 0x42000000 */
+#define SYS_RAM_ETH_SIZE        (0x10000)                               /* 64KB */
+#define SYS_RAM_ETH_END         (SDRAM_BASE + SYS_RAM_ETH_SIZE)         /* 0x42010000 */
+
+//GAP: 0x42010000...0x43FFFFFF: ~33MB
+
+#define SYS_RAM_END             (SDRAM_BASE + SDRAM_SIZE)               /* 0x44000000 */
+
+
+
+/*
+ * Most of 378x SoC registers are associated with four addresses
+ * used for different operations - read/write, set, clear and toggle bits.
+ *
+ * Some of registers do not implement such feature and, thus, should be
+ * accessed/manipulated via single address in common way.
+ */
+#define REG_RD(x)       (*(volatile unsigned int *)(x))
+#define REG_WR(x, v)    ((*(volatile unsigned int *)(x)) = (v))
+#define REG_SET(x, v)   ((*(volatile unsigned int *)((x) + 0x04)) = (v))
+#define REG_CLR(x, v)   ((*(volatile unsigned int *)((x) + 0x08)) = (v))
+#define REG_TOG(x, v)   ((*(volatile unsigned int *)((x) + 0x0c)) = (v))
+
+
+/*====================*/
+/* SPI Driver info */
+/*====================*/
+#define CONFIG_SSP_CLK      48000000
+#define CONFIG_SPI_CLK      3000000
+#define CONFIG_SPI_SSP1
+
+#define CPU_CLK_DEVIDER (18) //480MHz
 
 #endif /* __PLATFORM_H__ */

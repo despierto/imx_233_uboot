@@ -43,6 +43,9 @@ void drv_print_error(const char* filename, const char* funcname, const int nrow)
 #define PRINTF_INF_OK
 #define PRINTF_NET_OK
 #define PRINTF_ETH_OK
+#define PRINTF_CLK_OK
+#define PRINTF_SPI_OK
+#define PRINTF_PIN_OK
 
 /********************************************************************************
  *          Hardware Initialization type of printing                                                                        *
@@ -70,6 +73,12 @@ void drv_print_error(const char* filename, const char* funcname, const int nrow)
 #define print_dbg(fmt, args...)
 #endif  /* PRINTF_DBG_OK */
 
+#ifdef PRINTF_CLK_OK
+#define print_clk(fmt, args...) printf("[clk] " fmt "\r\n", ## args)
+#else  /* PRINTF_CLK_OK */
+#define print_clk(fmt, args...)
+#endif  /* PRINTF_CLK_OK */
+
 #ifdef PRINTF_NET_OK
 #define print_net(fmt, args...) printf("[net] " fmt "\r\n", ## args)
 #else  /* PRINTF_NET_OK */
@@ -81,6 +90,18 @@ void drv_print_error(const char* filename, const char* funcname, const int nrow)
 #else  /* PRINTF_ETH_OK */
 #define print_eth(fmt, args...)
 #endif  /* PRINTF_ETH_OK */
+
+#ifdef PRINTF_SPI_OK
+#define print_spi(fmt, args...) printf("[spi] " fmt "\r\n", ## args)
+#else  /* PRINTF_SPI_OK */
+#define print_spi(fmt, args...)
+#endif  /* PRINTF_SPI_OK */
+
+#ifdef PRINTF_PIN_OK
+#define print_pin(fmt, args...) printf("[pin] " fmt "\r\n", ## args)
+#else  /* PRINTF_PIN_OK */
+#define print_pin(fmt, args...)
+#endif  /* PRINTF_PIN_OK */
 
 #ifdef PRINTF_ERR_OK
 #define print_err(fmt, args...) {drv_print_error(__FILE__, __FUNCTION__, __LINE__); printf(fmt "\r\n\r\n", ## args);}

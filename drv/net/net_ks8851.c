@@ -64,7 +64,7 @@ Additional Features. In addition to offering all of the features of a Layer 2 co
 #include "global.h"
 #include "net_ks8851.h"
 #include "drv/regs_ks8851.h"
-
+#include "spi.h"
 
 /************************************************
  *              DEFINITIONS                                                *
@@ -82,6 +82,29 @@ typedef struct _NET_KS8851_INF_ {
     U8              buff[MAX_BUF_SIZE];
     KS8851_TX_HDR   txh;
 }NET_KS8851_INF, *PNET_KS8851_INF;
+
+
+#define __ALIGN_MASK(x,mask)    (((x)+(mask))&~(mask))
+#define ALIGN(x,a)              __ALIGN_MASK(x,(typeof(x))(a)-1)
+
+/* shift for byte-enable data */
+#define BYTE_EN(_x) ((_x) << 2)
+
+/* turn register number and byte-enable mask into data for start of packet */
+#define MK_OP(_byteen, _reg) (BYTE_EN(_byteen) | (_reg)  << (8+2) | (_reg) >> 6)
+
+//uchar def_mac_addr[] = {0x00, 0x10, 0xA1, 0x86, 0x95, 0x11};
+uchar def_mac_addr[] = {0x00, 0x1F, 0xF2, 0x00, 0x00, 0x00};
+
+static NET_KS8851_INF  *ks;
+
+static void     ks_reg8_write(ushort reg, ushort val);
+static void     ks_reg16_write(ushort reg, ushort val);
+static void     ks_reg_read(ushort op, uchar *rxb, ushort len);
+static ushort   ks_reg8_read(ushort reg);
+static ushort   ks_reg16_read(ushort reg);
+static uint     ks_reg32_read(ushort reg);
+static void     ks_powermode_set(ushort pwrmode);
 
 
 /************************************************
@@ -129,8 +152,20 @@ RESULTCODE  net_ks8851_init(PTR ptr)
 
 void        net_ks8851_halt(void)
 {
-    print_net("--> %s -> %s : %d", __FILE__, __FUNCTION__, __LINE__);
+    print_net("%s", "KS-8851 network device halt");
 
+    /* shutdown RX process */
+    print_net("%s", " - Shutdown RX process");
+    ks_reg16_write(KS_RXCR1, 0x0000);
+
+    /* shutdown TX process */
+    print_net("%s", " - Shutdown RX process");
+    ks_reg16_write(KS_TXCR, 0x0000);
+
+    /* set powermode to soft power down to save power */
+    print_net("%s", " - Disable power");    
+    ks_powermode_set(PMECR_PM_SOFTDOWN);
+    
     return;
 }
 
@@ -151,6 +186,82 @@ RESULTCODE  net_ks8851_tx(VPTR packet, U32 length)
 /************************************************
  *              LOCAL FUNCTIONS                                        *
  ************************************************/
+
+/* Write a 8 bit register to ks8851 chip  */
+static void     ks_reg8_write(ushort reg, ushort val)
+{
+    ushort  txb[2];
+    ushort  bit;
+
+    bit = 1 << (reg & 3);
+
+    txb[0] = MK_OP(bit, reg) | KS_SPIOP_WR;
+    txb[1] = val;
+
+    spi_txrx((char *)txb, 3, 0, 0, SPI_START | SPI_STOP);
+}
+
+/* Write a 16 bit register to ks8851 chip */
+static void     ks_reg16_write(ushort reg, ushort val)
+{
+    ushort txb[2];
+
+    txb[0] = MK_OP(reg & 2 ? 0xC : 0x03, reg) | KS_SPIOP_WR;
+    txb[1] = val;
+
+    spi_txrx((char *)txb, 4, 0, 0, SPI_START | SPI_STOP);
+}
+
+/* Issue read register command and return the data */
+static void     ks_reg_read(ushort op, uchar *rxb, ushort len)
+{
+    ushort txb = op | KS_SPIOP_RD;
+
+    spi_txrx((char *)&txb, 2, 0, 0, SPI_START);
+    spi_txrx(0, 0, (char *)rxb, len, SPI_STOP);
+}
+
+/* Read 8 bit register from device  */
+static ushort   ks_reg8_read(ushort reg)
+{
+    ushort rxb = 0;
+
+    ks_reg_read(MK_OP(1 << (reg & 3), reg), (uchar *)&rxb, 1);
+
+    return rxb;
+}
+
+/* Read 16 bit register from device  */
+static ushort   ks_reg16_read(ushort reg)
+{
+    ushort rxb = 0;
+
+    ks_reg_read(MK_OP(reg & 2 ? 0xC : 0x3, reg), (uchar *)&rxb, 2);
+
+    return rxb;
+}
+
+/* Read 32 bit register from device */
+static uint     ks_reg32_read(ushort reg)
+{
+    uint rxb = 0;
+
+    ks_reg_read(MK_OP(0x0f, reg), (uchar *)&rxb, 4);
+
+    return rxb;
+}
+
+/* set power mode of the device */
+static void ks_powermode_set(ushort pwrmode)
+{
+    ushort pmecr;
+
+    pmecr = ks_reg16_read(KS_PMECR);
+    pmecr &= ~PMECR_PM_MASK;
+    pmecr |= pwrmode;
+
+    ks_reg16_write(KS_PMECR, pmecr);
+}
 
 
 

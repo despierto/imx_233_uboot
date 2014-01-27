@@ -1,5 +1,5 @@
-/**
- * Top layer ethernel driver header file
+/*
+ * iMX233 HW pin mux init
  *
  * Copyright (c) 2013 X-boot GITHUB team
   *
@@ -18,13 +18,22 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
- #ifndef __DRV_ETH_H__
- #define __DRV_ETH_H__
+#include "global.h"
+#include "pinmux.h"
 
-int     drv_eth_init(void);
-void    drv_eth_halt(void);
-int     drv_eth_rx(void);
-int     drv_eth_tx(volatile void *packet, int length);
+void init_pinmux(void)
+{
+    print_pin("%s", "Configure SSP1 pins for ENC28j60: 8maA");
+        
+    /*  */
+    REG_CLR(PINCTRL_BASE + PINCTRL_MUXSEL(4), 0x00003fff);
 
+    REG_CLR(PINCTRL_BASE + PINCTRL_DRIVE(8), 0X03333333);
+    REG_SET(PINCTRL_BASE + PINCTRL_DRIVE(8), 0x01111111);
 
-#endif /* __DRV_ETH_H__ */
+    REG_CLR(PINCTRL_BASE + PINCTRL_PULL(2), 0x0000003f);
+    sleep_ms(10);
+    
+    return;
+}
+

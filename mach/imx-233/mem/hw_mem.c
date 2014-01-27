@@ -469,6 +469,7 @@ void entry_auto_clock_gate(void)
     value |= 1<<11;
     HW_DRAM_CTL16_WR(value);
 }
+
 void change_cpu_freq(void)
 {
     int value = 0;
@@ -489,14 +490,14 @@ void change_cpu_freq(void)
         print_hw(" - VDDD level is %d mV", (value & BM_POWER_VDDDCTRL_TRG)*25 + 800); 
     }
 
-    //set CPU frequesny
+    //set CPU frequency
     value = HW_CLKCTRL_FRAC_RD();
-    if (((value & BM_CLKCTRL_FRAC_CPUFRAC) != 19)||(value & BM_CLKCTRL_FRAC_CLKGATECPU)) {
+    if (((value & BM_CLKCTRL_FRAC_CPUFRAC) != CPU_CLK_DEVIDER)||(value & BM_CLKCTRL_FRAC_CLKGATECPU)) {
         print_hw(" - Set CPU frequency from %d Hz to %d Hz", 
                 480*(18*1000000/(value & BM_CLKCTRL_FRAC_CPUFRAC)),
-                480*(18*1000000/19));        
+                480*(18*1000000/CPU_CLK_DEVIDER));        
         value &= ~BM_CLKCTRL_FRAC_CPUFRAC;
-        value |= BF_CLKCTRL_FRAC_CPUFRAC(19); //19 = 454Mhz
+        value |= BF_CLKCTRL_FRAC_CPUFRAC(CPU_CLK_DEVIDER); //19 = 454Mhz 18 = 480MHz
         value &= ~BM_CLKCTRL_FRAC_CLKGATECPU;
         HW_CLKCTRL_FRAC_WR(value);
     }
