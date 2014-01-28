@@ -65,12 +65,14 @@ Additional Features. In addition to offering all of the features of a Layer 2 co
 #include "net_ks8851.h"
 #include "drv/regs_ks8851.h"
 #include "spi.h"
+#include <stdio.h>
 
 /************************************************
  *              DEFINITIONS                                                *
  ************************************************/
 #define KS_ERR          -1
 #define MAX_BUF_SIZE    2048
+#define ETH_ALEN        6
 
 typedef struct _KS8851_TX_HDR_ {
     U8      txb[6];
@@ -105,6 +107,9 @@ static ushort   ks_reg8_read(ushort reg);
 static ushort   ks_reg16_read(ushort reg);
 static uint     ks_reg32_read(ushort reg);
 static void     ks_powermode_set(ushort pwrmode);
+static void     ks_fifo_read(uchar *buff, ushort len);
+void            ks_mac_set(void);
+void            ks_mac_default_set(void);
 
 
 /************************************************
@@ -119,6 +124,10 @@ RESULTCODE  net_ks8851_init(PTR ptr)
     U16         chip_id;
 
     print_net("--> %s -> %s : %d", __FILE__, __FUNCTION__, __LINE__);
+
+
+    ks_mac_default_set();
+    net_ks8851_mac_set("AA:BB:CC:DD:EE:FF");
 
 #if 0
     ks_reg16_write(KS_GRR, GRR_GSR);                                /* issue a global soft reset to reset the device. */
@@ -141,7 +150,7 @@ RESULTCODE  net_ks8851_init(PTR ptr)
 
     ks->fid = 0;
 
-    ks_mac_set();
+    ks_mac_default_set();
     ks_config();
 
     ks_reg16_write(KS_ISR, 0xffff);
@@ -181,6 +190,26 @@ RESULTCODE  net_ks8851_tx(VPTR packet, U32 length)
     print_net("--> %s -> %s : %d", __FILE__, __FUNCTION__, __LINE__);
     
     return 0;
+}
+
+void net_ks8851_mac_set(const char *ethaddr)
+{
+    int i;
+    uchar mac[6];
+    char testmac[64];  
+
+    sscanf(ethaddr, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", 
+        &mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5]);
+
+    //for(i = 0; i < ETH_ALEN; i++)
+    //    ks_reg8_write(KS_MAR(i), mac[i]);
+
+    sprintf(testmac, "%02X:%02X:%02X:%02X:%02X:%02X",
+        mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+
+    print_net("Set HW MAC addr (%s)", testmac);
+
+    return;
 }
 
 /************************************************
@@ -263,5 +292,31 @@ static void ks_powermode_set(ushort pwrmode)
     ks_reg16_write(KS_PMECR, pmecr);
 }
 
+/* read data from the receive fifo */
+static void ks_fifo_read(uchar *buff, ushort len)
+{
+    uchar txb = KS_SPIOP_RXFIFO;
+
+    spi_txrx((char *)&txb, 1, 0, 0, SPI_START);
+    spi_txrx(0, 0, (char *)buff, len, SPI_STOP);
+}
+
+void ks_mac_default_set(void)
+{
+    int i;
+    char ethaddr[64];
+
+    for(i = 0; i < ETH_ALEN; i++)
+        ks_reg8_write(KS_MAR(i), def_mac_addr[i]);
+
+    sprintf(ethaddr, "%02X:%02X:%02X:%02X:%02X:%02X",
+        def_mac_addr[0], def_mac_addr[1],
+        def_mac_addr[2], def_mac_addr[3],
+        def_mac_addr[4], def_mac_addr[5]);
+
+    print_net(" - set default HW MAC addr (%s)", ethaddr);
+
+    return;
+}
 
 

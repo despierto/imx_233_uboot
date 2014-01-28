@@ -2,6 +2,8 @@ cmake_minimum_required (VERSION 2.8)
 
 message(STATUS "xboot: mach: imx-233: hw_init")
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHW_INIT_MODULE")
+
 add_executable(hw_init hw_init.c hw_init.S)
 target_link_libraries(hw_init mem)
 target_link_libraries(hw_init ddi_power)
