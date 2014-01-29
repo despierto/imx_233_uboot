@@ -65,7 +65,6 @@ Additional Features. In addition to offering all of the features of a Layer 2 co
 #include "net_ks8851.h"
 #include "drv/regs_ks8851.h"
 #include "spi.h"
-#include <stdio.h>
 
 /************************************************
  *              DEFINITIONS                                                *

@@ -1,7 +1,7 @@
 /*************************************************
  *                   X-BOOT console              *
  *************************************************/
-#include <stdio.h>
+#include "global.h"
 #include "sys_console.h"
 
 int  sys_console_init(void)

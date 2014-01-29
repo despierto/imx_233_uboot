@@ -63,7 +63,7 @@ void    sys_print_error(const char* filename, const char* funcname, const int nr
 
 /* sys_vfprintf.h */
 int     sprintf(char * buf, const char *fmt, ...);
-
+int     sscanf(const char * buf, const char * fmt, ...);
 
 
 
@@ -88,15 +88,10 @@ int     sprintf(char * buf, const char *fmt, ...);
 #define PRINTF_PIN_OK
 
 
-#undef  printf
-#ifdef HW_INIT_MODULE 
-void sys_smart_printf(const char *fmt, ...);
-#define printf  sys_smart_printf
-#else
-void sys_heavy_printf(const char *fmt, ...);
-#define printf  sys_heavy_printf
-#endif
+void sys_printf(const char *fmt, ...);
 
+#undef  printf
+#define printf  sys_printf
 
 
 /********************************************************************************

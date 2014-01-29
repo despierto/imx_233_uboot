@@ -23,7 +23,6 @@
 
 #include "types.h"
 #include "error.h"
-#include "drv_print.h"
 #include "drv_utils.h"
 #include "sys_console.h"
 #include "platform.h"

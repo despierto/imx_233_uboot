@@ -21,8 +21,8 @@
 #ifndef _DRV_PRINT_H_
 #define _DRV_PRINT_H_
 
-#include <stdio.h>
-#include <stdarg.h>
+//#include <stdio.h>
+//#include <stdarg.h>
 #include "types.h"
 #include "error.h"
 

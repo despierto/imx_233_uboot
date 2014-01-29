@@ -22,100 +22,12 @@
  */
 
 #include <stdio.h>
+#include <stdarg.h>
 #include "types.h"
 #include "sys_utils.h"
 #include "drv_print.h"
 #include "platform.h"
 
-
-
-#ifdef HW_INIT_MODULE
-void sys_printhex(int data)
-{
-    int i = 0;
-    char c;
-    for (i = sizeof(int)*2-1; i >= 0; i--) {
-        c = data>>(i*4);
-        c &= 0xf;
-        if (c > 9)
-            drv_print_putc(c-10+'A');
-        else
-            drv_print_putc(c+'0');
-    }
-    return;
-}
-
-void sys_printdec(int data)
-{
-    int i = 0;
-    char s[10]; //max length of U32 dec value
-
-    if (!data) {
-        drv_print_putc('0');
-    } else {
-        while(data) {
-            s[i++]= (char)data%10 +'0';
-            data = data/10;
-        }
-        while(i) {
-            drv_print_putc(s[--i]);
-        }
-    }
-    return;
-}
-
-void sys_printstr(const char *s, int precision)
-{
-    int i;
-    int len = strnlen(s, precision);
-
-    for (i = 0; i < len; ++i)
-        drv_print_putc(*s++);
-
-}
-
-void sys_smart_printf(const char *fmt, ...)
-{
-    va_list args;
-    int one;
-    va_start(args, fmt);
-    
-    while (*fmt) {
-
-        if (*fmt == '%') {
-            fmt++;
-            switch (*fmt) {
-                case 'd':
-                    sys_printdec(va_arg(args, int));
-                    break;
-                case 'x':
-                case 'X':
-                    sys_printhex(va_arg(args, int));
-                    break;
-                case '%':
-                    drv_print_putc('%');
-                    break;
-                case 's':
-                    sys_printstr(va_arg(args, char *), 255);
-                    break;
-                default:
-                    break;
-            }
-        } else {
-            drv_print_putc(*fmt);
-        }
-
-        fmt++;
-    }
-    va_end(args);
-    
-    return;
-}
-
-
-
-
-#else /* HW_INIT_MODULE */
 
 /************************************************
  *              DEFINITIONS                                                *
@@ -131,12 +43,12 @@ void sys_smart_printf(const char *fmt, ...)
 
 #define NUM_TYPE    long
 
-#define do_div(n, base) ({ \
-                            unsigned int __res; \
-                            __res = (unsigned int)((unsigned NUM_TYPE) n) % base; \
-                            n = ((unsigned NUM_TYPE) n) / base; \
-                            __res; \
-                        })
+//#define do_div(n, base) ({ \
+//                            unsigned int __res; \
+//                            __res = (unsigned int)((unsigned NUM_TYPE) n) % base; \
+//                            n = ((unsigned NUM_TYPE) n) / base; \
+//                            __res; \
+//                        })
 
 const char hex_asc[] = "0123456789abcdef";
 #define hex_asc_lo(x)   hex_asc[((x) & 0x0f)]
@@ -144,6 +56,10 @@ const char hex_asc[] = "0123456789abcdef";
 
 /* No inlining helps gcc to use registers better */
 #define noinline __attribute__((noinline))
+
+/* Works only for digits and letters, but small and fast */
+#define TOLOWER(x) ((x) | 0x20)
+
 
 
 int             vsprintf(char *buf, const char *fmt, va_list args);
@@ -153,14 +69,19 @@ static inline char *pack_hex_byte(char *buf, uchar byte);
 unsigned long   simple_strtoul(const char *cp,char **endp,unsigned int base);
 long            simple_strtol(const char *cp,char **endp,unsigned int base);
 int             ustrtoul(const char *cp, char **endp, unsigned int base);
-static char* put_dec_trunc(char *buf, unsigned q);
-static char* put_dec_full(char *buf, unsigned q);
+static char*    put_dec_trunc(char *buf, unsigned q);
+static char*    put_dec_full(char *buf, unsigned q);
 static noinline char* put_dec(char *buf, unsigned NUM_TYPE num);
-static char *number(char *buf, unsigned NUM_TYPE num, int base, int size, int precision, int type);
-static char *string(char *buf, char *s, int field_width, int precision, int flags);
-static char *mac_address_string(char *buf, uchar *addr, int field_width, int precision, int flags);
+static char     *number(char *buf, unsigned NUM_TYPE num, int base, int size, int precision, int type);
+static char     *string(char *buf, char *s, int field_width, int precision, int flags);
+static char     *mac_address_string(char *buf, uchar *addr, int field_width, int precision, int flags);
 /*static char *ip6_addr_string(char *buf, uchar *addr, int field_width, int precision, int flags);*/
-static char *ip4_addr_string(char *buf, uchar *addr, int field_width, int precision, int flags);
+static char     *ip4_addr_string(char *buf, uchar *addr, int field_width, int precision, int flags);
+int             vsscanf(const char * buf, const char * fmt, va_list args);
+long long simple_strtoll(const char *cp, char **endp, unsigned int base);
+unsigned long long simple_strtoull(const char *cp, char **endp, unsigned int base);
+static unsigned int simple_guess_base(const char *cp);
+
 
 
 /************************************************
@@ -189,7 +110,7 @@ int sprintf(char * buf, const char *fmt, ...)
     return i;
 }
 
-void sys_heavy_printf(const char *fmt, ...)
+void sys_printf(const char *fmt, ...)
 {
     va_list args;
     uint i;
@@ -207,11 +128,16 @@ void sys_heavy_printf(const char *fmt, ...)
     drv_print_puts(printbuffer);
 }
 
+int sscanf(const char * buf, const char * fmt, ...)
+{
+    va_list args;
+    int i;
 
-
-
-
-
+    va_start(args,fmt);
+    i = vsscanf(buf,fmt,args);
+    va_end(args);
+    return i;
+}
 
 
 /************************************************
@@ -248,7 +174,7 @@ unsigned long simple_strtoul(const char *cp,char **endp,unsigned int base)
         cp++;
     }
     if (endp)
-        *endp = (char *)cp;
+        *endp = (char *)&cp;
     
     return result;
 }
@@ -260,27 +186,60 @@ long simple_strtol(const char *cp,char **endp,unsigned int base)
     return simple_strtoul(cp,endp,base);
 }
 
-int ustrtoul(const char *cp, char **endp, unsigned int base)
+static unsigned int simple_guess_base(const char *cp)
 {
-    unsigned long result = simple_strtoul(cp, endp, base);
-    switch (**endp) {
-    case 'G' :
-        result *= 1024;
-        /* fall through */
-    case 'M':
-        result *= 1024;
-        /* fall through */
-    case 'K':
-    case 'k':
-        result *= 1024;
-        if ((*endp)[1] == 'i') {
-            if ((*endp)[2] == 'B')
-                (*endp) += 3;
-            else
-                (*endp) += 2;
-        }
+    if (cp[0] == '0') {
+        if (TOLOWER(cp[1]) == 'x' && isxdigit(cp[2]))
+            return 16;
+        else
+            return 8;
+    } else {
+        return 10;
     }
+}
+
+/**
+ * simple_strtoull - convert a string to an unsigned long long
+ * @cp: The start of the string
+ * @endp: A pointer to the end of the parsed string will be placed here
+ * @base: The number base to use
+ */
+unsigned long long simple_strtoull(const char *cp, char **endp, unsigned int base)
+{
+    unsigned long long result = 0;
+
+    if (!base)
+        base = simple_guess_base(cp);
+
+    if (base == 16 && cp[0] == '0' && TOLOWER(cp[1]) == 'x')
+        cp += 2;
+
+    while (isxdigit(*cp)) {
+        unsigned int value;
+
+        value = isdigit(*cp) ? *cp - '0' : TOLOWER(*cp) - 'a' + 10;
+        if (value >= base)
+            break;
+        result = result * base + value;
+        cp++;
+    }
+
+    if (endp)
+        *endp = (char *)&cp;
     return result;
+}
+
+/**
+ * simple_strtoll - convert a string to a signed long long
+ * @cp: The start of the string
+ * @endp: A pointer to the end of the parsed string will be placed here
+ * @base: The number base to use
+ */
+long long simple_strtoll(const char *cp, char **endp, unsigned int base)
+{
+    if(*cp=='-')
+        return -simple_strtoull(cp + 1, endp, base);
+    return simple_strtoull(cp, endp, base);
 }
 
 /**
@@ -618,7 +577,9 @@ static noinline char* put_dec(char *buf, unsigned NUM_TYPE num)
         unsigned int rem;
         if (num < 100000)
             return put_dec_trunc(buf, num);
-        rem = do_div(num, 100000);
+        //rem = do_div(num, 100000);
+        rem = (unsigned int)(num % 10000);
+        num = (unsigned NUM_TYPE)(num / 10000);
         buf = put_dec_full(buf, rem);
     }
 }
@@ -789,8 +750,229 @@ static char *ip4_addr_string(char *buf, uchar *addr, int field_width, int precis
     return string(buf, ip4_addr, field_width, precision, flags & ~SPECIAL);
 }
 
+/**
+ * vsscanf - Unformat a buffer into a list of arguments
+ * @buf:    input buffer
+ * @fmt:    format of buffer
+ * @args:    arguments
+ */
+int vsscanf(const char * buf, const char * fmt, va_list args)
+{
+    const char *str = buf;
+    char *next;
+    char digit;
+    int num = 0;
+    int qualifier;
+    int base;
+    int field_width;
+    int is_sign = 0;
 
+    while(*fmt && *str) {
+        /* skip any white space in format */
+        /* white space in format matchs any amount of
+                * white space, including none, in the input.
+                */
+        if (isspace(*fmt)) {
+            while (isspace(*fmt))
+                ++fmt;
+            while (isspace(*str))
+                ++str;
+        }
 
+        /* anything that is not a conversion must match exactly */
+        if (*fmt != '%' && *fmt) {
+            if (*fmt++ != *str++)
+                break;
+            continue;
+        }
 
-#endif /* HW_INIT_MODULE */
+        if (!*fmt)
+            break;
+        ++fmt;
+        
+        /* skip this conversion.
+         * advance both strings to next white space
+         */
+        if (*fmt == '*') {
+            while (!isspace(*fmt) && *fmt)
+                fmt++;
+            while (!isspace(*str) && *str)
+                str++;
+            continue;
+        }
 
+        /* get field width */
+        field_width = -1;
+        if (isdigit(*fmt))
+            field_width = skip_atoi(&fmt);
+
+        /* get conversion qualifier */
+        qualifier = -1;
+        if (*fmt == 'h' || *fmt == 'l' || *fmt == 'L' ||
+            *fmt == 'Z' || *fmt == 'z') {
+            qualifier = *fmt++;
+            if (unlikely(qualifier == *fmt)) {
+                if (qualifier == 'h') {
+                    qualifier = 'H';
+                    fmt++;
+                } else if (qualifier == 'l') {
+                    qualifier = 'L';
+                    fmt++;
+                }
+            }
+        }
+        base = 10;
+        is_sign = 0;
+
+        if (!*fmt || !*str)
+            break;
+
+        switch(*fmt++) {
+        case 'c':
+        {
+            char *s = (char *) va_arg(args,char*);
+            if (field_width == -1)
+                field_width = 1;
+            do {
+                *s++ = *str++;
+            } while (--field_width > 0 && *str);
+            num++;
+        }
+        continue;
+        case 's':
+        {
+            char *s = (char *) va_arg(args, char *);
+            if(field_width == -1)
+                field_width = INT_MAX;
+            /* first, skip leading white space in buffer */
+            while (isspace(*str))
+                str++;
+
+            /* now copy until next white space */
+            while (*str && !isspace(*str) && field_width--) {
+                *s++ = *str++;
+            }
+            *s = '\0';
+            num++;
+        }
+        continue;
+        case 'n':
+            /* return number of characters read so far */
+        {
+            int *i = (int *)va_arg(args,int*);
+            *i = str - buf;
+        }
+        continue;
+        case 'o':
+            base = 8;
+            break;
+        case 'x':
+        case 'X':
+            base = 16;
+            break;
+        case 'i':
+                        base = 0;
+        case 'd':
+            is_sign = 1;
+        case 'u':
+            break;
+        case '%':
+            /* looking for '%' in str */
+            if (*str++ != '%') 
+                return num;
+            continue;
+        default:
+            /* invalid format; stop here */
+            return num;
+        }
+
+        /* have some sort of integer conversion.
+         * first, skip white space in buffer.
+         */
+        while (isspace(*str))
+            str++;
+
+        digit = *str;
+        if (is_sign && digit == '-')
+            digit = *(str + 1);
+
+        if (!digit
+                    || (base == 16 && !isxdigit(digit))
+                    || (base == 10 && !isdigit(digit))
+                    || (base == 8 && (!isdigit(digit) || digit > '7'))
+                    || (base == 0 && !isdigit(digit)))
+                break;
+
+        switch(qualifier) {
+        case 'H':    /* that's 'hh' in format */
+            if (is_sign) {
+                signed char *s = (signed char *) va_arg(args,signed char *);
+                *s = (signed char) simple_strtol(str,&next,base);
+            } else {
+                unsigned char *s = (unsigned char *) va_arg(args, unsigned char *);
+                *s = (unsigned char) simple_strtoul(str, &next, base);
+            }
+            break;
+        case 'h':
+            if (is_sign) {
+                short *s = (short *) va_arg(args,short *);
+                *s = (short) simple_strtol(str,&next,base);
+            } else {
+                unsigned short *s = (unsigned short *) va_arg(args, unsigned short *);
+                *s = (unsigned short) simple_strtoul(str, &next, base);
+            }
+            break;
+        case 'l':
+            if (is_sign) {
+                long *l = (long *) va_arg(args,long *);
+                *l = simple_strtol(str,&next,base);
+            } else {
+                unsigned long *l = (unsigned long*) va_arg(args,unsigned long*);
+                *l = simple_strtoul(str,&next,base);
+            }
+            break;
+        case 'L':
+            if (is_sign) {
+                long long *l = (long long*) va_arg(args,long long *);
+                *l = simple_strtoll(str,&next,base);
+            } else {
+                unsigned long long *l = (unsigned long long*) va_arg(args,unsigned long long*);
+                *l = simple_strtoull(str,&next,base);
+            }
+            break;
+        case 'Z':
+        case 'z':
+        {
+            size_t *s = (size_t*) va_arg(args,size_t*);
+            *s = (size_t) simple_strtoul(str,&next,base);
+        }
+        break;
+        default:
+            if (is_sign) {
+                int *i = (int *) va_arg(args, int*);
+                *i = (int) simple_strtol(str,&next,base);
+            } else {
+                unsigned int *i = (unsigned int*) va_arg(args, unsigned int*);
+                *i = (unsigned int) simple_strtoul(str,&next,base);
+            }
+            break;
+        }
+        num++;
+
+        if (!next)
+            break;
+        str = next;
+    }
+
+    /*
+     * Now we've come all the way through so either the input string or the
+     * format ended. In the former case, there can be a %n at the current
+     * position in the format that needs to be filled.
+     */
+    if (*fmt == '%' && *(fmt + 1) == 'n') {
+        int *p = (int *)va_arg(args, int *);
+        *p = str - buf;
+    }
+
+    return num;
+}
