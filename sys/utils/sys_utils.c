@@ -28,6 +28,14 @@
  *              DEFINITIONS                                                *
  ************************************************/
 
+#define ZEROPAD     1       /* pad with zero */
+#define SIGN        2       /* unsigned/signed long */
+#define PLUS        4       /* show plus */
+#define SPACE       8       /* space if plus */
+#define LEFT        16      /* left justified */
+#define SMALL       32      /* Must be 32 == 0x20 */
+#define SPECIAL     64      /* 0x */
+
 
 
 /************************************************
@@ -59,6 +67,16 @@ void copy_filename (char *dst, char *src, int size)
     return;
 }
 
+int strnlen(const char *s, unsigned int len)
+{
+    int n;
+    n = 0;
+    while (*s++ && n < len)
+        n++;
+
+    return (n);
+}
+
 void sys_print_assert(const char* filename, const char* funcname, const int nrow)
 {
     printf("\r\n  ---- ASSERT ----\r\n\r\n");
@@ -87,18 +105,6 @@ void sys_print_error(const char* filename, const char* funcname, const int nrow)
   *              LOCAL  FUNCTIONS                                      *
   ************************************************/
 
-
-
- 
-int strnlen(const char *s, unsigned int len)
-{
-    int n;
-    n = 0;
-    while (*s++ && n < len)
-        n++;
-
-    return (n);
-}
 
 void drv_print_printhex(int data)
 {

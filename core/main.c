@@ -135,7 +135,7 @@ static void initialization(void)
     print_eth("%s", "Halt Ethernel driver whatever its condition...");
     drv_eth_halt();                                             /* do call of common interface function */
 
-    if (drv_eth_init(NULL)) {                                    /* do call of common interface function */
+    if (drv_eth_init()) {                                    /* do call of common interface function */
         drv_eth_halt();                                         /* do call of common interface function */
         gStatusEthernet = 0;
         print_err("%s", "ethernet initialization wasn't completed");

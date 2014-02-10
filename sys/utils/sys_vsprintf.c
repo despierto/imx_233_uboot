@@ -25,7 +25,7 @@
 #include <stdarg.h>
 #include "types.h"
 #include "sys_utils.h"
-#include "drv_print.h"
+#include "dbguart.h"
 #include "platform.h"
 
 

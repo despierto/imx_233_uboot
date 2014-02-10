@@ -22,8 +22,7 @@
 #define _DRV_PRINT_H_
 
 
-
-void drv_print_putc(char ch);
+void drv_print_putc(const char ch);
 void drv_print_puts(const char *s);
 
 

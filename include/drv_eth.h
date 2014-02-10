@@ -21,10 +21,10 @@
  #ifndef __DRV_ETH_H__
  #define __DRV_ETH_H__
 
-int drv_eth_init(void * ptr);
-void drv_eth_halt(void);
-int drv_eth_rx(void);
-int drv_eth_tx(volatile void *packet, int length);
+int     drv_eth_init(void);
+void    drv_eth_halt(void);
+int     drv_eth_rx(void);
+int     drv_eth_tx(volatile void *packet, int length);
 
 
 #endif /* __DRV_ETH_H__ */

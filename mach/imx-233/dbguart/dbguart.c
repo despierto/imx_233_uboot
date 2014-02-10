@@ -18,15 +18,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
- //#include <stdio.h>
-//#include <stdarg.h>
-//#include "types.h"
-//#include "error.h"
-
 #include "registers/regsuartdbg.h"
 #include "dbguart.h"
 
-void drv_print_putc(char ch)
+void drv_print_putc(const char ch)
 {
     int loop = 0;
     while (HW_UARTDBGFR_RD()&BM_UARTDBGFR_TXFF) {
