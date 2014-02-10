@@ -61,6 +61,9 @@ void    sys_print_error(const char* filename, const char* funcname, const int nr
 
 
 
+/* sys_vfprintf.h */
+int     sprintf(char * buf, const char *fmt, ...);
+int     sscanf(const char * buf, const char * fmt, ...);
 
 
 

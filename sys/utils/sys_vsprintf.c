@@ -28,6 +28,9 @@
 #include "dbguart.h"
 #include "platform.h"
 
+#include "registers/regsuartdbg.h"
+#include "sys_utils.h"
+#include "dbguart.h"
 
 /************************************************
  *              DEFINITIONS                                                *
@@ -139,6 +142,84 @@ int sscanf(const char * buf, const char * fmt, ...)
     return i;
 }
 
+void drv_print_printhex(int data)
+{
+    int i = 0;
+    char c;
+    for (i = sizeof(int)*2-1; i >= 0; i--) {
+        c = data>>(i*4);
+        c &= 0xf;
+        if (c > 9)
+            drv_print_putc(c-10+'A');
+        else
+            drv_print_putc(c+'0');
+    }
+    return;
+}
+void drv_print_printdec(int data)
+{
+    int i = 0;
+    char s[10]; //max length of U32 dec value
+
+    if (!data) {
+        drv_print_putc('0');
+    } else {
+        while(data) {
+            s[i++]= (char)data%10 +'0';
+            data = data/10;
+        }
+        while(i) {
+            drv_print_putc(s[--i]);
+        }
+    }
+    return;
+}
+void drv_print_printstr(const char *s, int precision)
+{
+    int i;
+    int len = strnlen(s, precision);
+
+    for (i = 0; i < len; ++i)
+        drv_print_putc(*s++);
+
+}
+void drv_print_printf(const char *fmt, ...)
+{
+    va_list args;
+    int one;
+    va_start(args, fmt);
+    
+    while (*fmt) {
+
+        if (*fmt == '%') {
+            fmt++;
+            switch (*fmt) {
+                case 'd':
+                    drv_print_printdec(va_arg(args, int));
+                    break;
+                case 'x':
+                case 'X':
+                    drv_print_printhex(va_arg(args, int));
+                    break;
+                case '%':
+                    drv_print_putc('%');
+                    break;
+                case 's':
+                    drv_print_printstr(va_arg(args, char *), 255);
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            drv_print_putc(*fmt);
+        }
+
+        fmt++;
+    }
+    va_end(args);
+    
+    return;
+}
 
 /************************************************
   *              LOCAL  FUNCTIONS                                      *

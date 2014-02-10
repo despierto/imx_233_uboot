@@ -27,11 +27,13 @@ RESULTCODE  net_ks8851_init(PTR ptr);
 void        net_ks8851_halt(void);
 RESULTCODE  net_ks8851_rx(void);
 RESULTCODE  net_ks8851_tx(VPTR packet, U32 length);
+void        net_ks8851_mac_set(const char *ethaddr);
 
 #define net_init(ptr)           net_ks8851_init(ptr)
 #define net_halt()              net_ks8851_halt()
 #define net_rx()                net_ks8851_rx()
 #define net_tx(packet, length)  net_ks8851_tx(packet, length)
+#define net_mac_set(ethaddr)    net_ks8851_mac_set(ethaddr);
 
 #endif /* __NET_KS8851_H__ */
 
