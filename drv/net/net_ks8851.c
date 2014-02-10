@@ -64,7 +64,7 @@ Additional Features. In addition to offering all of the features of a Layer 2 co
 #include "global.h"
 #include "net_ks8851.h"
 #include "drv/regs_ks8851.h"
-#include "spi.h"
+
 
 /************************************************
  *              DEFINITIONS                                                *
@@ -85,32 +85,6 @@ typedef struct _NET_KS8851_INF_ {
 }NET_KS8851_INF, *PNET_KS8851_INF;
 
 
-#define __ALIGN_MASK(x,mask)    (((x)+(mask))&~(mask))
-#define ALIGN(x,a)              __ALIGN_MASK(x,(typeof(x))(a)-1)
-
-/* shift for byte-enable data */
-#define BYTE_EN(_x) ((_x) << 2)
-
-/* turn register number and byte-enable mask into data for start of packet */
-#define MK_OP(_byteen, _reg) (BYTE_EN(_byteen) | (_reg)  << (8+2) | (_reg) >> 6)
-
-//uchar def_mac_addr[] = {0x00, 0x10, 0xA1, 0x86, 0x95, 0x11};
-uchar def_mac_addr[] = {0x00, 0x1F, 0xF2, 0x00, 0x00, 0x00};
-
-static NET_KS8851_INF  *ks;
-
-static void     ks_reg8_write(ushort reg, ushort val);
-static void     ks_reg16_write(ushort reg, ushort val);
-static void     ks_reg_read(ushort op, uchar *rxb, ushort len);
-static ushort   ks_reg8_read(ushort reg);
-static ushort   ks_reg16_read(ushort reg);
-static uint     ks_reg32_read(ushort reg);
-static void     ks_powermode_set(ushort pwrmode);
-static void     ks_fifo_read(uchar *buff, ushort len);
-void            ks_mac_set(void);
-void            ks_mac_default_set(void);
-
-
 /************************************************
   *              GLOBAL FUNCTIONS                                      *
   ************************************************/
@@ -123,10 +97,6 @@ RESULTCODE  net_ks8851_init(PTR ptr)
     U16         chip_id;
 
     print_net("--> %s -> %s : %d", __FILE__, __FUNCTION__, __LINE__);
-
-
-    ks_mac_default_set();
-    net_ks8851_mac_set("AA:BB:CC:DD:EE:FF");
 
 #if 0
     ks_reg16_write(KS_GRR, GRR_GSR);                                /* issue a global soft reset to reset the device. */
@@ -149,7 +119,7 @@ RESULTCODE  net_ks8851_init(PTR ptr)
 
     ks->fid = 0;
 
-    ks_mac_default_set();
+    ks_mac_set();
     ks_config();
 
     ks_reg16_write(KS_ISR, 0xffff);
@@ -160,20 +130,8 @@ RESULTCODE  net_ks8851_init(PTR ptr)
 
 void        net_ks8851_halt(void)
 {
-    print_net("%s", "KS-8851 network device halt");
+    print_net("--> %s -> %s : %d", __FILE__, __FUNCTION__, __LINE__);
 
-    /* shutdown RX process */
-    print_net("%s", " - Shutdown RX process");
-    ks_reg16_write(KS_RXCR1, 0x0000);
-
-    /* shutdown TX process */
-    print_net("%s", " - Shutdown RX process");
-    ks_reg16_write(KS_TXCR, 0x0000);
-
-    /* set powermode to soft power down to save power */
-    print_net("%s", " - Disable power");    
-    ks_powermode_set(PMECR_PM_SOFTDOWN);
-    
     return;
 }
 
@@ -191,131 +149,9 @@ RESULTCODE  net_ks8851_tx(VPTR packet, U32 length)
     return 0;
 }
 
-void net_ks8851_mac_set(const char *ethaddr)
-{
-    int i;
-    uchar mac[6];
-    char testmac[64];  
-
-    sscanf(ethaddr, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", 
-        &mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5]);
-
-    //for(i = 0; i < ETH_ALEN; i++)
-    //    ks_reg8_write(KS_MAR(i), mac[i]);
-
-    sprintf(testmac, "%02X:%02X:%02X:%02X:%02X:%02X",
-        mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-
-    print_net("Set HW MAC addr (%s)", testmac);
-
-    return;
-}
-
 /************************************************
  *              LOCAL FUNCTIONS                                        *
  ************************************************/
 
-/* Write a 8 bit register to ks8851 chip  */
-static void     ks_reg8_write(ushort reg, ushort val)
-{
-    ushort  txb[2];
-    ushort  bit;
-
-    bit = 1 << (reg & 3);
-
-    txb[0] = MK_OP(bit, reg) | KS_SPIOP_WR;
-    txb[1] = val;
-
-    spi_txrx((char *)txb, 3, 0, 0, SPI_START | SPI_STOP);
-}
-
-/* Write a 16 bit register to ks8851 chip */
-static void     ks_reg16_write(ushort reg, ushort val)
-{
-    ushort txb[2];
-
-    txb[0] = MK_OP(reg & 2 ? 0xC : 0x03, reg) | KS_SPIOP_WR;
-    txb[1] = val;
-
-    spi_txrx((char *)txb, 4, 0, 0, SPI_START | SPI_STOP);
-}
-
-/* Issue read register command and return the data */
-static void     ks_reg_read(ushort op, uchar *rxb, ushort len)
-{
-    ushort txb = op | KS_SPIOP_RD;
-
-    spi_txrx((char *)&txb, 2, 0, 0, SPI_START);
-    spi_txrx(0, 0, (char *)rxb, len, SPI_STOP);
-}
-
-/* Read 8 bit register from device  */
-static ushort   ks_reg8_read(ushort reg)
-{
-    ushort rxb = 0;
-
-    ks_reg_read(MK_OP(1 << (reg & 3), reg), (uchar *)&rxb, 1);
-
-    return rxb;
-}
-
-/* Read 16 bit register from device  */
-static ushort   ks_reg16_read(ushort reg)
-{
-    ushort rxb = 0;
-
-    ks_reg_read(MK_OP(reg & 2 ? 0xC : 0x3, reg), (uchar *)&rxb, 2);
-
-    return rxb;
-}
-
-/* Read 32 bit register from device */
-static uint     ks_reg32_read(ushort reg)
-{
-    uint rxb = 0;
-
-    ks_reg_read(MK_OP(0x0f, reg), (uchar *)&rxb, 4);
-
-    return rxb;
-}
-
-/* set power mode of the device */
-static void ks_powermode_set(ushort pwrmode)
-{
-    ushort pmecr;
-
-    pmecr = ks_reg16_read(KS_PMECR);
-    pmecr &= ~PMECR_PM_MASK;
-    pmecr |= pwrmode;
-
-    ks_reg16_write(KS_PMECR, pmecr);
-}
-
-/* read data from the receive fifo */
-static void ks_fifo_read(uchar *buff, ushort len)
-{
-    uchar txb = KS_SPIOP_RXFIFO;
-
-    spi_txrx((char *)&txb, 1, 0, 0, SPI_START);
-    spi_txrx(0, 0, (char *)buff, len, SPI_STOP);
-}
-
-void ks_mac_default_set(void)
-{
-    int i;
-    char ethaddr[64];
-
-    for(i = 0; i < ETH_ALEN; i++)
-        ks_reg8_write(KS_MAR(i), def_mac_addr[i]);
-
-    sprintf(ethaddr, "%02X:%02X:%02X:%02X:%02X:%02X",
-        def_mac_addr[0], def_mac_addr[1],
-        def_mac_addr[2], def_mac_addr[3],
-        def_mac_addr[4], def_mac_addr[5]);
-
-    print_net(" - set default HW MAC addr (%s)", ethaddr);
-
-    return;
-}
 
 

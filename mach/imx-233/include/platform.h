@@ -72,76 +72,14 @@
 #define FINGERPRINT             0x00                /* fingerprint offset */
 
 
-/*******************************************************************************/
-/*                                              64MB SDRAM INTERNAL MAPPING                                        */
-/*******************************************************************************/
-
-/* MAP: 0 - base of system RAM*/
-#define SYS_RAM_BASE            (SDRAM_BASE)                            /* 0x40000000 */
-#define SYS_RAM_SIZE            (SDRAM_SIZE)                            /* 0x04000000 */
-
-#define SYS_RAM_LINUX_BOOT_PARAM_ADDR   (SDRAM_BASE + 0x100)            /* 0x40000100 */
-
-
-
-
-/* MAP: 32 KB - offset for kernel image loading */
-#define SYS_RAM_LOAD_ADDR       (SDRAM_BASE + 0x8000)                   /* 0x40008000 */
-#define SYS_RAM_LOAD_SIZE       (0x7F8000)                              /* 8MB - 32KB */
-#define SYS_RAM_LOAD_END        (SYS_RAM_LOAD_ADDR+SYS_RAM_LOAD_SIZE)   /* 0x40808000 */               
-
-//GAP: 0x40808000...0x41FFFFFF: ~25MB
-
-/* MAP: 32 MB - offset for devices queues */
-#define SYS_RAM_ETH_ADDR        (SDRAM_BASE + 0x2000000)                /* 0x42000000 */
-#define SYS_RAM_ETH_SIZE        (0x10000)                               /* 64KB */
-#define SYS_RAM_ETH_END         (SDRAM_BASE + SYS_RAM_ETH_SIZE)         /* 0x42010000 */
-
-//GAP: 0x42010000...0x43FFFFFF: ~33MB
-
-#define SYS_RAM_END             (SDRAM_BASE + SDRAM_SIZE)               /* 0x44000000 */
-
-
-
-/*
- * Most of 378x SoC registers are associated with four addresses
- * used for different operations - read/write, set, clear and toggle bits.
- *
- * Some of registers do not implement such feature and, thus, should be
- * accessed/manipulated via single address in common way.
- */
-#define REG_RD(x)       (*(volatile unsigned int *)(x))
-#define REG_WR(x, v)    ((*(volatile unsigned int *)(x)) = (v))
-#define REG_SET(x, v)   ((*(volatile unsigned int *)((x) + 0x04)) = (v))
-#define REG_CLR(x, v)   ((*(volatile unsigned int *)((x) + 0x08)) = (v))
-#define REG_TOG(x, v)   ((*(volatile unsigned int *)((x) + 0x0c)) = (v))
-
-
 /*====================*/
 /* SPI Driver info */
 /*====================*/
 #define CONFIG_SSP_CLK      48000000
 #define CONFIG_SPI_CLK      3000000
-#define CONFIG_SPI_SSP1
+//#define CONFIG_SPI_SSP1
 
 #define CPU_CLK_DEVIDER (18) //480MHz
-
-/*====================*/
-/* ETH configuration                    */
-/*====================*/
-#define CONFIG_BOOTFILE         "zlinux"	                    /* Boot file name */
-#define CONFIG_BOOTFILE_SIZE    128
-#define CONFIG_SYS_PROMPT       "x-boot> "
-#define CONFIG_NETMASK          255.255.255.0
-#define CONFIG_IPADDR           192.168.0.200                   /* 10.1.184.112 192.168.0.136 */
-#define CONFIG_SERVERIP         192.168.0.105                   /* 10.1.184.188 192.168.0.2 */
-#define CONFIG_BOOTDELAY        3                               /* sec */
-
-/*====================*/
-/* UART configuration                */
-/*====================*/
-#define CONFIG_SYS_CBSIZE   1024                                        /* Console I/O Buffer Size  */
-#define CONFIG_SYS_PBSIZE   (CONFIG_SYS_CBSIZE+sizeof(CONFIG_SYS_PROMPT)+16)
 
 
 #endif /* __PLATFORM_H__ */

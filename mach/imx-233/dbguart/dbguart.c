@@ -1,5 +1,5 @@
 /**
- * Top layer ethernel driver header file
+ * HW Debug UART Driver file
  *
  * Copyright (c) 2013 X-boot GITHUB team
   *
@@ -18,13 +18,38 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
- #ifndef __DRV_ETH_H__
- #define __DRV_ETH_H__
+ //#include <stdio.h>
+//#include <stdarg.h>
+//#include "types.h"
+//#include "error.h"
 
-int drv_eth_init(void * ptr);
-void drv_eth_halt(void);
-int drv_eth_rx(void);
-int drv_eth_tx(volatile void *packet, int length);
+#include "registers/regsuartdbg.h"
+#include "dbguart.h"
+
+void drv_print_putc(char ch)
+{
+    int loop = 0;
+    while (HW_UARTDBGFR_RD()&BM_UARTDBGFR_TXFF) {
+        loop++;
+        if (loop > 10000)
+            break;
+    };
+
+    /* if(!(HW_UARTDBGFR_RD() &BM_UARTDBGFR_TXFF)) */
+    HW_UARTDBGDR_WR(ch);
+    
+    if (ch == '\n')
+        drv_print_putc('\r');
+    
+    return;
+}
+
+void drv_print_puts(const char *s)
+{
+    while (*s) {
+        drv_print_putc(*s++);
+    }
+}
 
 
-#endif /* __DRV_ETH_H__ */
+

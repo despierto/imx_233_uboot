@@ -1,5 +1,5 @@
 /**
- * Top layer ethernel driver header file
+ * HW Print Driver header file
  *
  * Copyright (c) 2013 X-boot GITHUB team
   *
@@ -18,13 +18,13 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
- #ifndef __DRV_ETH_H__
- #define __DRV_ETH_H__
-
-int drv_eth_init(void * ptr);
-void drv_eth_halt(void);
-int drv_eth_rx(void);
-int drv_eth_tx(volatile void *packet, int length);
+#ifndef _DRV_PRINT_H_
+#define _DRV_PRINT_H_
 
 
-#endif /* __DRV_ETH_H__ */
+
+void drv_print_putc(char ch);
+void drv_print_puts(const char *s);
+
+
+#endif /*_DRV_PRINT_H_*/

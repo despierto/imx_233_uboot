@@ -18,33 +18,4 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "registers/regsuartdbg.h"
-#include "drv_print.h"
-
-void drv_print_putc(const char ch)
-{
-    int loop = 0;
-    while (HW_UARTDBGFR_RD()&BM_UARTDBGFR_TXFF) {
-        loop++;
-        if (loop > 10000)
-            break;
-    };
-
-    /* if(!(HW_UARTDBGFR_RD() &BM_UARTDBGFR_TXFF)) */
-    HW_UARTDBGDR_WR(ch);
-    
-    if (ch == '\n')
-        drv_print_putc('\r');
-    
-    return;
-}
-
-void drv_print_puts(const char *s)
-{
-    while (*s) {
-        drv_print_putc(*s++);
-    }
-}
-
-
 

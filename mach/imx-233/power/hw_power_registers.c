@@ -16,7 +16,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include "types.h"
 #include "error.h"
-#include "drv_print.h"
+#include "sys_utils.h"
 
 #include "hw_power.h"
 #include "hw_digctl.h"

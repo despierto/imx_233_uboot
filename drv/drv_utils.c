@@ -18,9 +18,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-//#include <stdio.h>
+#include <stdio.h>
 #include "drv_utils.h"
-#include "drv_print.h"
 #include "registers/regsdigctl.h"
 
 void drv_delay(unsigned int us)

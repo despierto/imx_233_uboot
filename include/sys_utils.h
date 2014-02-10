@@ -22,6 +22,8 @@
 #ifndef __SYS_UTILS_H__
 #define __SYS_UTILS_H__
 
+
+
 /************************************************
  *              DEFINITIONS                                                *
  ************************************************/
@@ -55,15 +57,11 @@
 /* sys_utils.h */
 void    memset(void * s, unsigned int c, unsigned int count);
 void    copy_filename(char *dst, char *src, int size);
-int     strnlen(const char *s, unsigned int len);
 void    sys_print_assert(const char* filename, const char* funcname, const int nrow);
 void    sys_print_error(const char* filename, const char* funcname, const int nrow);
 
 
 
-/* sys_vfprintf.h */
-int     sprintf(char * buf, const char *fmt, ...);
-int     sscanf(const char * buf, const char * fmt, ...);
 
 
 
@@ -88,10 +86,12 @@ int     sscanf(const char * buf, const char * fmt, ...);
 #define PRINTF_PIN_OK
 
 
-void sys_printf(const char *fmt, ...);
+//void sys_printf(const char *fmt, ...);
+
+void drv_print_printf(const char *fmt, ...);
 
 #undef  printf
-#define printf  sys_printf
+#define printf  drv_print_printf
 
 
 /********************************************************************************

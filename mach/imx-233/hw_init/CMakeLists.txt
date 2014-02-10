@@ -11,6 +11,8 @@ target_link_libraries(hw_init icall)
 target_link_libraries(hw_init digctl)
 target_link_libraries(hw_init sysutils)
 target_link_libraries(hw_init drv)
+target_link_libraries(hw_init dbguart)
+
 
 target_link_libraries(hw_init ${TARGET_LIBC} ${TARGET_LIBGCC}) # order does matter
 set_target_properties(hw_init PROPERTIES LINK_FLAGS "-Map ${BOOT_PRJ_NAME}.map -T ${CMAKE_SOURCE_DIR}/mach/${TARGET_MACH}/boot/${BOOT_PRJ_NAME}_link.lds")

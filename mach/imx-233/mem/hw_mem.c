@@ -27,7 +27,6 @@
 #include "registers/regspinctrl.h"
 #include "registers/regsdigctl.h"
 #include "registers/regsocotp.h"
-#include "drv_print.h"
 #include "drv_utils.h"
 #include "platform.h"
 #include "sys_utils.h"
