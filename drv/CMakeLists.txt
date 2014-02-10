@@ -7,5 +7,6 @@ add_library(drv STATIC 	drv_utils.c
 
 install(TARGETS drv DESTINATION lib)
 
+add_subdirectory(spi)
 add_subdirectory(net)
 
