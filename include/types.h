@@ -18,7 +18,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "ctypes.h"
-#include "assert.h"
 
 
 /************************************************

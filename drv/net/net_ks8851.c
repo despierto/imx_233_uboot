@@ -124,11 +124,6 @@ RESULTCODE  net_ks8851_init(PTR ptr)
 
     print_net("--> %s -> %s : %d", __FILE__, __FUNCTION__, __LINE__);
 
-
-    //ks_mac_default_set();
-    //net_ks8851_mac_set("AA:BB:CC:DD:EE:FF");
-
-#if 0
     ks_reg16_write(KS_GRR, GRR_GSR);                                /* issue a global soft reset to reset the device. */
     sleep_us(500);                                                  /* wait a short time to effect reset */
     ks_reg16_write(KS_GRR, 0);
@@ -141,20 +136,20 @@ RESULTCODE  net_ks8851_init(PTR ptr)
     }
     print_net("ks8851 chip ID=0x%x", chip_id);
 
-    ks = malloc(sizeof(ks8851_inf));
-    if(!ks) {
-        print_err("cannot allocate space (%d) bytes", sizeof(ks8851_inf));
-        return KS_ERR;
-    }
-
-    ks->fid = 0;
+//    ks = malloc(sizeof(NET_KS8851_INF));
+//    if(!ks) {
+//        print_err("cannot allocate space (%d) bytes", sizeof(NET_KS8851_INF));
+//        return KS_ERR;
+//    }
+//
+//    ks->fid = 0;
 
     ks_mac_default_set();
-    ks_config();
-
+    //net_ks8851_mac_set("AA:BB:CC:DD:EE:FF");
+    
     ks_reg16_write(KS_ISR, 0xffff);
     ks_reg16_write(KS_IER, IRQ_RXI);
-#endif
+
     return ret;
 }
 
@@ -197,16 +192,22 @@ void net_ks8851_mac_set(const char *ethaddr)
     uchar mac[6];
     char testmac[64];  
 
-//    sscanf(ethaddr, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", 
-//        &mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5]);
+    //sscanf(ethaddr, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", 
+    //    &mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5]);
 
-    //for(i = 0; i < ETH_ALEN; i++)
-    //    ks_reg8_write(KS_MAR(i), mac[i]);
+    //TODO: verification mac ranges
 
-//    sprintf(testmac, "%02X:%02X:%02X:%02X:%02X:%02X",
-//        mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    sprintf(testmac, "%02X:%02X:%02X:%02X:%02X:%02X",
+        mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
-    print_net("Set HW MAC addr (%s)", testmac);
+     if(strcmp(ethaddr, testmac)) {
+        for(i = 0; i < ETH_ALEN; i++)
+            ks_reg8_write(KS_MAR(i), mac[i]);
+
+        print_net("Set HW MAC addr (%s)", testmac);
+    } else {
+        print_err("Incomming MAC (%s) is wrong. Resulting MAC is (%s)", ethaddr, testmac);
+    }
 
     return;
 }
@@ -308,10 +309,10 @@ void ks_mac_default_set(void)
     for(i = 0; i < ETH_ALEN; i++)
         ks_reg8_write(KS_MAR(i), def_mac_addr[i]);
 
-//    sprintf(ethaddr, "%02X:%02X:%02X:%02X:%02X:%02X",
-//        def_mac_addr[0], def_mac_addr[1],
-//        def_mac_addr[2], def_mac_addr[3],
-//        def_mac_addr[4], def_mac_addr[5]);
+    sprintf(ethaddr, "%02X:%02X:%02X:%02X:%02X:%02X",
+        def_mac_addr[0], def_mac_addr[1],
+        def_mac_addr[2], def_mac_addr[3],
+        def_mac_addr[4], def_mac_addr[5]);
 
     print_net(" - set default HW MAC addr (%s)", ethaddr);
 

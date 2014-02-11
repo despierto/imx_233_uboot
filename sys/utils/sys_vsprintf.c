@@ -28,9 +28,6 @@
 #include "dbguart.h"
 #include "platform.h"
 
-#include "registers/regsuartdbg.h"
-#include "sys_utils.h"
-#include "dbguart.h"
 
 /************************************************
  *              DEFINITIONS                                                *
@@ -142,6 +139,7 @@ int sscanf(const char * buf, const char * fmt, ...)
     return i;
 }
 
+#if 0 //light printf
 void drv_print_printhex(int data)
 {
     int i = 0;
@@ -220,6 +218,7 @@ void drv_print_printf(const char *fmt, ...)
     
     return;
 }
+#endif
 
 /************************************************
   *              LOCAL  FUNCTIONS                                      *

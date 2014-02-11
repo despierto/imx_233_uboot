@@ -75,6 +75,42 @@ int strnlen(const char *s, unsigned int len)
     return (n);
 }
 
+/**
+ * strcmp - Compare two strings
+ * @cs: One string
+ * @ct: Another string
+ */
+int strcmp(const char * cs,const char * ct)
+{
+    register signed char __res;
+
+    while (1) {
+        if ((__res = *cs - *ct++) != 0 || !*cs++)
+            break;
+    }
+
+    return __res;
+}
+
+/**
+ * strncmp - Compare two length-limited strings
+ * @cs: One string
+ * @ct: Another string
+ * @count: The maximum number of bytes to compare
+ */
+int strncmp(const char * cs,const char * ct,size_t count)
+{
+    register signed char __res = 0;
+
+    while (count) {
+        if ((__res = *cs - *ct++) != 0 || !*cs++)
+            break;
+        count--;
+    }
+
+    return __res;
+}
+
 void sys_print_assert(const char* filename, const char* funcname, const int nrow)
 {
     printf("\r\n  ---- ASSERT ----\r\n\r\n");

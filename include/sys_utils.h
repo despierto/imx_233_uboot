@@ -22,6 +22,8 @@
 #ifndef __SYS_UTILS_H__
 #define __SYS_UTILS_H__
 
+#include "types.h"
+
 /************************************************
  *              DEFINITIONS                                                *
  ************************************************/
@@ -58,7 +60,8 @@ void    copy_filename(char *dst, char *src, int size);
 int     strnlen(const char *s, unsigned int len);
 void    sys_print_assert(const char* filename, const char* funcname, const int nrow);
 void    sys_print_error(const char* filename, const char* funcname, const int nrow);
-
+int     strcmp(const char * cs,const char * ct);
+int     strncmp(const char * cs,const char * ct, size_t count);
 
 
 /* sys_vfprintf.h */
@@ -87,12 +90,15 @@ int     sscanf(const char * buf, const char * fmt, ...);
 #define PRINTF_SPI_OK
 #define PRINTF_PIN_OK
 
-
-void drv_print_printf(const char *fmt, ...);
-
 #undef  printf
-#define printf  drv_print_printf
 
+#if 0 //light printf
+void drv_print_printf(const char *fmt, ...);
+#define printf  drv_print_printf
+#else
+void sys_printf(const char *fmt, ...);
+#define printf  sys_printf
+#endif
 
 /********************************************************************************
  *          Hardware Initialization type of printing                                                                        *
@@ -163,7 +169,21 @@ void drv_print_printf(const char *fmt, ...);
 #endif  /* PRINTF_INF_OK */
 
 
+#ifdef CODEPROTENA
+#if defined (__linux__)
+    #define     SystemHalt sys_print_assert
+#elif defined (__THUMB)
+    #define     SystemHalt(fl, fn, ln) __asm(" .half 0xdead")
+#else
+    #define     SystemHalt(fl, fn, ln) __asm(" .word 0xdeadc0de")
+#endif
 
+#define assert(x) if (!(x)) {SystemHalt(__FILE__, __FUNCTION__, __LINE__); while(1);}
+
+#else /*CODEPROTENA*/
+#define assert(x)
+
+#endif /*CODEPROTENA*/
 
 
 #endif /*__SYS_UTILS_H__*/
