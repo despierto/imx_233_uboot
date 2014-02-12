@@ -97,7 +97,7 @@ typedef struct _NET_KS8851_INF_ {
 //uchar def_mac_addr[] = {0x00, 0x10, 0xA1, 0x86, 0x95, 0x11};
 uchar def_mac_addr[] = {0x00, 0x1F, 0xF2, 0x00, 0x00, 0x00};
 
-static NET_KS8851_INF  *ks;
+static PNET_KS8851_INF ks = (PNET_KS8851_INF)SYS_RAM_NET_CTX_ADDR;
 
 static void     ks_reg8_write(ushort reg, ushort val);
 static void     ks_reg16_write(ushort reg, ushort val);
@@ -109,7 +109,7 @@ static void     ks_powermode_set(ushort pwrmode);
 static void     ks_fifo_read(uchar *buff, ushort len);
 void            ks_mac_set(void);
 void            ks_mac_default_set(void);
-
+static void     ks_config(void);
 
 /************************************************
   *              GLOBAL FUNCTIONS                                      *
@@ -122,8 +122,9 @@ RESULTCODE  net_ks8851_init(PTR ptr)
     RESULTCODE  ret = 0;
     U16         chip_id;
 
-    print_net("--> %s -> %s : %d", __FILE__, __FUNCTION__, __LINE__);
+    print_net("%s", "Network device initialization started");
 
+    print_net("%s", " - Reset device");
     ks_reg16_write(KS_GRR, GRR_GSR);                                /* issue a global soft reset to reset the device. */
     sleep_us(500);                                                  /* wait a short time to effect reset */
     ks_reg16_write(KS_GRR, 0);
@@ -131,25 +132,29 @@ RESULTCODE  net_ks8851_init(PTR ptr)
     
     chip_id = ks_reg16_read(KS_CIDER);                              /* simple check for a valid chip being connected to the bus */
     if((chip_id & ~CIDER_REV_MASK) != CIDER_ID) {
-        print_err("the ks8851 chip ID is wrong, ID=0x%x", chip_id);
+        print_err("The ks8851 chip ID is wrong, ID=0x%x", chip_id);
         return KS_ERR;
     }
-    print_net("ks8851 chip ID=0x%x", chip_id);
+    print_net(" - ks8851 chip ID=0x%x", chip_id);
 
-//    ks = malloc(sizeof(NET_KS8851_INF));
-//    if(!ks) {
-//        print_err("cannot allocate space (%d) bytes", sizeof(NET_KS8851_INF));
-//        return KS_ERR;
-//    }
-//
-//    ks->fid = 0;
+    if (sizeof(NET_KS8851_INF) > SYS_RAM_NET_CTX_SIZE) {
+        print_err("Size of NET_KS8851_INF CTX (%d) is out of ranges in (%d) bytes", sizeof(NET_KS8851_INF), SYS_RAM_NET_CTX_SIZE);
+        return KS_ERR;
+    }
+    print_net(" - Allocation of NET_KS8851_INF CTX at (0x%x), size (%d)", (unsigned int)ks, sizeof(NET_KS8851_INF));
+        
+    ks->fid = 0;
 
     ks_mac_default_set();
     //net_ks8851_mac_set("AA:BB:CC:DD:EE:FF");
+
+    ks_config();
+
     
     ks_reg16_write(KS_ISR, 0xffff);
     ks_reg16_write(KS_IER, IRQ_RXI);
-
+    print_net("%s", " - Enabled device ISR"); 
+           
     return ret;
 }
 
@@ -192,15 +197,21 @@ void net_ks8851_mac_set(const char *ethaddr)
     uchar mac[6];
     char testmac[64];  
 
-    //sscanf(ethaddr, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", 
-    //    &mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5]);
+    print_net("%s", "------>  WARNING: here is bug in sscanf <-----");
+    print_net("---> in HW MAC addr (%s)", ethaddr);
+
+    //sys_sscanf(ethaddr, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", 
+    sys_sscanf(ethaddr, "%02X:%02X:%02X:%02X:%02X:%02X", 
+        &mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5]);
 
     //TODO: verification mac ranges
+
+    print_net("---> split: %02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
     sprintf(testmac, "%02X:%02X:%02X:%02X:%02X:%02X",
         mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
-     if(strcmp(ethaddr, testmac)) {
+    if(strcmp(ethaddr, testmac)) {
         for(i = 0; i < ETH_ALEN; i++)
             ks_reg8_write(KS_MAR(i), mac[i]);
 
@@ -301,6 +312,7 @@ static void ks_fifo_read(uchar *buff, ushort len)
     spi_txrx(0, 0, (char *)buff, len, SPI_STOP);
 }
 
+/* Set default HW MAC address*/
 void ks_mac_default_set(void)
 {
     int i;
@@ -314,9 +326,55 @@ void ks_mac_default_set(void)
         def_mac_addr[2], def_mac_addr[3],
         def_mac_addr[4], def_mac_addr[5]);
 
-    print_net(" - set default HW MAC addr (%s)", ethaddr);
-
+    print_net(" - Set default HW MAC addr to (%s)", ethaddr);
+    
     return;
 }
+
+/* configure network device */
+static void ks_config(void)
+{
+    print_net("%s", " - Bring up power");
+    /* bring chip out of any power saving mode it was in */
+    ks_powermode_set(PMECR_PM_NORMAL);
+
+    /* auto-increment tx data, reset tx pointer */
+    ks_reg16_write(KS_TXFDPR, TXFDPR_TXFPAI);
+
+    /* Enable QMU TxQ Auto-Enqueue frame */
+    ks_reg16_write(KS_TXQCR, TXQCR_AETFE);
+
+    print_net("%s", " - Setup transmission parameters");
+    /* setup transmission parameters */
+    ks_reg16_write(KS_TXCR, (TXCR_TXE |     /* enable transmit process */
+                            TXCR_TCGIP |
+                            TXCR_TCGTCP |
+                            TXCR_TCGICMP |
+                            TXCR_TXPE |     /* pad to min length */
+                            TXCR_TXCRC |    /* add CRC */
+                            TXCR_TXFCE));   /* enable flow control */
+
+    print_net("%s", " - Setup reception parameters");
+    /* Setup Receive Frame Threshold - 1 frame */
+    ks_reg16_write(KS_RXFCTR, 1 << RXFCTR_RXFCT_SHIFT);
+
+    /* setup receiver control */
+    ks_reg16_write(KS_RXCR1, (RXCR1_RXPAFMA |   /* mac filter */
+                            RXCR1_RXUDPFCC |
+                            RXCR1_RXTCPFCC |
+                            RXCR1_RXIPFCC |
+                            RXCR1_RXME |
+                            RXCR1_RXAE |
+                            RXCR1_RXFCE |       /* enable flow control */
+                            RXCR1_RXUE |        /* unicast enable */
+                            RXCR1_RXE));        /* enable rx block */
+                          /*  RXCR1_RXBE |         broadcast enable */
+
+    /* transfer entire frames out in one go */
+    ks_reg16_write(KS_RXCR2, RXCR2_SRDBL_FRAME);
+
+    return;    
+}
+
 
 

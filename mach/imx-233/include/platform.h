@@ -94,7 +94,9 @@
 
 /* MAP: 32 MB - offset for devices queues */
 #define SYS_RAM_ETH_ADDR        (SDRAM_BASE + 0x2000000)                /* 0x42000000 */
-#define SYS_RAM_ETH_SIZE        (0x10000)                               /* 64KB */
+#define SYS_RAM_ETH_SIZE        (0x10000 - 0x1000)                      /* 60KB*/
+#define SYS_RAM_NET_CTX_ADDR    (SDRAM_BASE + 0x2000000)                /* 0x4200F000 */
+#define SYS_RAM_NET_CTX_SIZE    (0x1000)                                /* 4KB for NET CTX*/
 #define SYS_RAM_ETH_END         (SDRAM_BASE + SYS_RAM_ETH_SIZE)         /* 0x42010000 */
 
 //GAP: 0x42010000...0x43FFFFFF: ~33MB

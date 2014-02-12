@@ -128,12 +128,12 @@ void sys_printf(const char *fmt, ...)
     drv_print_puts(printbuffer);
 }
 
-int sscanf(const char * buf, const char * fmt, ...)
+int sys_sscanf(const char * buf, const char * fmt, ...)
 {
     va_list args;
-    int i;
+    int i = 0;
 
-    va_start(args,fmt);
+    va_start(args, fmt);
     i = vsscanf(buf,fmt,args);
     va_end(args);
     return i;

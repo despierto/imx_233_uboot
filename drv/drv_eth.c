@@ -110,6 +110,9 @@ int drv_eth_init(void)
         pEth->Status = 1;
     }
 
+    //delay for printing out the print buffer
+    sleep_ms(100);
+        
     return ret;
 }
 

@@ -66,7 +66,7 @@ int     strncmp(const char * cs,const char * ct, size_t count);
 
 /* sys_vfprintf.h */
 int     sprintf(char * buf, const char *fmt, ...);
-int     sscanf(const char * buf, const char * fmt, ...);
+int     sys_sscanf(const char * buf, const char * fmt, ...);
 
 
 
