@@ -1,7 +1,7 @@
 /**
  * X-Boot Operation System Entry
  *
- * Copyright (c) 2013 X-boot GITHUB team
+ * Copyright (c) 2014 X-boot GITHUB team
   *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,6 +45,9 @@ void  _start(void)
     print_inf("Version: %d.%d\r\n\r\n", XBOOT_VERSION_R, XBOOT_VERSION_RC);
 
     initialization();
+
+    //do a test ping
+    net_ping_req(10000UL, pEth->cfg_ip_server);
 
     print_log("%s", "Entry to the main loop...");
     while(1)

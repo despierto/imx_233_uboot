@@ -111,6 +111,18 @@ int strncmp(const char * cs,const char * ct,size_t count)
     return __res;
 }
 
+void *memcpy(void *s1, const void *s2, int n)
+{
+    char *dst = s1;
+    const char *src = s2;
+
+    while (n-- > 0)
+        *dst++ = *src++;
+
+    return s1;
+}
+
+
 void sys_print_assert(const char* filename, const char* funcname, const int nrow)
 {
     printf("\r\n  ---- ASSERT ----\r\n\r\n");

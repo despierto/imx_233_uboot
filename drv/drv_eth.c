@@ -22,6 +22,10 @@
 #include "net_ks8851.h"
 #include "drv_eth.h"
 
+
+/************************************************
+ *              DEFINITIONS                                                *
+ ************************************************/
 //definitions
 #define PKTSIZE                 1518
 #define PKTSIZE_ALIGN           1536
@@ -52,12 +56,26 @@ typedef struct _ETH_CTX_ {
     unsigned int    NetArpWaitTimerStart;
     unsigned int    NetArpWaitTry;
 
+    uchar           cfg_mac_addr[6];
+    IPaddr_t        cfg_ip_addr;
+    IPaddr_t        cfg_ip_netmask;
+    IPaddr_t        cfg_ip_gateway;    
+    IPaddr_t        cfg_ip_server;
+    IPaddr_t        cfg_ip_dns;
+    IPaddr_t        cfg_ip_vlan;
+    
+    
 }ETH_CTX, *PETH_CTX;
 
 //#define SYS_RAM_ETH_ADDR          /* 0x42000000 */
 //#define SYS_RAM_ETH_SIZE          /* 0x10000      */
 PETH_CTX        pEth = (PETH_CTX)SYS_RAM_ETH_ADDR;
 
+
+
+/************************************************
+ *              GLOBAL FUNCTIONS                                      *
+ ************************************************/
 int drv_eth_init(void)
 {
     int ret = 0;
@@ -112,6 +130,14 @@ int drv_eth_init(void)
 
     //delay for printing out the print buffer
     sleep_ms(100);
+
+    drv_eth_parse_enetaddr(CONFIG_HW_MAC_ADDR, &pEth->cfg_mac_addr[0]); // "ethaddr"
+    pEth->cfg_ip_addr       = drv_string_to_ip(CONFIG_IPADDR);          // "ipaddr"
+    pEth->cfg_ip_netmask    = drv_string_to_ip(CONFIG_NETMASK);         // "netmask"
+    pEth->cfg_ip_gateway    = drv_string_to_ip(CONFIG_GATEWAYIP);       // "gatewayip"
+    pEth->cfg_ip_server     = drv_string_to_ip(CONFIG_SERVERIP);        // "serverip"
+    pEth->cfg_ip_dns        = drv_string_to_ip(CONFIG_DNSIP);           // "dnsip"
+    pEth->cfg_ip_vlan       = drv_string_to_ip(CONFIG_VLANIP);          // "vlanip"
         
     return ret;
 }
@@ -138,4 +164,46 @@ int drv_eth_tx(volatile void *packet, int length)
     net_tx(packet, length);
     return 0;
 }
+
+void drv_eth_parse_enetaddr(const char *addr, uchar *enetaddr)
+{
+    char *end;
+    int i;
+
+    print_eth("--> %s -> %s : %d", __FILE__, __FUNCTION__, __LINE__);
+    
+    for (i = 0; i < 6; ++i) {
+        enetaddr[i] = addr ? simple_strtoul(addr, &end, 16) : 0;
+        if (addr)
+            addr = (*end) ? end + 1 : end;
+    }
+}
+
+IPaddr_t drv_string_to_ip(char *s)
+{
+    IPaddr_t addr;
+    char *e;
+    int i;
+
+    if (s == NULL)
+        return(0);
+
+    for (addr=0, i=0; i<4; ++i) {
+        ulong val = s ? simple_strtoul(s, &e, 10) : 0;
+        addr <<= 8;
+        addr |= (val & 0xFF);
+        if (s) {
+            s = (*e) ? e+1 : e;
+        }
+    }
+
+    return (htonl(addr));
+}
+
+
+
+/************************************************
+ *              LOCAL FUNCTIONS                                        *
+ ************************************************/
+
 

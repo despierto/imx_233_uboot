@@ -135,9 +135,13 @@
 #define CONFIG_BOOTFILE_SIZE    128
 #define CONFIG_SYS_PROMPT       "x-boot> "
 #define CONFIG_NETMASK          255.255.255.0
-#define CONFIG_IPADDR           192.168.0.200                   /* 10.1.184.112 192.168.0.136 */
-#define CONFIG_SERVERIP         192.168.0.105                   /* 10.1.184.188 192.168.0.2 */
+#define CONFIG_IPADDR           192.168.10.200                   /* 10.1.184.112 192.168.0.136 */
+#define CONFIG_SERVERIP         192.168.10.105                   /* 10.1.184.188 192.168.0.2 */
+#define CONFIG_GATEWAYIP        192.168.10.1
+#define CONFIG_DNSIP            1.1.1.1
+#define CONFIG_VLANIP           2.2.2.2
 #define CONFIG_BOOTDELAY        3                               /* sec */
+#define CONFIG_HW_MAC_ADDR      "AA:BB:CC:DD:EE:FF"             /* default HW MAC address */
 
 /*====================*/
 /* UART configuration                */
