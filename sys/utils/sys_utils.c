@@ -144,6 +144,25 @@ void sys_print_error(const char* filename, const char* funcname, const int nrow)
     return;
 }
 
+int sys_checksum_ok(uchar * ptr, int len)
+{
+    return !((sys_checksum(ptr, len) + 1) & 0xfffe);
+}
+
+uint sys_checksum(uchar * ptr, int len)
+{
+    ulong   xsum;
+    ushort *p = (ushort *)ptr;
+
+    xsum = 0;
+    while (len-- > 0)
+        xsum += *p++;
+    
+    xsum = (xsum & 0xffff) + (xsum >> 16);
+    xsum = (xsum & 0xffff) + (xsum >> 16);
+    
+    return (xsum & 0xffff);
+}
 
 
 

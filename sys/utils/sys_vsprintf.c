@@ -253,8 +253,9 @@ unsigned long simple_strtoul(const char *cp,char **endp,unsigned int base)
         result = result*base + value;
         cp++;
     }
-    if (endp)
-        *endp = (char *)&cp;
+    if (endp) {
+        *endp = (char *)cp;
+    }
     
     return result;
 }

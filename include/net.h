@@ -21,7 +21,159 @@
  #ifndef __NET_H__
  #define __NET_H__
 
-void net_ping_req(void);
+#include "types.h"
+
+
+/************************************************
+ *              PROTOCOL HEADERS DEFINITIONS                *
+ ************************************************/
+
+#define VLAN_NONE       4095        /* untagged (0x1000)*/
+#define VLAN_IDMASK     0x0fff      /* mask of valid vlan id */
+
+
+/* Ethernet header  */
+typedef struct {
+    uchar       et_dest[6];         /* Destination node */
+    uchar       et_src[6];          /* Source node */
+    ushort      et_protlen;         /* Protocol or length */
+    uchar       et_dsap;            /* 802 DSAP */
+    uchar       et_ssap;            /* 802 SSAP */
+    uchar       et_ctl;             /* 802 control */
+    uchar       et_snap1;           /* SNAP */
+    uchar       et_snap2;
+    uchar       et_snap3;
+    ushort      et_prot;            /* 802 protocol */
+} Ethernet_t;
+
+#define ETHER_HDR_SIZE      14      /* Ethernet header size */
+#define E802_HDR_SIZE       22      /* 802 ethernet header size */
+
+
+/* VLAN Ethernet header */
+typedef struct {
+    uchar       vet_dest[6];        /* Destination node */
+    uchar       vet_src[6];         /* Source node */
+    ushort      vet_vlan_type;      /* PROT_VLAN */
+    ushort      vet_tag;            /* TAG of VLAN */
+    ushort      vet_type;           /* protocol type */
+} VLAN_Ethernet_t;
+
+#define VLAN_ETHER_HDR_SIZE 18      /* VLAN Ethernet header size */
+
+#define PROT_IP             0x0800  /* IP protocol */
+#define PROT_ARP            0x0806  /* IP ARP protocol */
+#define PROT_RARP           0x8035  /* IP ARP protocol */
+#define PROT_VLAN           0x8100  /* IEEE 802.1q protocol */
+
+#define IPPROTO_ICMP        1       /* Internet Control Message Protocol */
+#define IPPROTO_UDP         17      /* User Datagram Protocol */
+
+#define PROT_IPV4_VERSION   4       /* IPv4 protocol version*/
+#define PROT_IPV6_VERSION   6       /* IPv6 protocol version*/
+
+
+/* Internet Protocol v4 (IPv4) header */
+typedef struct {
+    uchar       ip_hl_v;    /* header length and version */
+    uchar       ip_tos;     /* type of service */
+    ushort      ip_len;     /* total length */
+    ushort      ip_id;      /* identification */
+    ushort      ip_off;     /* fragment offset field */
+    uchar       ip_ttl;     /* time to live */
+    uchar       ip_p;       /* protocol */
+    ushort      ip_sum;     /* checksum */
+    IPaddr_t    ip_src;     /* Source IP address */
+    IPaddr_t    ip_dst;     /* Destination IP address */
+} IP_t;
+
+/* User Data Protocol (UDP) header */
+typedef struct {
+    ushort      udp_src;    /* UDP source port */
+    ushort      udp_dst;    /* UDP destination port */
+    ushort      udp_len;    /* Length of UDP packet */
+    ushort      udp_xsum;   /* Checksum */
+} UDP_t;
+
+/* Internet Control Message Protocol (ICMP) header: echo request (ping) */
+typedef struct {
+    uchar       icmp_type;  /* ICMP type */
+    uchar       icmp_code;  /* ICMP code */
+    ushort      icmp_sum;   /* ICMP checksum */
+    ushort      icmp_id;    /* ICMP identificatoin */
+    ushort      icmp_sn;    /* ICMP sequence number */    
+} ICMP_ECHO_t;
+
+#define IP_OFFS             0x1fff  /* ip offset *= 8 */
+#define IP_FLAGS            0xe000  /* first 3 bits */
+#define IP_FLAGS_RES        0x8000  /* reserved */
+#define IP_FLAGS_DFRAG      0x4000  /* don't fragments */
+#define IP_FLAGS_MFRAG      0x2000  /* more fragments */
+
+#define IP_HDR_SIZE         (sizeof (IP_t))
+#define UDP_HDR_SIZE        (sizeof (UDP_t))
+#define ICMP_ECHO_HDR_SIZE  (sizeof (ICMP_ECHO_t))
+
+#define ICMP_TYPE_ECHO_REPLY            (0)
+#define ICMP_TYPE_DST_UNREACHABLE       (3)
+#define ICMP_TYPE_SRC_QUENCH            (4)
+#define ICMP_TYPE_REDIRECT_MSG          (5)
+#define ICMP_TYPE_ECHO_REQUEST          (8)
+#define ICMP_TYPE_ROUTER_ADVERTISEMENT  (9)
+#define ICMP_TYPE_ROUTER_SOLICITATION   (10)
+#define ICMP_TYPE_TIME_EXCEEDED         (11)
+#define ICMP_TYPE_BAD_IP_HDR            (12)
+#define ICMP_TYPE_TIMESTAMP_REQUEST     (13)
+#define ICMP_TYPE_TIMESTAMP_REPLY       (14)
+#define ICMP_TYPE_INFO_REQUEST          (15)
+#define ICMP_TYPE_INFO_REPLY            (16)
+#define ICMP_TYPE_ADDR_MASK_REQUEST     (17)
+#define ICMP_TYPE_ADDR_MASK_REPLY       (18)
+#define ICMP_TYPE_TRACEROUTE            (30)
+
+#define IP_PROT_ICMP        0x01    /* Internet Control Message Protocol,  RFC 792*/
+#define IP_PROT_UDC         0x11    /* ser Datagram Protocol,  RFC 768*/
+
+/* Address Resolution Protocol (ARP) header. */
+typedef struct {
+    ushort      ar_hrd;             /* Format of hardware address */
+#   define ARP_ETHER        1       /* Ethernet  hardware address */
+    ushort      ar_pro;             /* Format of protocol address */
+    uchar       ar_hln;             /* Length of hardware address */
+    uchar       ar_pln;             /* Length of protocol address */
+    ushort      ar_op;              /* Operation */
+#   define ARPOP_REQUEST    1       /* Request  to resolve  address */
+#   define ARPOP_REPLY      2       /* Response to previous request */
+
+#   define RARPOP_REQUEST   3       /* Request  to resolve  address */
+#   define RARPOP_REPLY     4       /* Response to previous request */
+
+    /*
+     * The remaining fields are variable in size, according to
+     * the sizes above, and are defined as appropriate for
+     * specific hardware/protocol combinations.
+     */
+    uchar       ar_data[1];
+#if 0
+    uchar       ar_sha[];           /* Sender hardware address */
+    uchar       ar_spa[];           /* Sender protocol address */
+    uchar       ar_tha[];           /* Target hardware address */
+    uchar       ar_tpa[];           /* Target protocol address */
+#endif /* 0 */
+}ARP_t;
+
+#define ARP_HDR_SIZE        (8+20)  /* Size assuming ethernet */
+
+
+
+/************************************************
+ *              FUNCTION HEADERS DEFINITIONS                 *
+ ************************************************/
+void net_ping_req(unsigned int timeout_ms, IPaddr_t ip);
+
+
+
+
 
 #endif /* __NET_H__ */
 

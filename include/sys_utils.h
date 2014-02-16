@@ -31,39 +31,26 @@
 /* we use this so that we can do without the ctype library */
 #define is_digit(c) ((c) >= '0' && (c) <= '9')
 
-#define ___swab16(x) \
-    ((__u16)( \
-        (((__u16)(x) & (__u16)0x00ffU) << 8) | \
-        (((__u16)(x) & (__u16)0xff00U) >> 8) ))
-#define ___swab32(x) \
-    ((__u32)( \
-        (((__u32)(x) & (__u32)0x000000ffUL) << 24) | \
-        (((__u32)(x) & (__u32)0x0000ff00UL) <<  8) | \
-        (((__u32)(x) & (__u32)0x00ff0000UL) >>  8) | \
-        (((__u32)(x) & (__u32)0xff000000UL) >> 24) ))
-#define ___swab64(x) \
-    ((__u64)( \
-        (__u64)(((__u64)(x) & (__u64)0x00000000000000ffULL) << 56) | \
-        (__u64)(((__u64)(x) & (__u64)0x000000000000ff00ULL) << 40) | \
-        (__u64)(((__u64)(x) & (__u64)0x0000000000ff0000ULL) << 24) | \
-        (__u64)(((__u64)(x) & (__u64)0x00000000ff000000ULL) <<  8) | \
-        (__u64)(((__u64)(x) & (__u64)0x000000ff00000000ULL) >>  8) | \
-        (__u64)(((__u64)(x) & (__u64)0x0000ff0000000000ULL) >> 24) | \
-        (__u64)(((__u64)(x) & (__u64)0x00ff000000000000ULL) >> 40) | \
-        (__u64)(((__u64)(x) & (__u64)0xff00000000000000ULL) >> 56) ))
-
-#  define __swab16(x) \
-(__builtin_constant_p((__u16)(x)) ? \
- ___swab16((x)) : \
- __fswab16((x)))
-#  define __swab32(x) \
-(__builtin_constant_p((__u32)(x)) ? \
- ___swab32((x)) : \
- __fswab32((x)))
-#  define __swab64(x) \
-(__builtin_constant_p((__u64)(x)) ? \
- ___swab64((x)) : \
- __fswab64((x)))
+#define __swab16(x) \
+    ((U16)( \
+        (((U16)(x) & (U16)0x00ffU) << 8) | \
+        (((U16)(x) & (U16)0xff00U) >> 8) ))
+#define __swab32(x) \
+    ((U32)( \
+        (((U32)(x) & (U32)0x000000ffUL) << 24) | \
+        (((U32)(x) & (U32)0x0000ff00UL) <<  8) | \
+        (((U32)(x) & (U32)0x00ff0000UL) >>  8) | \
+        (((U32)(x) & (U32)0xff000000UL) >> 24) ))
+#define __swab64(x) \
+    ((U64)( \
+        (U64)(((U64)(x) & (U64)0x00000000000000ffULL) << 56) | \
+        (U64)(((U64)(x) & (U64)0x000000000000ff00ULL) << 40) | \
+        (U64)(((U64)(x) & (U64)0x0000000000ff0000ULL) << 24) | \
+        (U64)(((U64)(x) & (U64)0x00000000ff000000ULL) <<  8) | \
+        (U64)(((U64)(x) & (U64)0x000000ff00000000ULL) >>  8) | \
+        (U64)(((U64)(x) & (U64)0x0000ff0000000000ULL) >> 24) | \
+        (U64)(((U64)(x) & (U64)0x00ff000000000000ULL) >> 40) | \
+        (U64)(((U64)(x) & (U64)0xff00000000000000ULL) >> 56) ))
 
 #if 1 /* little endian */
 #define __cpu_to_be64(x) __swab64((x))
@@ -73,12 +60,12 @@
 #define __cpu_to_be16(x) __swab16((x))
 #define __be16_to_cpu(x) __swab16((x))
 #else  /*big endian */
-#define __cpu_to_be64(x) ((__u64)(x))
-#define __be64_to_cpu(x) ((__u64)(x))
-#define __cpu_to_be32(x) ((__u32)(x))
-#define __be32_to_cpu(x) ((__u32)(x))
-#define __cpu_to_be16(x) ((__u16)(x))
-#define __be16_to_cpu(x) ((__u16)(x))
+#define __cpu_to_be64(x) ((U64)(x))
+#define __be64_to_cpu(x) ((U64)(x))
+#define __cpu_to_be32(x) ((U32)(x))
+#define __be32_to_cpu(x) ((U32)(x))
+#define __cpu_to_be16(x) ((U16)(x))
+#define __be16_to_cpu(x) ((U16)(x))
 #endif
 
 
@@ -125,8 +112,9 @@ void    *memcpy(void *s1, const void *s2, int n);
 /* sys_vfprintf.h */
 int     sprintf(char * buf, const char *fmt, ...);
 int     sys_sscanf(const char * buf, const char * fmt, ...);
-
-
+unsigned long simple_strtoul(const char *cp,char **endp,unsigned int base);
+int     sys_checksum_ok(uchar * ptr, int len);
+uint    sys_checksum(uchar * ptr, int len);
 
 
 

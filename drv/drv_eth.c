@@ -26,46 +26,6 @@
 /************************************************
  *              DEFINITIONS                                                *
  ************************************************/
-//definitions
-#define PKTSIZE                 1518
-#define PKTSIZE_ALIGN           1536
-#define PKTALIGN                32
-#define PKTBUFSRX               4                               /* Rx MAX supported by ks8851 is 12KB */
-#define PKTBUFSTX               1                               /* Tx MAX supported by ks8851 is 6KB */
-
-//declarations
-typedef struct _ETH_CTX_ {
-    //buffers are aligned to 32 bytes
-    volatile uchar  TxPktBuf[PKTBUFSTX * PKTSIZE_ALIGN];       
-    volatile uchar  RxPktBuf[PKTBUFSRX * PKTSIZE_ALIGN];       
-    volatile uchar  NetArpWaitPacketBuf[PKTSIZE_ALIGN];
-    volatile uchar *NetTxPackets[PKTBUFSTX];                        /* Transmit packets */
-    volatile uchar *NetRxPackets[PKTBUFSRX];                        /* Receive packets */
-
-    volatile uchar *NetArpWaitTxPacket;                             /* THE transmit packet */
-    unsigned int    NetArpWaitTxPacketSize;
-
-    unsigned int    Status;                                         /* disabled */
-    char            BootFile[CONFIG_BOOTFILE_SIZE];
-    unsigned int    linux_load_addr;
-
-    uchar           *NetArpWaitPacketMAC;                            /* MAC address of waiting packet's destination */
-    IPaddr_t        NetArpWaitPacketIP;
-    IPaddr_t        NetArpWaitReplyIP;
-
-    unsigned int    NetArpWaitTimerStart;
-    unsigned int    NetArpWaitTry;
-
-    uchar           cfg_mac_addr[6];
-    IPaddr_t        cfg_ip_addr;
-    IPaddr_t        cfg_ip_netmask;
-    IPaddr_t        cfg_ip_gateway;    
-    IPaddr_t        cfg_ip_server;
-    IPaddr_t        cfg_ip_dns;
-    IPaddr_t        cfg_ip_vlan;
-    
-    
-}ETH_CTX, *PETH_CTX;
 
 //#define SYS_RAM_ETH_ADDR          /* 0x42000000 */
 //#define SYS_RAM_ETH_SIZE          /* 0x10000      */
@@ -94,13 +54,13 @@ int drv_eth_init(void)
     print_eth(" - Eth CTX base (0x%x) size (%d) bytes", (unsigned int)pEth, sizeof(ETH_CTX));
     
     //setup packet buffers, aligned correctly
-    for (i = 0; i < PKTBUFSTX; i++) {
-        pEth->NetTxPackets[i] = (volatile uchar *)((unsigned int)&pEth->TxPktBuf[0] + i*PKTSIZE_ALIGN);
-        print_eth(" - Net TX packet[%d]: addr (0x%x) count (%d)", i, (unsigned int)pEth->NetTxPackets[i], PKTBUFSTX);        
+    for (i = 0; i < ETH_PKTBUFSTX; i++) {
+        pEth->NetTxPackets[i] = (volatile uchar *)((unsigned int)&pEth->TxPktBuf[0] + i*ETH_PKTSIZE_ALIGN);
+        print_eth(" - Net TX packet[%d]: addr (0x%x) count (%d)", i, (unsigned int)pEth->NetTxPackets[i], ETH_PKTBUFSTX);        
     }
-    for (i = 0; i < PKTBUFSRX; i++) {
-        pEth->NetRxPackets[i] = (volatile uchar *)((unsigned int)&pEth->RxPktBuf[0] + i*PKTSIZE_ALIGN);
-        print_eth(" - Net RX packet[%d]: addr (0x%x) count (%d)", i, (unsigned int)pEth->NetRxPackets[i], PKTBUFSRX);                
+    for (i = 0; i < ETH_PKTBUFSRX; i++) {
+        pEth->NetRxPackets[i] = (volatile uchar *)((unsigned int)&pEth->RxPktBuf[0] + i*ETH_PKTSIZE_ALIGN);
+        print_eth(" - Net RX packet[%d]: addr (0x%x) count (%d)", i, (unsigned int)pEth->NetRxPackets[i], ETH_PKTBUFSRX);                
     }
 
     pEth->NetArpWaitTxPacket = (volatile uchar *)&pEth->NetArpWaitPacketBuf[0];
@@ -138,6 +98,8 @@ int drv_eth_init(void)
     pEth->cfg_ip_server     = drv_string_to_ip(CONFIG_SERVERIP);        // "serverip"
     pEth->cfg_ip_dns        = drv_string_to_ip(CONFIG_DNSIP);           // "dnsip"
     pEth->cfg_ip_vlan       = drv_string_to_ip(CONFIG_VLANIP);          // "vlanip"
+
+
         
     return ret;
 }
@@ -169,9 +131,7 @@ void drv_eth_parse_enetaddr(const char *addr, uchar *enetaddr)
 {
     char *end;
     int i;
-
-    print_eth("--> %s -> %s : %d", __FILE__, __FUNCTION__, __LINE__);
-    
+   
     for (i = 0; i < 6; ++i) {
         enetaddr[i] = addr ? simple_strtoul(addr, &end, 16) : 0;
         if (addr)
@@ -190,6 +150,7 @@ IPaddr_t drv_string_to_ip(char *s)
 
     for (addr=0, i=0; i<4; ++i) {
         ulong val = s ? simple_strtoul(s, &e, 10) : 0;
+        
         addr <<= 8;
         addr |= (val & 0xFF);
         if (s) {
@@ -200,6 +161,26 @@ IPaddr_t drv_string_to_ip(char *s)
     return (htonl(addr));
 }
 
+char *drv_ip_to_string(IPaddr_t ip, uchar *buf)
+{
+    sprintf((char *)buf, "%03d.%03d.%03d.%03d", (ip & 0xFF), ((ip >> 8) & 0xFF), ((ip >> 16) & 0xFF), ((ip >> 24) & 0xFF));
+    return (char *)buf;
+}
+
+void drv_eth_info(void)
+{
+    uchar s[15];
+    
+    print_eth("%s", "Ethernet configuration:");
+    print_eth(" - ipaddr:       %s", drv_ip_to_string(pEth->cfg_ip_addr, &s[0]));
+    print_eth(" - netmask:      %s", drv_ip_to_string(pEth->cfg_ip_netmask, &s[0]));
+    print_eth(" - gatewayip:    %s", drv_ip_to_string(pEth->cfg_ip_gateway, &s[0]));
+    print_eth(" - serverip:     %s", drv_ip_to_string(pEth->cfg_ip_server, &s[0]));
+    print_eth(" - dnsip:        %s", drv_ip_to_string(pEth->cfg_ip_dns, &s[0]));
+    print_eth(" - vlanip:       %s", drv_ip_to_string(pEth->cfg_ip_vlan, &s[0]));
+
+    return;
+}
 
 
 /************************************************

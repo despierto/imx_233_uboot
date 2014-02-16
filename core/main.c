@@ -46,13 +46,16 @@ void  _start(void)
 
     initialization();
 
+    //viewk system configuration
+    drv_eth_info();
+    
     //do a test ping
     net_ping_req(10000UL, pEth->cfg_ip_server);
 
     print_log("%s", "Entry to the main loop...");
     while(1)
     {
-        if (system_time_msec%10000 == 0)
+        if (system_time_msec%60000 == 0)
           print_inf("[%d sec] Next cycle...\r\n", system_time_msec/1000);
 
         rt_process();

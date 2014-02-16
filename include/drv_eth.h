@@ -23,13 +23,68 @@
 
 #include "net.h"
 
+/************************************************
+ *              DEFINITIONS                                                *
+ ************************************************/
+//definitions
+#define ETH_PKTSIZE             1518
+#define ETH_PKTSIZE_ALIGN       1536
+#define ETH_PKTALIGN            32
+#define ETH_PKTBUFSRX           4                               /* Rx MAX supported by ks8851 is 12KB */
+#define ETH_PKTBUFSTX           1                               /* Tx MAX supported by ks8851 is 6KB */
+
+//declarations
+typedef struct _ETH_CTX_ {
+    //buffers are aligned to 32 bytes
+    volatile uchar  TxPktBuf[ETH_PKTBUFSTX * ETH_PKTSIZE_ALIGN];       
+    volatile uchar  RxPktBuf[ETH_PKTBUFSRX * ETH_PKTSIZE_ALIGN];       
+    volatile uchar  NetArpWaitPacketBuf[ETH_PKTSIZE_ALIGN];
+    volatile uchar *NetTxPackets[ETH_PKTBUFSTX];                        /* Transmit packets */
+    volatile uchar *NetRxPackets[ETH_PKTBUFSRX];                        /* Receive packets */
+
+    volatile uchar *NetArpWaitTxPacket;                             /* THE transmit packet */
+    unsigned int    NetArpWaitTxPacketSize;
+
+    unsigned int    Status;                                         /* disabled */
+    char            BootFile[CONFIG_BOOTFILE_SIZE];
+    unsigned int    linux_load_addr;
+
+    uchar           *NetArpWaitPacketMAC;                            /* MAC address of waiting packet's destination */
+    IPaddr_t        NetArpWaitPacketIP;
+    IPaddr_t        NetArpWaitReplyIP;
+
+    unsigned int    NetArpWaitTimerStart;
+    unsigned int    NetArpWaitTry;
+
+    ushort          NetIPID;                                        /* IP packet ID */
+    ushort          PingSeqNo;                                      /* PING request counter */
+    
+    uchar           cfg_mac_addr[6];
+    IPaddr_t        cfg_ip_addr;
+    IPaddr_t        cfg_ip_netmask;
+    IPaddr_t        cfg_ip_gateway;    
+    IPaddr_t        cfg_ip_server;
+    IPaddr_t        cfg_ip_dns;
+    IPaddr_t        cfg_ip_vlan;
+    
+
+        
+}ETH_CTX, *PETH_CTX;
+
+extern PETH_CTX        pEth;
+
+
+/************************************************
+ *              FUNCTIONS                                                  *
+ ************************************************/
+
 /**
  * is_zero_ether_addr - Determine if give Ethernet address is all zeros.
  * @addr: Pointer to a six-byte array containing the Ethernet address
  *
  * Return true if the address is all zeroes.
  */
-static inline int is_zero_ether_addr(const u8 *addr)
+static inline int is_zero_ether_addr(const uchar *addr)
 {
     return !(addr[0] | addr[1] | addr[2] | addr[3] | addr[4] | addr[5]);
 }
@@ -41,7 +96,7 @@ static inline int is_zero_ether_addr(const u8 *addr)
  * Return true if the address is a multicast address.
  * By definition the broadcast address is also a multicast address.
  */
-static inline int is_multicast_ether_addr(const u8 *addr)
+static inline int is_multicast_ether_addr(const uchar *addr)
 {
     return (0x01 & addr[0]);
 }
@@ -55,7 +110,7 @@ static inline int is_multicast_ether_addr(const u8 *addr)
  *
  * Return true if the address is valid.
  */
-static inline int is_valid_ether_addr(const u8 * addr)
+static inline int is_valid_ether_addr(const uchar * addr)
 {
     /* FF:FF:FF:FF:FF:FF is a multicast address so we don't need to
      * explicitly check for it here. */
@@ -65,7 +120,7 @@ static inline int is_valid_ether_addr(const u8 * addr)
 
 
 
-extern PETH_CTX        pEth ;
+
 
 
 int         drv_eth_init(void);
@@ -74,7 +129,8 @@ int         drv_eth_rx(void);
 int         drv_eth_tx(volatile void *packet, int length);
 void        drv_eth_parse_enetaddr(const char *addr, uchar *enetaddr);
 IPaddr_t    drv_string_to_ip(char *s);
-
+char        *drv_ip_to_string(IPaddr_t ip, uchar *buf);
+void        drv_eth_info(void);
 
 
 #endif /* __DRV_ETH_H__ */
