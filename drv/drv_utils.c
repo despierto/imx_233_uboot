@@ -20,7 +20,6 @@
 
 #include <stdio.h>
 #include "drv_utils.h"
-#include "registers/regsdigctl.h"
 
 void drv_delay(unsigned int us)
 {

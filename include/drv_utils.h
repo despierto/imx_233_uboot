@@ -22,6 +22,8 @@
 #ifndef __DRV_UTILS_H__
 #define __DRV_UTILS_H__
 
+#include "registers/regsdigctl.h"
+
 void drv_delay(unsigned int us);
 
 #undef  delay
@@ -29,6 +31,13 @@ void drv_delay(unsigned int us);
 #define sleep(s)    drv_delay(s*1000000)
 #define sleep_ms(ms)    drv_delay(ms*1000)
 #define sleep_us(us)    drv_delay(us)
+
+static inline unsigned int get_tick(void) 
+{
+    /* in usec */
+    return (unsigned int)HW_DIGCTL_MICROSECONDS_RD();
+}
+
 
 #endif /*__DRV_UTILS_H__*/
 

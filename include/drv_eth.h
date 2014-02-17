@@ -53,7 +53,7 @@ typedef struct _ETH_CTX_ {
     IPaddr_t        NetArpWaitPacketIP;
     IPaddr_t        NetArpWaitReplyIP;
 
-    unsigned int    NetArpWaitTimerStart;
+    unsigned int    NetArpWaitTimerStart;                           /* in usec */
     unsigned int    NetArpWaitTry;
 
     ushort          NetIPID;                                        /* IP packet ID */
