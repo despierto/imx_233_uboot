@@ -86,7 +86,7 @@ typedef struct _NET_KS8851_INF_ {
 
 
 #define __ALIGN_MASK(x,mask)    (((x)+(mask))&~(mask))
-#define ALIGN(x,a)              __ALIGN_MASK(x,(typeof(x))(a)-1)
+#define ALIGN(x,a)              __ALIGN_MASK(x,(__typeof__(x))(a)-1)
 
 /* shift for byte-enable data */
 #define BYTE_EN(_x) ((_x) << 2)
@@ -186,7 +186,22 @@ RESULTCODE  net_ks8851_rx(void)
 
 RESULTCODE  net_ks8851_tx(VPTR packet, U32 length)
 {
-    print_net("--> %s -> %s : %d", __FILE__, __FUNCTION__, __LINE__);
+    ushort fid = 0;
+
+    fid = ks->fid++;
+    fid &= TXFR_TXFID_MASK;
+
+    /* start header at txb[1] to align txw entries */
+    ks->txh.txb[1] = KS_SPIOP_TXFIFO;
+    ks->txh.txw[1] = fid;
+    ks->txh.txw[2] = length;
+
+    ks_reg16_write(KS_RXQCR, RXQCR_SDA);
+
+    spi_txrx((char *)&ks->txh.txb[1], 5, 0, 0, SPI_START);
+    spi_txrx((char *)packet, (unsigned int)ALIGN((unsigned int)length, 4), 0, 0, SPI_STOP);
+
+    ks_reg16_write(KS_RXQCR, 0);
     
     return 0;
 }

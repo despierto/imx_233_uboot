@@ -121,8 +121,20 @@ int drv_eth_rx(void)
 
 int drv_eth_tx(volatile void *packet, int length)
 {
-    print_eth("--> %s -> %s : %d", __FILE__, __FUNCTION__, __LINE__);
-    
+
+#ifdef GBL_ETH_DIAG_ENA
+    print_inf("[dbg] TX (0x%08x|%d):[ ", (unsigned int)packet, length);
+    {
+        unsigned char *A = (unsigned char *)packet;
+        unsigned int i;
+        for (i=0; i<length; i++)
+        {
+            print_inf("%x ", A[i]);
+        }
+        print_inf("]\r\n");
+    }
+#endif
+
     net_tx(packet, length);
     return 0;
 }

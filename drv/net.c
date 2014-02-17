@@ -82,8 +82,8 @@ int local_net_ping_send(IPaddr_t ip_addr)
     pEth->NetArpWaitPacketMAC = mac;
 
     pkt = pEth->NetArpWaitTxPacket;
-    print_dbg("pkt (0x%x), NetArpWaitPacket: IP (0x%x) MAC (%s)", 
-        (unsigned int)pkt, pEth->NetArpWaitPacketIP, pEth->NetArpWaitPacketMAC);
+    //print_dbg("pkt (0x%x), NetArpWaitPacket: IP (0x%x) MAC (%s)", 
+    //    (unsigned int)pkt, pEth->NetArpWaitPacketIP, pEth->NetArpWaitPacketMAC);
 
     pkt += local_net_set_eth_hdr(pkt, mac, PROT_IP);
     pkt += local_net_set_ipv4_hdr(pkt, ICMP_ECHO_HDR_SIZE, IP_FLAGS_DFRAG, 255, IP_PROT_ICMP, ip_addr);
@@ -207,14 +207,21 @@ void local_net_arp_request (void)
     volatile uchar *pkt;
     ARP_t *arp;
 
-    print_dbg("ARP broadcast %d", pEth->NetArpWaitTry);
+    //print_dbg("ARP broadcast %d", pEth->NetArpWaitTry);
 
     pkt = (volatile uchar *)&pEth->NetTxPackets[0];
 
     pkt += local_net_set_eth_hdr(pkt, NetBcastAddr, PROT_ARP);
     pkt += local_net_set_arp_hdr(pkt);
-    
-    drv_eth_tx ((void *)&pEth->NetTxPackets[0], (unsigned int)pkt - (unsigned int)&pEth->NetTxPackets[0]);
+
+
+	for (i=0; i<10; i++)
+	{
+    	drv_eth_tx ((void *)&pEth->NetTxPackets[0], (unsigned int)pkt - (unsigned int)&pEth->NetTxPackets[0]);
+		sleep(1);
+	}
+
+	
     return;
 }
 
