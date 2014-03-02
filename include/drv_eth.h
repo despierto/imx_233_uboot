@@ -39,10 +39,6 @@
 
 //declarations
 typedef struct _ETH_CTX_ {
-    //buffers are aligned to 32 bytes
-    volatile uchar  TxPktBuf[ETH_PKTBUFSTX * ETH_PKTSIZE_ALIGN];       
-    volatile uchar  RxPktBuf[ETH_PKTBUFSRX * ETH_PKTSIZE_ALIGN];       
-    volatile uchar  NetArpWaitPacketBuf[ETH_PKTSIZE_ALIGN];
     volatile uchar *NetTxPackets[ETH_PKTBUFSTX];                        /* Transmit packets */
     volatile uchar *NetRxPackets[ETH_PKTBUFSRX];                        /* Receive packets */
 
@@ -74,6 +70,23 @@ typedef struct _ETH_CTX_ {
 
         
 }ETH_CTX, *PETH_CTX;
+
+typedef struct _ETH_HEAP_LIST_ {
+    U32         *next;
+    U32         addr;
+    U32         status;    
+}ETH_HEAP_LIST, *PETH_HEAP_LIST;
+
+typedef struct _ETH_HEAP_CTX_ 
+{
+    ETH_HEAP_LIST   list[NET_PKT_COUNT];
+    PETH_HEAP_LIST  next_alloc_item;    
+    PETH_HEAP_LIST  next_free_item;        
+    U32             stats_alloc;
+    U32             stats_free;
+    U32             stats_balance;
+    
+}ETH_HEAP_CTX, *PETH_HEAP_CTX;
 
 extern PETH_CTX        pEth;
 
@@ -135,6 +148,9 @@ void        drv_eth_parse_enetaddr(const char *addr, uchar *enetaddr);
 IPaddr_t    drv_string_to_ip(char *s);
 char        *drv_ip_to_string(IPaddr_t ip, uchar *buf);
 void        drv_eth_info(void);
+
+PTR         eth_heap_alloc(void);
+int         eth_heap_free(PTR ptr);
 
 
 #endif /* __DRV_ETH_H__ */

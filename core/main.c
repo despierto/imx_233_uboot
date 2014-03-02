@@ -55,7 +55,7 @@ void  _start(void)
     print_log("%s", "Entry to the main loop...");
     while(1)
     {
-        if (system_time_msec%60000 == 0)
+        if (system_time_msec%600000 == 0)
           print_inf("[%d sec] Next cycle...\r\n", system_time_msec/1000);
 
         rt_process();

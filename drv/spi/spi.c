@@ -114,6 +114,8 @@ void spi_txrx(const char *dout, unsigned int tx_len, char *din, unsigned int rx_
 {
     int i;
 
+    print_spi("---> spi_txrx: tx_len (%d) rx_len (%d) dout (%x)", tx_len, rx_len, (unsigned int)dout);
+    
     if (tx_len == 0 && rx_len == 0)
         return;
 

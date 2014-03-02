@@ -70,7 +70,6 @@ Additional Features. In addition to offering all of the features of a Layer 2 co
  *              DEFINITIONS                                                *
  ************************************************/
 #define KS_ERR          -1
-#define MAX_BUF_SIZE    2048
 #define ETH_ALEN        6
 
 typedef struct _KS8851_TX_HDR_ {
@@ -79,11 +78,9 @@ typedef struct _KS8851_TX_HDR_ {
 }KS8851_TX_HDR, *PKS8851_TX_HDR;
 
 typedef struct _NET_KS8851_INF_ {
-    U16             fid;
-    U8              buff[MAX_BUF_SIZE];
     KS8851_TX_HDR   txh;
+    U16             fid;
 }NET_KS8851_INF, *PNET_KS8851_INF;
-
 
 #define __ALIGN_MASK(x,mask)    (((x)+(mask))&~(mask))
 #define ALIGN(x,a)              __ALIGN_MASK(x,(__typeof__(x))(a)-1)
@@ -109,13 +106,13 @@ static void     ks_powermode_set(ushort pwrmode);
 static void     ks_fifo_read(uchar *buff, ushort len);
 void            ks_mac_set(void);
 void            ks_mac_default_set(void);
-static void     ks_config(void);
+static void     ks_config(uint addr_filter);
+uint ks_get_rx_addres_filter(uint option);
+
 
 /************************************************
   *              GLOBAL FUNCTIONS                                      *
   ************************************************/
-
-
 
 RESULTCODE  net_ks8851_init(PTR ptr)
 {
@@ -136,19 +133,20 @@ RESULTCODE  net_ks8851_init(PTR ptr)
         return KS_ERR;
     }
     print_net(" - ks8851 chip ID=0x%x", chip_id);
-
+   
     if (sizeof(NET_KS8851_INF) > SYS_RAM_NET_CTX_SIZE) {
         print_err("Size of NET_KS8851_INF CTX (%d) is out of ranges in (%d) bytes", sizeof(NET_KS8851_INF), SYS_RAM_NET_CTX_SIZE);
         return KS_ERR;
     }
     print_net(" - Allocation of NET_KS8851_INF CTX at (0x%x), size (%d)", (unsigned int)ks, sizeof(NET_KS8851_INF));
-        
+    memset((void *)ks, 0, sizeof(NET_KS8851_INF));
+
     ks->fid = 0;
 
     ks_mac_default_set();
     //net_ks8851_mac_set("AA:BB:CC:DD:EE:FF");
 
-    ks_config();
+    ks_config(NET_RX_FILTER_PROMISCUOUS); //NET_RX_FILTER_HASH_ONLY_W_PHYS_ADDR_PASSED
 
     
     ks_reg16_write(KS_ISR, 0xffff);
@@ -177,32 +175,86 @@ void        net_ks8851_halt(void)
     return;
 }
 
-RESULTCODE  net_ks8851_rx(void)
+U32         net_ks8851_rxfc_get(void)
 {
-    print_net("--> %s -> %s : %d", __FILE__, __FUNCTION__, __LINE__);
-    
-    return 0;
+    U32 rxfc, status;
+        
+    status = (U32)ks_reg16_read(KS_ISR);
+    print_net("RX: status (%x)", status);
+    if(status & IRQ_RXI == 0)
+        return 0;
+
+    ks_reg16_write(KS_ISR, IRQ_RXI);
+    rxfc = (U32)ks_reg8_read(KS_RXFC);
+    print_net("RX: fc (%x)", rxfc);
+
+    return rxfc;
+}
+
+U32         net_ks8851_rx(PTR rx_buff)
+{
+    uint    rxh;
+    ushort  rxlen, status;
+    int i;
+
+    rxh = ks_reg32_read(KS_RXFHSR);
+    /* the length of the packet includes the 32bit CRC */
+    rxlen = rxh >> 16;
+    print_net(" - RX: h (%x) len (%x)", rxh, rxlen);
+
+    /* setup Receive Frame Data Pointer Auto-Increment */
+    ks_reg16_write(KS_RXFDPR, RXFDPR_RXFPAI);
+
+    /* start the packet dma process, and set auto-dequeue rx */
+    ks_reg16_write(KS_RXQCR, RXQCR_SDA | RXQCR_ADRFE);
+
+    if(rxlen > 0) {
+        /* align the packet length to 4 bytes, and add 4 bytes
+                                as we're getting the rx status header as well */
+        rxlen = ALIGN(rxlen, 4) + 8;
+        
+        ks_fifo_read((uchar *)rx_buff, rxlen);
+    }
+    ks_reg16_write(KS_RXQCR, 0);
+
+    return (U32)rxlen;
 }
 
 RESULTCODE  net_ks8851_tx(VPTR packet, U32 length)
 {
     ushort fid = 0;
+    ushort txsr;
+
+    if (!length)
+        return -1;
 
     fid = ks->fid++;
     fid &= TXFR_TXFID_MASK;
 
-    /* start header at txb[1] to align txw entries */
+    txsr = ks_reg8_read(KS_TXSR);
+    print_net("TX: txsr-1 (%x)", txsr);
+
+    /* start head./wri  er at txb[1] to align txw entries */
     ks->txh.txb[1] = KS_SPIOP_TXFIFO;
     ks->txh.txw[1] = fid;
     ks->txh.txw[2] = length;
 
     ks_reg16_write(KS_RXQCR, RXQCR_SDA);
 
-    spi_txrx((char *)&ks->txh.txb[1], 5, 0, 0, SPI_START);
-    spi_txrx((char *)packet, (unsigned int)ALIGN((unsigned int)length, 4), 0, 0, SPI_STOP);
+    spi_txrx((char *)&ks->txh.txb[1], 5, (char *)0, 0, SPI_START);
+    spi_txrx((char *)packet, (unsigned int)ALIGN(length, 4), (char *)0, 0, SPI_STOP);
 
     ks_reg16_write(KS_RXQCR, 0);
-    
+
+    txsr = ks_reg8_read(KS_TXSR);
+    print_net("KS_TXQCR 1: (%x)", ks_reg8_read(KS_TXQCR));
+
+    print_net("TX: txsr-2 (%x)", txsr);
+
+    /* Enable QMU TxQ Auto-Enqueue frame */
+    ks_reg16_write(KS_TXQCR, TXQCR_METFE);//TXQCR_AETFE);
+
+    print_net("KS_TXQCR 2: (%x)", ks_reg8_read(KS_TXQCR));
     return 0;
 }
 
@@ -347,7 +399,7 @@ void ks_mac_default_set(void)
 }
 
 /* configure network device */
-static void ks_config(void)
+static void ks_config(uint addr_filter)
 {
     print_net("%s", " - Bring up power");
     /* bring chip out of any power saving mode it was in */
@@ -361,35 +413,82 @@ static void ks_config(void)
 
     print_net("%s", " - Setup transmission parameters");
     /* setup transmission parameters */
-    ks_reg16_write(KS_TXCR, (TXCR_TXE |     /* enable transmit process */
+    ks_reg16_write(KS_TXCR, (TXCR_TXE |     /* enable transmit process:     must be enabled */
                             TXCR_TCGIP |
                             TXCR_TCGTCP |
                             TXCR_TCGICMP |
-                            TXCR_TXPE |     /* pad to min length */
-                            TXCR_TXCRC |    /* add CRC */
-                            TXCR_TXFCE));   /* enable flow control */
+                          /*  TXCR_TCGUDP |  */                          
+                            TXCR_TXPE |     /* pad to min length:               must be enabled */
+                            TXCR_TXCRC |    /* add CRC:                           must be enabled */
+                            TXCR_TXFCE));   /* enable flow control:             must be enabled */
 
     print_net("%s", " - Setup reception parameters");
     /* Setup Receive Frame Threshold - 1 frame */
     ks_reg16_write(KS_RXFCTR, 1 << RXFCTR_RXFCT_SHIFT);
 
     /* setup receiver control */
-    ks_reg16_write(KS_RXCR1, (RXCR1_RXPAFMA |   /* mac filter */
+    ks_reg16_write(KS_RXCR1, (ks_get_rx_addres_filter(addr_filter) |   /*  address filtering */
                             RXCR1_RXUDPFCC |
                             RXCR1_RXTCPFCC |
                             RXCR1_RXIPFCC |
-                            RXCR1_RXME |
-                            RXCR1_RXAE |
                             RXCR1_RXFCE |       /* enable flow control */
-                            RXCR1_RXUE |        /* unicast enable */
-                            RXCR1_RXE));        /* enable rx block */
-                          /*  RXCR1_RXBE |         broadcast enable */
+                            RXCR1_RXME |        /* multicast enable:        must be enabled */                            
+                            RXCR1_RXUE |        /* unicast enable:           must be enabled  */
+                            RXCR1_RXE));        /* enable rx block:         must be enabled */
 
     /* transfer entire frames out in one go */
     ks_reg16_write(KS_RXCR2, RXCR2_SRDBL_FRAME);
 
     return;    
 }
+
+uint ks_get_rx_addres_filter(uint option)
+{
+    uint value = 0;
+
+    switch (option)
+    {
+        case  NET_RX_FILTER_PERFECT:
+            value = 0           | 0             | RXCR1_RXPAFMA | RXCR1_RXMAFMA;
+            break;
+        case  NET_RX_FILTER_INVERSE_PERFECT:
+            value = 0           | RXCR1_RXINVF  | RXCR1_RXPAFMA | RXCR1_RXMAFMA;
+            break;
+        case  NET_RX_FILTER_HASH_ONLY:
+            value = 0           | 0             | 0             | 0;
+            break;
+        case  NET_RX_FILTER_INVERSE_HASH_ONLY:
+            value = 0           | RXCR1_RXINVF  | 0             | 0;
+            break;
+        case  NET_RX_FILTER_HASH_PERFECT:
+            value = 0           | 0             | RXCR1_RXPAFMA | 0;
+            break;
+        case  NET_RX_FILTER_INVERSE_HASH_PERFECT:
+            value = 0           | RXCR1_RXINVF  | RXCR1_RXPAFMA | 0;
+            break;
+        case  NET_RX_FILTER_PROMISCUOUS:
+            value = RXCR1_RXAE  | RXCR1_RXINVF  | 0             | 0;
+            break;
+        case  NET_RX_FILTER_HASH_ONLY_W_MULTICAST_ADDR_PASSED:
+            value = RXCR1_RXAE  | 0             | 0             | 0;
+            break;
+        case  NET_RX_FILTER_PERFECT_W_MULTICAST_ADDR_PASSED:
+            value = RXCR1_RXAE  | 0             | RXCR1_RXPAFMA | RXCR1_RXMAFMA;
+            break;
+        case  NET_RX_FILTER_HASH_ONLY_W_PHYS_ADDR_PASSED:
+            value = RXCR1_RXAE  | 0             | RXCR1_RXPAFMA | 0;
+            break;
+        case  NET_RX_FILTER_PERFECT_W_PHYS_ADDR_PASSED:
+            value = RXCR1_RXAE  | 0             | 0             | RXCR1_RXMAFMA;
+            break; 
+        default:
+            print_err("unknown filter option (%d)", option);
+            break;
+    }
+
+    return value;
+}
+
 
 
 

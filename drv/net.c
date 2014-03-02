@@ -215,13 +215,14 @@ void local_net_arp_request (void)
     pkt += local_net_set_arp_hdr(pkt);
 
 
-	for (i=0; i<10; i++)
-	{
-    	drv_eth_tx ((void *)&pEth->NetTxPackets[0], (unsigned int)pkt - (unsigned int)&pEth->NetTxPackets[0]);
-		sleep(1);
-	}
+    for (i=0; i<20; i++)
+    {
+        drv_eth_tx ((void *)&pEth->NetTxPackets[0], (unsigned int)pkt - (unsigned int)&pEth->NetTxPackets[0]);
+        drv_eth_rx();
+        sleep(1);
+    }
 
-	
+
     return;
 }
 

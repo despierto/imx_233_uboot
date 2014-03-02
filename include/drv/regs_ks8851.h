@@ -100,16 +100,16 @@
 #define RXCR1_RXUDPFCC                          (1 << 14)
 #define RXCR1_RXTCPFCC                          (1 << 13)
 #define RXCR1_RXIPFCC                           (1 << 12)
-#define RXCR1_RXPAFMA                           (1 << 11)
+#define RXCR1_RXPAFMA                           (1 << 11)               /* Packet filter: Rx Physical Address */
 #define RXCR1_RXFCE                             (1 << 10)
 #define RXCR1_RXEFE                             (1 << 9)
-#define RXCR1_RXMAFMA                           (1 << 8)
+#define RXCR1_RXMAFMA                           (1 << 8)                /* Packet filter: Rx Multicast Address */
 #define RXCR1_RXBE                              (1 << 7)
-#define RXCR1_RXME                              (1 << 6)
-#define RXCR1_RXUE                              (1 << 5)
-#define RXCR1_RXAE                              (1 << 4)
-#define RXCR1_RXINVF                            (1 << 1)
-#define RXCR1_RXE                               (1 << 0)
+#define RXCR1_RXME                              (1 << 6)                /* Rx multicast enable - must be set*/
+#define RXCR1_RXUE                              (1 << 5)                /* Rx unicast enable - must be set*/
+#define RXCR1_RXAE                              (1 << 4)                /* Packet filter: Rx All */
+#define RXCR1_RXINVF                            (1 << 1)                /* Packet filter: Inverse Rx */
+#define RXCR1_RXE                               (1 << 0)                /* Rx enable - must be set*/
 
 #define KS_RXCR2                                0x76
 #define RXCR2_SRDBL_MASK                        (0x7 << 5)
@@ -196,6 +196,7 @@
 #define RXFCTR_RXFCT_SHIFT                      (0)
 
 #define KS_TXNTFSR                              0x9E
+#define KS_TXSR                                 0x72
 
 #define KS_MAHTR0                               0xA0
 #define KS_MAHTR1                               0xA2

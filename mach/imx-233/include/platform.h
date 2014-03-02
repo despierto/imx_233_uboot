@@ -72,6 +72,13 @@
 #define FINGERPRINT             0x00                /* fingerprint offset */
 
 
+/*====================*/
+/* Network definitions                 */
+/*====================*/
+#define NET_PKT_MAX_SIZE        (2048)
+#define NET_PKT_COUNT           (1000)
+
+
 /*******************************************************************************/
 /*                                              64MB SDRAM INTERNAL MAPPING                                        */
 /*******************************************************************************/
@@ -88,18 +95,23 @@
 /* MAP: 32 KB - offset for kernel image loading */
 #define SYS_RAM_LOAD_ADDR       (SDRAM_BASE + 0x8000)                   /* 0x40008000 */
 #define SYS_RAM_LOAD_SIZE       (0x7F8000)                              /* 8MB - 32KB */
-#define SYS_RAM_LOAD_END        (SYS_RAM_LOAD_ADDR+SYS_RAM_LOAD_SIZE)   /* 0x40808000 */               
 
 //GAP: 0x40808000...0x41FFFFFF: ~25MB
 
 /* MAP: 32 MB - offset for devices queues */
-#define SYS_RAM_ETH_ADDR        (SDRAM_BASE + 0x2000000)                /* 0x42000000 */
-#define SYS_RAM_ETH_SIZE        (0x10000 - 0x1000)                      /* 60KB*/
-#define SYS_RAM_NET_CTX_ADDR    (SDRAM_BASE + 0x2000000)                /* 0x4200F000 */
-#define SYS_RAM_NET_CTX_SIZE    (0x1000)                                /* 4KB for NET CTX*/
-#define SYS_RAM_ETH_END         (SDRAM_BASE + SYS_RAM_ETH_SIZE)         /* 0x42010000 */
+#define SYS_RAM_ETH_STORAGE_ADDR    (SDRAM_BASE + 0x2000000)                                /* 0x42000000 */
+#define SYS_RAM_ETH_STORAGE_SIZE    (NET_PKT_MAX_SIZE * NET_PKT_COUNT)                     /* 0x1F4000: 2MB*/
 
-//GAP: 0x42010000...0x43FFFFFF: ~33MB
+#define SYS_RAM_ETH_HEAP_ADDR       (SYS_RAM_ETH_STORAGE_ADDR + SYS_RAM_ETH_STORAGE_SIZE)   /* 0x421F4000 */
+#define SYS_RAM_ETH_HEAP_SIZE       (0x3000)                                                /*  12288*/
+
+#define SYS_RAM_ETH_CTX_ADDR        (SYS_RAM_ETH_HEAP_ADDR + SYS_RAM_ETH_HEAP_SIZE)         /* 0x421F7000 */
+#define SYS_RAM_ETH_CTX_SIZE        (0x100)                                                 /* 256KB*/
+
+#define SYS_RAM_NET_CTX_ADDR        (SYS_RAM_ETH_CTX_ADDR + SYS_RAM_ETH_CTX_SIZE)           /* 0x421F7100 */
+#define SYS_RAM_NET_CTX_SIZE        (0x100)                                                 /* 256KB*/
+
+//GAP: 0x421F7200...0x43FFFFFF: ~31MB
 
 #define SYS_RAM_END             (SDRAM_BASE + SDRAM_SIZE)               /* 0x44000000 */
 
@@ -135,9 +147,9 @@
 #define CONFIG_BOOTFILE_SIZE    128
 #define CONFIG_SYS_PROMPT       "x-boot> "
 #define CONFIG_NETMASK          "255.255.255.0"
-#define CONFIG_IPADDR           "192.168.5.200"                /* 10.1.184.112 192.168.0.136 */
-#define CONFIG_SERVERIP         "192.168.5.3"                /* 10.1.184.188 192.168.0.2 */
-#define CONFIG_GATEWAYIP        "192.168.5.1"
+#define CONFIG_IPADDR           "192.168.0.200"                /* 10.1.184.112 192.168.0.136 */
+#define CONFIG_SERVERIP         "192.168.0.104"                /* 10.1.184.188 192.168.0.2 */
+#define CONFIG_GATEWAYIP        "192.168.0.1"
 #define CONFIG_DNSIP            "1.1.1.1"
 #define CONFIG_VLANIP           "127.0.0.1"
 #define CONFIG_VLANNETMASK      "255.0.0.0"
