@@ -31,6 +31,8 @@ uchar   NetEtherNullAddr[6] = { 0, 0, 0, 0, 0, 0 };
 uchar   NetBcastAddr[6] = /* Ethernet bcast address */
             { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 
+static unsigned int net_state;
+    
 int local_net_ping_send(IPaddr_t ip_addr);
 int local_net_set_eth_hdr(volatile uchar * xet, uchar * addr, uint prot);
 int local_net_set_ipv4_hdr(volatile uchar * pkt, ushort payload_len, ushort frag_off, uchar ttl, uchar prot, IPaddr_t ip_dst);
@@ -47,6 +49,7 @@ void net_ping_req(unsigned int timeout_ms, IPaddr_t ip_addr)
     uchar ip_str[15];
     unsigned int data_size = 56;
     unsigned int packet_size = data_size + IP_HDR_SIZE + ICMP_ECHO_HDR_SIZE;
+    unsigned int i;
     
     drv_ip_to_string(ip_addr, &ip_str[0]);
 
@@ -58,6 +61,20 @@ void net_ping_req(unsigned int timeout_ms, IPaddr_t ip_addr)
     //NetSetHandler (PingHandler);
 
     local_net_ping_send(ip_addr);
+    
+    net_state = NETSTATE_CONTINUE;
+
+    print_net("%s", "Entry in loop");
+ 
+    while (net_state == NETSTATE_CONTINUE)
+    {
+        drv_eth_rx();
+        local_net_arp_timeout_check();
+        
+        //sleep_ms(50);
+    }
+
+    print_net("Exit from net loop with state (%d)", net_state);
     
     return;
 }
@@ -95,9 +112,9 @@ int local_net_ping_send(IPaddr_t ip_addr)
     pEth->NetArpWaitTry = 1;
     pEth->NetArpWaitTimerStart = get_tick();
 
+    print_net("---> NetArpWaitTimerStart 0x%x", pEth->NetArpWaitTimerStart);
 
     local_net_arp_request();
-
 
     return 1; /* waiting */
 }
@@ -214,17 +231,44 @@ void local_net_arp_request (void)
     pkt += local_net_set_eth_hdr(pkt, NetBcastAddr, PROT_ARP);
     pkt += local_net_set_arp_hdr(pkt);
 
-
-    for (i=0; i<20; i++)
-    {
-        drv_eth_tx ((void *)&pEth->NetTxPackets[0], (unsigned int)pkt - (unsigned int)&pEth->NetTxPackets[0]);
-        drv_eth_rx();
-        sleep(1);
-    }
-
+    drv_eth_tx ((void *)&pEth->NetTxPackets[0], (unsigned int)pkt - (unsigned int)&pEth->NetTxPackets[0]);
 
     return;
 }
 
+void local_net_arp_timeout_check (void)
+{   
+    unsigned int t;
+    
+    if (!pEth->NetArpWaitPacketIP)
+        return;
+
+    t = get_tick();
+    
+    /* check for arp timeout */
+    if ( (unsigned int)((t - pEth->NetArpWaitTimerStart)/1000) > (unsigned int)ARP_TIMEOUT) {
+        pEth->NetArpWaitTry++;
+
+        print_net("---> NetArpWaitTry %d\n", pEth->NetArpWaitTry);
+
+        if (pEth->NetArpWaitTry >= ARP_TIMEOUT_COUNT) {
+            print_net("ARP Retry count exceeded (%d) times");
+            pEth->NetArpWaitTry = 0;
+            net_state = NETSTATE_RESTART;
+
+            //printf("---> NetStartAgain\n");
+            //NetStartAgain();
+        } else {
+            pEth->NetArpWaitTimerStart = t;
+            print_net("---> NetArpWaitTimerStart 0x%x", pEth->NetArpWaitTimerStart);
+ 
+            printf("---> ArpRequest\n");
+            local_net_arp_request();
+        }
+    }
+
+ 
+    return;
+}
 
 

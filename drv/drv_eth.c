@@ -133,15 +133,14 @@ int drv_eth_rx(void)
     PTR pRxPacket;
 
     rxfc = net_rxfc_get();
+    //print_eth("-------- RX %d packets -----------", rxfc);
     for (; rxfc != 0; rxfc--) {
 
-
-        
         pRxPacket = eth_heap_alloc();
         assert(pRxPacket);
         
         rx_len = net_rx(pRxPacket);
-
+        print_eth("-------- RX packet len %d bytes from %d packets -----------", rx_len, rxfc);
         if (pRxPacket && rx_len) {
             U8 *pA = (U8 *)pRxPacket;
             print_inf("[eth] Rx Packet[%x]: [ ", rx_len);
@@ -163,7 +162,7 @@ int drv_eth_rx(void)
 int drv_eth_tx(volatile void *packet, int length)
 {
 
-#ifdef GBL_ETH_DIAG_ENA
+#if 0 //def GBL_ETH_DIAG_ENA
     print_inf("[dbg] TX (0x%08x|%d):[ ", (unsigned int)packet, length);
     {
         unsigned char *A = (unsigned char *)packet;

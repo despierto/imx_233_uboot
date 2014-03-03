@@ -146,7 +146,7 @@ RESULTCODE  net_ks8851_init(PTR ptr)
     ks_mac_default_set();
     //net_ks8851_mac_set("AA:BB:CC:DD:EE:FF");
 
-    ks_config(NET_RX_FILTER_PROMISCUOUS); //NET_RX_FILTER_HASH_ONLY_W_PHYS_ADDR_PASSED
+    ks_config(NET_RX_FILTER_HASH_ONLY_W_MULTICAST_ADDR_PASSED);
 
     
     ks_reg16_write(KS_ISR, 0xffff);
@@ -180,13 +180,13 @@ U32         net_ks8851_rxfc_get(void)
     U32 rxfc, status;
         
     status = (U32)ks_reg16_read(KS_ISR);
-    print_net("RX: status (%x)", status);
+    //print_net("RX: status (%x)", status);
     if(status & IRQ_RXI == 0)
         return 0;
 
     ks_reg16_write(KS_ISR, IRQ_RXI);
     rxfc = (U32)ks_reg8_read(KS_RXFC);
-    print_net("RX: fc (%x)", rxfc);
+    //print_net("RX: fc (%x)", rxfc);
 
     return rxfc;
 }
@@ -200,7 +200,7 @@ U32         net_ks8851_rx(PTR rx_buff)
     rxh = ks_reg32_read(KS_RXFHSR);
     /* the length of the packet includes the 32bit CRC */
     rxlen = rxh >> 16;
-    print_net(" - RX: h (%x) len (%x)", rxh, rxlen);
+    print_net(" - RX: h (%x) len (%x)", (U32)rxh, (U32)rxlen);
 
     /* setup Receive Frame Data Pointer Auto-Increment */
     ks_reg16_write(KS_RXFDPR, RXFDPR_RXFPAI);
@@ -213,6 +213,12 @@ U32         net_ks8851_rx(PTR rx_buff)
                                 as we're getting the rx status header as well */
         rxlen = ALIGN(rxlen, 4) + 8;
         
+        if (rxlen > NET_PKT_MAX_SIZE) {
+            print_net("WARNING: rxlen %d bytes is out of range of %d bytes", rxlen, NET_PKT_MAX_SIZE);
+            rxlen = NET_PKT_MAX_SIZE;
+        }
+
+        print_net(" - Read: in 0x%x len %d bytes", (U32)rx_buff, (U32)rxlen);
         ks_fifo_read((uchar *)rx_buff, rxlen);
     }
     ks_reg16_write(KS_RXQCR, 0);
@@ -231,13 +237,25 @@ RESULTCODE  net_ks8851_tx(VPTR packet, U32 length)
     fid = ks->fid++;
     fid &= TXFR_TXFID_MASK;
 
-    txsr = ks_reg8_read(KS_TXSR);
-    print_net("TX: txsr-1 (%x)", txsr);
+    //txsr = ks_reg8_read(KS_TXSR);
+    //print_net("TX: txsr-1 (%x)", txsr);
 
     /* start head./wri  er at txb[1] to align txw entries */
     ks->txh.txb[1] = KS_SPIOP_TXFIFO;
     ks->txh.txw[1] = fid;
     ks->txh.txw[2] = length;
+
+#if 1//def GBL_ETH_DIAG_ENA
+    print_inf("[dbg] SEND (0x%08x|%d):[ ", (unsigned int)packet, length);
+    {
+        unsigned char *A = (unsigned char *)packet;
+        unsigned int i;
+        for (i=0; i<length; i++) {
+            print_inf("%x ", A[i]);
+        }
+        print_inf("]\r\n");
+    }
+#endif
 
     ks_reg16_write(KS_RXQCR, RXQCR_SDA);
 
@@ -246,15 +264,15 @@ RESULTCODE  net_ks8851_tx(VPTR packet, U32 length)
 
     ks_reg16_write(KS_RXQCR, 0);
 
-    txsr = ks_reg8_read(KS_TXSR);
-    print_net("KS_TXQCR 1: (%x)", ks_reg8_read(KS_TXQCR));
+    //txsr = ks_reg8_read(KS_TXSR);
+    //print_net("KS_TXQCR 1: (%x)", ks_reg8_read(KS_TXQCR));
 
-    print_net("TX: txsr-2 (%x)", txsr);
+    //print_net("TX: txsr-2 (%x)", txsr);
 
     /* Enable QMU TxQ Auto-Enqueue frame */
-    ks_reg16_write(KS_TXQCR, TXQCR_METFE);//TXQCR_AETFE);
+    //ks_reg16_write(KS_TXQCR, TXQCR_METFE);//TXQCR_AETFE);
 
-    print_net("KS_TXQCR 2: (%x)", ks_reg8_read(KS_TXQCR));
+    //print_net("KS_TXQCR 2: (%x)", ks_reg8_read(KS_TXQCR));
     return 0;
 }
 
@@ -417,7 +435,6 @@ static void ks_config(uint addr_filter)
                             TXCR_TCGIP |
                             TXCR_TCGTCP |
                             TXCR_TCGICMP |
-                          /*  TXCR_TCGUDP |  */                          
                             TXCR_TXPE |     /* pad to min length:               must be enabled */
                             TXCR_TXCRC |    /* add CRC:                           must be enabled */
                             TXCR_TXFCE));   /* enable flow control:             must be enabled */
@@ -431,6 +448,7 @@ static void ks_config(uint addr_filter)
                             RXCR1_RXUDPFCC |
                             RXCR1_RXTCPFCC |
                             RXCR1_RXIPFCC |
+                            RXCR1_RXBE |        /*  broadcast enable  */
                             RXCR1_RXFCE |       /* enable flow control */
                             RXCR1_RXME |        /* multicast enable:        must be enabled */                            
                             RXCR1_RXUE |        /* unicast enable:           must be enabled  */

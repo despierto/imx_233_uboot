@@ -160,13 +160,21 @@ typedef struct {
     
 #define ARP_HDR_SIZE        (sizeof (ARP_t))
 
+#define ARP_TIMEOUT         5000UL          /* Milliseconds before trying ARP again */
+#define ARP_TIMEOUT_COUNT    5              /* # of timeouts before giving up  */
+
+#define NETSTATE_CONTINUE    1
+#define NETSTATE_RESTART     2
+#define NETSTATE_SUCCESS     3
+#define NETSTATE_FAIL        4
+
 
 
 /************************************************
  *              FUNCTION HEADERS DEFINITIONS                 *
  ************************************************/
 void net_ping_req(unsigned int timeout_ms, IPaddr_t ip);
-
+void local_net_arp_timeout_check (void);
 
 
 
