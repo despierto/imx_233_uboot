@@ -264,7 +264,7 @@ int         eth_heap_free(PTR ptr)
     U32 index;
 
     if (((U32)ptr < SYS_RAM_ETH_STORAGE_ADDR) || ((U32)ptr >= (SYS_RAM_ETH_STORAGE_ADDR + SYS_RAM_ETH_STORAGE_SIZE))) {
-        print_err("PTR (0x%x) is out of network heap range");
+        print_err("PTR (0x%x) is out of network heap range", (unsigned int)ptr);
         return FAILURE;
     }
 

@@ -146,7 +146,7 @@ RESULTCODE  net_ks8851_init(PTR ptr)
     ks_mac_default_set();
     //net_ks8851_mac_set("AA:BB:CC:DD:EE:FF");
 
-    ks_config(NET_RX_FILTER_HASH_ONLY_W_MULTICAST_ADDR_PASSED);
+    ks_config(NET_RX_FILTER_PERFECT_W_PHYS_ADDR_PASSED);
 
     
     ks_reg16_write(KS_ISR, 0xffff);
@@ -448,11 +448,12 @@ static void ks_config(uint addr_filter)
                             RXCR1_RXUDPFCC |
                             RXCR1_RXTCPFCC |
                             RXCR1_RXIPFCC |
-                            RXCR1_RXBE |        /*  broadcast enable  */
+                          /*  RXCR1_RXBE |   */     /*  broadcast enable  */
                             RXCR1_RXFCE |       /* enable flow control */
                             RXCR1_RXME |        /* multicast enable:        must be enabled */                            
                             RXCR1_RXUE |        /* unicast enable:           must be enabled  */
                             RXCR1_RXE));        /* enable rx block:         must be enabled */
+
 
     /* transfer entire frames out in one go */
     ks_reg16_write(KS_RXCR2, RXCR2_SRDBL_FRAME);
