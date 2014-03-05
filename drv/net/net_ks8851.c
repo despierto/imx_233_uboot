@@ -66,15 +66,17 @@ Additional Features. In addition to offering all of the features of a Layer 2 co
 #include "drv/regs_ks8851.h"
 #include "spi.h"
 
-#if 1
 
-#define ETH_ALEN        6
+
+/************************************************
+ *              DEFINITIONS                                                *
+ ************************************************/
 #define KS_ERR          -1
-#define MAX_BUF_SIZE    2048
+#define ETH_ALEN        6
 
 #undef ALIGN
-#define ALIGN(x,a)              __ALIGN_MASK(x,(__typeof__(x))(a)-1)
 #define __ALIGN_MASK(x,mask)    (((x)+(mask))&~(mask))
+#define ALIGN(x,a)              __ALIGN_MASK(x,(__typeof__(x))(a)-1)
 
 /* shift for byte-enable data */
 #define BYTE_EN(_x) ((_x) << 2)
@@ -82,6 +84,14 @@ Additional Features. In addition to offering all of the features of a Layer 2 co
 /* turn register number and byte-enable mask into data for start of packet */
 #define MK_OP(_byteen, _reg) (BYTE_EN(_byteen) | (_reg)  << (8+2) | (_reg) >> 6)
 
+//uchar def_mac_addr[] = {0x00, 0x10, 0xA1, 0x86, 0x95, 0x11};
+uchar def_mac_addr[] = {0x00, 0x1F, 0xF2, 0x00, 0x00, 0x00};
+
+
+
+
+
+#if 1
 
 union ks8851_tx_hdr {
     uchar   txb[6];
@@ -90,14 +100,11 @@ union ks8851_tx_hdr {
 
 typedef struct {
     ushort  fid;
-    uchar   buff[MAX_BUF_SIZE];
     union ks8851_tx_hdr txh;
 } ks8851_inf;
 
 
 static ks8851_inf  *ks = (ks8851_inf  *)0x421F7100;
-//uchar def_mac_addr[] = {0x00, 0x10, 0xA1, 0x86, 0x95, 0x11};
-uchar def_mac_addr[] = {0x00, 0x1F, 0xF2, 0x00, 0x00, 0x00};
 
 
 /*
@@ -210,58 +217,7 @@ static void ks_fifo_read(uchar *buff, ushort len)
     spi_txrx(0, 0, buff, len, SPI_STOP);
 }
 
-/*
- * receive packets from the host
- */
 
-#if 0
-
-static void ks_rx_pkts(void)
-{
-    uint    rxh;
-    ushort  rxfc, rxlen, status;
-    int i;
-
-    status = ks_reg16_read(KS_ISR);
-    //printf("[net] RX: status (%x)\n", status);
-    if(status & IRQ_RXI == 0)
-        return;
-
-    ks_reg16_write(KS_ISR, IRQ_RXI);
-    rxfc = ks_reg8_read(KS_RXFC);
-    //printf("[net] RX: fc (%x)\n", rxfc);
-
-    for (; rxfc != 0; rxfc--) {
-        rxh = ks_reg32_read(KS_RXFHSR);
-        /* the length of the packet includes the 32bit CRC */
-        rxlen = rxh >> 16;
-        printf("[net]  - RX[%d]: h (%x) len (%x)\n", rxfc, rxh, rxlen);
-
-        /* setup Receive Frame Data Pointer Auto-Increment */
-        ks_reg16_write(KS_RXFDPR, RXFDPR_RXFPAI);
-
-        /* start the packet dma process, and set auto-dequeue rx */
-        ks_reg16_write(KS_RXQCR, RXQCR_SDA | RXQCR_ADRFE);
-
-        if(rxlen > 0) {
-            /* align the packet length to 4 bytes, and add 4 bytes
-                                    as we're getting the rx status header as well */
-            uint len = ALIGN(rxlen, 4) + 8;
-            
-            ks_fifo_read(ks->buff, len);
-            printf("[net]  - Buff[%x]: [ ", len);
-            for(i=0; i<len; i++) {
-                printf("%x ", ks->buff[i]);
-            }
-            printf("]\r\n");
-                
-        }
-        ks_reg16_write(KS_RXQCR, 0);
-    }
-
-    return 0;
-}
-#else
 unsigned int         net_ks8851_rxfc_get(void)
 {
     unsigned int rxfc, status;
@@ -313,13 +269,6 @@ unsigned int         net_ks8851_rx(void * rx_buff)
     return (unsigned int)rxlen;
 }
 
-
-#endif
-
-/*
- * write packet to TX FIFO
- */
- #if 1
 RESULTCODE  net_ks8851_tx(VPTR packet, uint length)
 {
     ushort fid = 0;
@@ -352,37 +301,7 @@ RESULTCODE  net_ks8851_tx(VPTR packet, uint length)
     return 0;
 }
 
- #else
- void net_ks8851_tx(unsigned char *txp, int len)
-{
-    ushort fid = 0;
 
-    fid = ks->fid++;
-    fid &= TXFR_TXFID_MASK;
-
-    /* start header at txb[1] to align txw entries */
-    ks->txh.txb[1] = KS_SPIOP_TXFIFO;
-    ks->txh.txw[1] = fid;
-    ks->txh.txw[2] = len;
-
-    printf("[dbg] SEND (0x%08x|%d):[ ", (unsigned int)txp, len);
-    {
-        unsigned char *A = (unsigned char *)txp;
-        unsigned int i;
-        for (i=0; i<len; i++) {
-            printf("%x ", A[i]);
-        }
-        printf("]\r\n");
-    }
-
-    ks_reg16_write(KS_RXQCR, RXQCR_SDA);
-
-    spi_txrx(&ks->txh.txb[1], 5, 0, 0, SPI_START);
-    spi_txrx(txp, ALIGN(len, 4), 0, 0, SPI_STOP);
-
-    ks_reg16_write(KS_RXQCR, 0);
-}
-#endif
 /*
  * set power mode of the device
  */
@@ -423,18 +342,6 @@ static void ks_config(void)
     /* Setup Receive Frame Threshold - 1 frame */
     ks_reg16_write(KS_RXFCTR, 1 << RXFCTR_RXFCT_SHIFT);
 
-    /* setup receiver control */
-#if 0 /* All Rx frames are passin wothout any conditions */
-    ks_reg16_write(KS_RXCR1, (RXCR1_RXBE |   /*  broadcast enable  */
-                            RXCR1_RXUDPFCC |
-                            RXCR1_RXTCPFCC |
-                            RXCR1_RXIPFCC |
-                            RXCR1_RXME |
-                            RXCR1_RXAE |
-                            RXCR1_RXFCE |       /* enable flow control */
-                            RXCR1_RXUE |        /* unicast enable */
-                            RXCR1_RXE));        /* enable rx block */
-#else
     ks_reg16_write(KS_RXCR1, (RXCR1_RXPAFMA |   /* mac filter */
                             RXCR1_RXUDPFCC |
                             RXCR1_RXTCPFCC |
@@ -445,7 +352,6 @@ static void ks_config(void)
                             RXCR1_RXUE |        /* unicast enable */
                             RXCR1_RXE));        /* enable rx block */
                           /*  RXCR1_RXBE |         broadcast enable */
-#endif
 
     /* transfer entire frames out in one go */
     ks_reg16_write(KS_RXCR2, RXCR2_SRDBL_FRAME);
@@ -550,11 +456,6 @@ void net_ks8851_halt(void)
 
 #else
 
-/************************************************
- *              DEFINITIONS                                                *
- ************************************************/
-#define KS_ERR          -1
-#define ETH_ALEN        6
 
 typedef struct _KS8851_TX_HDR_ {
     U8      txb[6];
@@ -566,17 +467,8 @@ typedef struct _NET_KS8851_INF_ {
     U16             fid;
 }NET_KS8851_INF, *PNET_KS8851_INF;
 
-#define __ALIGN_MASK(x,mask)    (((x)+(mask))&~(mask))
-#define ALIGN(x,a)              __ALIGN_MASK(x,(__typeof__(x))(a)-1)
 
-/* shift for byte-enable data */
-#define BYTE_EN(_x) ((_x) << 2)
 
-/* turn register number and byte-enable mask into data for start of packet */
-#define MK_OP(_byteen, _reg) (BYTE_EN(_byteen) | (_reg)  << (8+2) | (_reg) >> 6)
-
-//uchar def_mac_addr[] = {0x00, 0x10, 0xA1, 0x86, 0x95, 0x11};
-uchar def_mac_addr[] = {0x00, 0x1F, 0xF2, 0x00, 0x00, 0x00};
 
 static PNET_KS8851_INF ks = (PNET_KS8851_INF)SYS_RAM_NET_CTX_ADDR;
 
