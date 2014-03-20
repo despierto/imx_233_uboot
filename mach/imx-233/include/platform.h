@@ -106,12 +106,12 @@
 #define SYS_RAM_ETH_HEAP_SIZE       (0x3000)                                                /*  12288*/
 
 #define SYS_RAM_ETH_CTX_ADDR        (SYS_RAM_ETH_HEAP_ADDR + SYS_RAM_ETH_HEAP_SIZE)         /* 0x421F7000 */
-#define SYS_RAM_ETH_CTX_SIZE        (0x100)                                                 /* 256KB*/
+#define SYS_RAM_ETH_CTX_SIZE        (0x1000)                                                 /* 256KB*/
 
-#define SYS_RAM_NET_CTX_ADDR        (SYS_RAM_ETH_CTX_ADDR + SYS_RAM_ETH_CTX_SIZE)           /* 0x421F7100 */
+#define SYS_RAM_NET_CTX_ADDR        (SYS_RAM_ETH_CTX_ADDR + SYS_RAM_ETH_CTX_SIZE)           /* 0x421F8000 */
 #define SYS_RAM_NET_CTX_SIZE        (0x100)                                                 /* 256KB*/
 
-//GAP: 0x421F7200...0x43FFFFFF: ~31MB
+//GAP: 0x421F8100...0x43FFFFFF: ~31MB
 
 #define SYS_RAM_END             (SDRAM_BASE + SDRAM_SIZE)               /* 0x44000000 */
 
@@ -147,7 +147,7 @@
 #define CONFIG_BOOTFILE_SIZE    128
 #define CONFIG_SYS_PROMPT       "x-boot> "
 #define CONFIG_NETMASK          "255.255.255.0"
-#define CONFIG_IPADDR           "192.168.0.200"                /* 10.1.184.112 192.168.0.136 */
+#define CONFIG_IPADDR           "192.168.0.33"                /* 10.1.184.112 192.168.0.136 */
 #define CONFIG_SERVERIP         "192.168.0.104"                /* 10.1.184.188 192.168.0.2 */
 #define CONFIG_GATEWAYIP        "192.168.0.1"
 #define CONFIG_DNSIP            "1.1.1.1"

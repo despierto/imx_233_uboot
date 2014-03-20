@@ -175,7 +175,7 @@ typedef struct {
  ************************************************/
 void net_ping_req(unsigned int timeout_ms, IPaddr_t ip);
 void local_net_arp_timeout_check (void);
-
+void net_rx_process(void);
 
 
 

@@ -37,6 +37,13 @@
 #define ETH_PKTBUFSRX           4                               /* Rx MAX supported by ks8851 is 12KB */
 #define ETH_PKTBUFSTX           1                               /* Tx MAX supported by ks8851 is 6KB */
 
+#define ETH_RX_POOL_SIZE        256
+
+typedef struct _ETH_POOL_ {
+    U32         addr;
+    U32         size;    
+}ETH_POOL, *PETH_POOL;
+
 //declarations
 typedef struct _ETH_CTX_ {
     volatile uchar *NetTxPackets[ETH_PKTBUFSTX];                        /* Transmit packets */
@@ -67,7 +74,9 @@ typedef struct _ETH_CTX_ {
     IPaddr_t        cfg_ip_dns;
     IPaddr_t        cfg_ip_vlan;
     
-
+	ETH_POOL		rx_pool[ETH_RX_POOL_SIZE];						/* queue of incomming packets */
+	unsigned int	rx_pool_get;
+	unsigned int	rx_pool_put;	
         
 }ETH_CTX, *PETH_CTX;
 

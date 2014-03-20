@@ -33,7 +33,7 @@ PETH_CTX                pEth = (PETH_CTX)SYS_RAM_ETH_CTX_ADDR;
 static PETH_HEAP_CTX    pEthHeapCtx = (PETH_HEAP_CTX)SYS_RAM_ETH_HEAP_ADDR;
 
 static int eth_heap_init(void);
-
+static unsigned int drv_eth_rx_put(unsigned int addr, unsigned int size);
 
 /************************************************
  *              GLOBAL FUNCTIONS                                      *
@@ -115,9 +115,31 @@ int drv_eth_init(void)
     pEth->cfg_ip_dns        = drv_string_to_ip(CONFIG_DNSIP);           // "dnsip"
     pEth->cfg_ip_vlan       = drv_string_to_ip(CONFIG_VLANIP);          // "vlanip"
 
-
+	pEth->rx_pool_get = 0;
+	pEth->rx_pool_put = 0;	
         
     return ret;
+}
+
+/** return size in case some address is in queue or 0 */
+unsigned int drv_eth_rx_get(unsigned int *addr)
+{
+	unsigned int size = 0;
+	unsigned int get = pEth->rx_pool_get;
+	
+	if (pEth->rx_pool_put != get) {
+		*addr = pEth->rx_pool[get].addr;
+		size =  pEth->rx_pool[get].size;
+
+		print_eth("GET[%d]: addr_0x%x size_%d", get, *addr, size);
+	
+		if (++get >= ETH_RX_POOL_SIZE)
+			pEth->rx_pool_get = 0;
+		else
+			pEth->rx_pool_get = get;
+	}
+
+	return size;
 }
 
 void drv_eth_halt(void)
@@ -140,6 +162,26 @@ int drv_eth_rx(void)
         assert(pRxPacket);
         
         rx_len = net_rx(pRxPacket);
+		if (rx_len < NET_HW_RX_HEADER_SIZE) {
+			print_eth("WARNING: received packed with unexpected size (%d)", rx_len);
+			continue;
+		} else {
+		 	rx_len = rx_len - NET_HW_RX_HEADER_SIZE;
+		}
+
+		if (rx_len) {
+			unsigned int real_packet = (unsigned int)pRxPacket + NET_HW_RX_HEADER_SIZE;
+
+			print_eth("RX PUT: addr_0x%x size_%d pkt_%x", real_packet, rx_len, (unsigned int)pRxPacket);
+			
+			if (drv_eth_rx_put(real_packet, rx_len)) {
+				print_eth("WARNING: Killed RX packet, len (%d)", rx_len);
+		        eth_heap_free(pRxPacket);
+			}
+		} else {
+			print_eth("WARNING: received packed with null payload");
+		}
+#if 0		
         print_eth("-------- RX packet len %d bytes from %d packets -----------", rx_len, rxfc);
         if (pRxPacket && rx_len) {
             U8 *pA = (U8 *)pRxPacket;
@@ -149,13 +191,9 @@ int drv_eth_rx(void)
             }
             print_inf("]\r\n");
         }
-
-        eth_heap_free(pRxPacket);
+#endif
     }
-    
        
-    //NetReceive(ks->buff + 8, rxlen);
-
     return 0;
 }
 
@@ -293,6 +331,29 @@ int         eth_heap_free(PTR ptr)
 /************************************************
  *              LOCAL FUNCTIONS                                        *
  ************************************************/
+
+/** return 0 in case of success or error */
+static unsigned int drv_eth_rx_put(unsigned int addr, unsigned int size)
+{
+	unsigned int next_put = pEth->rx_pool_put + 1;
+
+	if (next_put >= ETH_RX_POOL_SIZE)
+		next_put = 0;
+
+	if (next_put == pEth->rx_pool_get) {
+		print_err("eth rx pool overflow");
+		return 1;
+	}
+
+	print_eth("PUT[%d]: addr_0x%x size_%d", pEth->rx_pool_put, addr, size);
+			
+	pEth->rx_pool[pEth->rx_pool_put].addr = addr;
+	pEth->rx_pool[pEth->rx_pool_put].size = size;	
+
+	pEth->rx_pool_put = next_put;
+
+	return 0;
+}
 
 static int eth_heap_init(void)
 {

@@ -79,6 +79,33 @@ void net_ping_req(unsigned int timeout_ms, IPaddr_t ip_addr)
     return;
 }
 
+void net_rx_process(void)
+{
+	unsigned int size;
+	unsigned int addr;	
+	
+	//receive all current packets
+	drv_eth_rx();
+
+	//get and process every packet
+	while((size = drv_eth_rx_get(&addr)) != 0) {
+		
+        if (addr && size) {
+            U8 *pA = (U8 *)addr;
+			unsigned int i;			
+			
+            print_inf("[net] --- Rx Packet[0x%x, %d]: [ ", addr, size);
+            for(i=0; i<size; i++) {
+                print_inf("%x ", pA[i]);
+            }
+            print_inf("] --- \r\n");
+			eth_heap_free(addr);
+        }
+	
+	}
+
+	return;
+}
 
 
 /************************************************
@@ -223,6 +250,7 @@ void local_net_arp_request (void)
     int i;
     volatile uchar *pkt;
     ARP_t *arp;
+	unsigned int len = 0;
 
     //print_dbg("ARP broadcast %d", pEth->NetArpWaitTry);
 
@@ -231,7 +259,10 @@ void local_net_arp_request (void)
     pkt += local_net_set_eth_hdr(pkt, NetBcastAddr, PROT_ARP);
     pkt += local_net_set_arp_hdr(pkt);
 
-    drv_eth_tx ((void *)&pEth->NetTxPackets[0], (unsigned int)pkt - (unsigned int)&pEth->NetTxPackets[0]);
+	len = (unsigned int)pkt - (unsigned int)&pEth->NetTxPackets[0];
+
+	print_net("local_net_arp_request: len_%d, pkt_0x%x tx_packet_0x%x", len, (unsigned int)pkt, (unsigned int)&pEth->NetTxPackets[0]);
+    drv_eth_tx ((void *)&pEth->NetTxPackets[0], len);
 
     return;
 }

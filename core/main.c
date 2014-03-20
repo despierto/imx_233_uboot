@@ -27,8 +27,8 @@
 #include "pinmux.h"
 #include "spi.h"
 
-#define XBOOT_VERSION_R      0
-#define XBOOT_VERSION_RC     2
+#define XBOOT_VERSION_R      1
+#define XBOOT_VERSION_RC     1
 
 static unsigned int system_time_msec = 0;
 static void initialization(void);
@@ -55,7 +55,7 @@ void  _start(void)
     print_log("%s", "Entry to the main loop...");
     while(1)
     {
-        if (system_time_msec%600000 == 0)
+        if (system_time_msec%5000 == 0)
           print_inf("[%d sec] Next cycle...\r\n", system_time_msec/1000);
 
         rt_process();
@@ -91,7 +91,7 @@ static void initialization(void)
 static void rt_process(void)
 {
     //runtime
-    
+    net_rx_process();
 
     return;
 }
