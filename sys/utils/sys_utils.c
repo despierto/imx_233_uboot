@@ -75,6 +75,15 @@ int strnlen(const char *s, unsigned int len)
     return (n);
 }
 
+unsigned int strlen(const char * s)
+{
+	const char *sc;
+
+	for (sc = s; *sc != '\0'; ++sc)
+		/* nothing */;
+	return sc - s;
+}
+
 /**
  * strcmp - Compare two strings
  * @cs: One string

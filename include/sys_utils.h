@@ -109,6 +109,7 @@ void    sys_print_error(const char* filename, const char* funcname, const int nr
 int     strcmp(const char * cs,const char * ct);
 int     strncmp(const char * cs,const char * ct, size_t count);
 void    *memcpy(void *s1, const void *s2, int n);
+unsigned int strlen(const char * s);
 
 /* sys_vfprintf.h */
 int     sprintf(char * buf, const char *fmt, ...);

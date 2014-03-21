@@ -31,11 +31,14 @@
 #define VLAN_NONE       4095                /* untagged (0x1000)*/
 #define VLAN_IDMASK     0x0fff              /* mask of valid vlan id */
 
+#define ETHER_ADDR_LEN       6              /* Length of ethernet MAC address */
+#define ETHER_HDR_SIZE      14              /* Ethernet header size */
+#define E802_HDR_SIZE       22              /* 802 ethernet header size */
 
 /* Ethernet header  */
 typedef struct {
-    uchar       et_dest[6];                 /* Destination node */
-    uchar       et_src[6];                  /* Source node */
+    uchar       et_dest[ETHER_ADDR_LEN];                 /* Destination node */
+    uchar       et_src[ETHER_ADDR_LEN];                  /* Source node */
     ushort      et_protlen;                 /* Protocol or length */
     uchar       et_dsap;                    /* 802 DSAP */
     uchar       et_ssap;                    /* 802 SSAP */
@@ -46,16 +49,10 @@ typedef struct {
     ushort      et_prot;                    /* 802 protocol */
 } Ethernet_t;
 
-#define ETHER_ADDR_LEN       6              /* Length of ethernet MAC address */
-
-#define ETHER_HDR_SIZE      14              /* Ethernet header size */
-#define E802_HDR_SIZE       22              /* 802 ethernet header size */
-
-
 /* VLAN Ethernet header */
 typedef struct {
-    uchar       vet_dest[6];                /* Destination node */
-    uchar       vet_src[6];                 /* Source node */
+    uchar       vet_dest[ETHER_ADDR_LEN];                /* Destination node */
+    uchar       vet_src[ETHER_ADDR_LEN];                 /* Source node */
     ushort      vet_vlan_type;              /* PROT_VLAN */
     ushort      vet_tag;                    /* TAG of VLAN */
     ushort      vet_type;                   /* protocol type */
@@ -167,7 +164,6 @@ typedef struct {
 #define NETSTATE_RESTART     2
 #define NETSTATE_SUCCESS     3
 #define NETSTATE_FAIL        4
-
 
 
 /************************************************

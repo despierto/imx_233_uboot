@@ -44,6 +44,22 @@ typedef struct _ETH_POOL_ {
     U32         size;    
 }ETH_POOL, *PETH_POOL;
 
+
+#define ARP_TABLE_SIZE				10
+#define ARP_TABLE_TYPE_NONE			0
+#define ARP_TABLE_TYPE_ETH			1
+#define ARP_TABLE_TYPE_VIRT			2
+#define ARP_TABLE_VALID_PERIOD_SEC	30	/* 255 max */
+#define ARP_TABLE_TTL_OBSOLETE		0
+
+typedef struct _ARP_TABLE_
+{
+	IPaddr_t		ip_addr;
+	uchar       	hw_addr[ETHER_ADDR_LEN];
+	ushort 			type;	
+	unsigned int 	reg_time;										/* time in sen when MAC addr wa placed into cache. 0 sec means MAC address is obsolete */
+} ARP_TABLE, *PARP_TABLE;
+
 //declarations
 typedef struct _ETH_CTX_ {
     volatile uchar *NetTxPackets[ETH_PKTBUFSTX];                        /* Transmit packets */
@@ -66,7 +82,7 @@ typedef struct _ETH_CTX_ {
     ushort          NetIPID;                                        /* IP packet ID */
     ushort          PingSeqNo;                                      /* PING request counter */
     
-    uchar           cfg_mac_addr[6];
+    uchar           cfg_mac_addr[ETHER_ADDR_LEN];
     IPaddr_t        cfg_ip_addr;
     IPaddr_t        cfg_ip_netmask;
     IPaddr_t        cfg_ip_gateway;    
@@ -77,7 +93,8 @@ typedef struct _ETH_CTX_ {
 	ETH_POOL		rx_pool[ETH_RX_POOL_SIZE];						/* queue of incomming packets */
 	unsigned int	rx_pool_get;
 	unsigned int	rx_pool_put;	
-        
+
+	ARP_TABLE		arp_table[ARP_TABLE_SIZE];
 }ETH_CTX, *PETH_CTX;
 
 typedef struct _ETH_HEAP_LIST_ {
@@ -152,14 +169,19 @@ static inline int is_valid_ether_addr(const uchar * addr)
 int         drv_eth_init(void);
 void        drv_eth_halt(void);
 int         drv_eth_rx(void);
+unsigned int drv_eth_rx_get(unsigned int *addr);
 int         drv_eth_tx(volatile void *packet, int length);
 void        drv_eth_parse_enetaddr(const char *addr, uchar *enetaddr);
 IPaddr_t    drv_string_to_ip(char *s);
+char *		drv_mac_to_string(uchar *mac);
 char        *drv_ip_to_string(IPaddr_t ip, uchar *buf);
 void        drv_eth_info(void);
 
-PTR         eth_heap_alloc(void);
-int         eth_heap_free(PTR ptr);
+PTR         drv_eth_heap_alloc(void);
+int         drv_eth_heap_free(PTR ptr);
 
+void 		drv_arp_table_info(void);
+uchar 		drv_arp_table_check_ip(IPaddr_t ip, char **mac);
+void 		drv_arp_table_reg_ip(IPaddr_t ip, char *mac, ushort type, unsigned int sys_time);
 
 #endif /* __DRV_ETH_H__ */

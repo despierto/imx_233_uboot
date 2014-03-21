@@ -32,7 +32,7 @@
 PETH_CTX                pEth = (PETH_CTX)SYS_RAM_ETH_CTX_ADDR;
 static PETH_HEAP_CTX    pEthHeapCtx = (PETH_HEAP_CTX)SYS_RAM_ETH_HEAP_ADDR;
 
-static int eth_heap_init(void);
+static int drv_eth_heap_init(void);
 static unsigned int drv_eth_rx_put(unsigned int addr, unsigned int size);
 
 /************************************************
@@ -44,14 +44,14 @@ int drv_eth_init(void)
     unsigned int i;
     PTR addr;
     
-    eth_heap_init();
+    drv_eth_heap_init();
 
-    addr = eth_heap_alloc();
+    addr = drv_eth_heap_alloc();
     if (!addr) {
         print_err("%s", "network heap allocation test is failed");        
         return FAILURE;
     }
-    ret = eth_heap_free(addr);
+    ret = drv_eth_heap_free(addr);
     if (ret) {
         print_err("%s", "network heap free test is failed");        
         return FAILURE;
@@ -71,15 +71,15 @@ int drv_eth_init(void)
     
     //setup packet buffers, aligned correctly
     for (i = 0; i < ETH_PKTBUFSTX; i++) {
-        pEth->NetTxPackets[i] = (volatile uchar *)eth_heap_alloc();
+        pEth->NetTxPackets[i] = (volatile uchar *)drv_eth_heap_alloc();
         print_eth(" - Net TX packet[%d]: addr (0x%x) count (%d)", i, (unsigned int)pEth->NetTxPackets[i], ETH_PKTBUFSTX);        
     }
     for (i = 0; i < ETH_PKTBUFSRX; i++) {
-        pEth->NetRxPackets[i] = (volatile uchar *)eth_heap_alloc();
+        pEth->NetRxPackets[i] = (volatile uchar *)drv_eth_heap_alloc();
         print_eth(" - Net RX packet[%d]: addr (0x%x) count (%d)", i, (unsigned int)pEth->NetRxPackets[i], i+1);                
     }
 
-    pEth->NetArpWaitTxPacket = (volatile uchar *)eth_heap_alloc();
+    pEth->NetArpWaitTxPacket = (volatile uchar *)drv_eth_heap_alloc();
     pEth->NetArpWaitTxPacketSize = 0;
     print_eth(" - Net Arp Tx packet: base (0x%x) count (%d)", (unsigned int)pEth->NetArpWaitTxPacket, 1);
     
@@ -115,9 +115,15 @@ int drv_eth_init(void)
     pEth->cfg_ip_dns        = drv_string_to_ip(CONFIG_DNSIP);           // "dnsip"
     pEth->cfg_ip_vlan       = drv_string_to_ip(CONFIG_VLANIP);          // "vlanip"
 
+	//rx pool init
 	pEth->rx_pool_get = 0;
 	pEth->rx_pool_put = 0;	
-        
+
+	//arp table init
+	for (i=0; i< ARP_TABLE_SIZE; i++) {
+		pEth->arp_table[i].type = ARP_TABLE_TYPE_NONE;
+	}
+		
     return ret;
 }
 
@@ -158,7 +164,7 @@ int drv_eth_rx(void)
     //print_eth("-------- RX %d packets -----------", rxfc);
     for (; rxfc != 0; rxfc--) {
 
-        pRxPacket = eth_heap_alloc();
+        pRxPacket = drv_eth_heap_alloc();
         assert(pRxPacket);
         
         rx_len = net_rx(pRxPacket);
@@ -176,7 +182,7 @@ int drv_eth_rx(void)
 			
 			if (drv_eth_rx_put(real_packet, rx_len)) {
 				print_eth("WARNING: Killed RX packet, len (%d)", rx_len);
-		        eth_heap_free(pRxPacket);
+		        drv_eth_heap_free(pRxPacket);
 			}
 		} else {
 			print_eth("WARNING: received packed with null payload");
@@ -256,6 +262,18 @@ char *drv_ip_to_string(IPaddr_t ip, uchar *buf)
     return (char *)buf;
 }
 
+char *drv_mac_to_string(uchar *mac)
+{
+    char mac_out[64];  
+	//unsigned int len = strnlen(mac, ETHER_ADDR_LEN);
+	//if (len != ETHER_ADDR_LEN) {
+	//	print_err("unexpected length (%d) of incoming mac address (%s)", len, mac);
+	//}
+	sprintf(mac_out, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+
+    return (char *)mac_out;
+}
+
 void drv_eth_info(void)
 {
     uchar s[15];
@@ -276,7 +294,7 @@ void drv_eth_info(void)
     return;
 }
 
-PTR         eth_heap_alloc(void)
+PTR         drv_eth_heap_alloc(void)
 {
     PTR addr;
 
@@ -296,7 +314,7 @@ PTR         eth_heap_alloc(void)
     return addr;
 }
 
-int         eth_heap_free(PTR ptr)
+int         drv_eth_heap_free(PTR ptr)
 {
     PETH_HEAP_LIST pList;
     U32 index;
@@ -355,7 +373,7 @@ static unsigned int drv_eth_rx_put(unsigned int addr, unsigned int size)
 	return 0;
 }
 
-static int eth_heap_init(void)
+static int drv_eth_heap_init(void)
 {
     U32 i;
 
@@ -390,5 +408,119 @@ static int eth_heap_init(void)
     print_eth(" - next AI[%d]_%x FI[%d]_%x", 0, pEthHeapCtx->next_alloc_item, i, (U32)pEthHeapCtx->next_free_item);
 
     return SUCCESS;
+}
+
+void drv_arp_table_info(void)
+{
+	unsigned int i;
+	uchar s[15];
+
+/*
+	//test
+	pEth->arp_table[0].type = ARP_TABLE_TYPE_ETH;
+	pEth->arp_table[0].ip_addr = pEth->cfg_ip_addr;
+	pEth->arp_table[0].reg_time = 250;
+	memcpy(pEth->arp_table[0].hw_addr, pEth->cfg_mac_addr, ETHER_ADDR_LEN);
+
+	pEth->arp_table[1].type = ARP_TABLE_TYPE_VIRT;
+	pEth->arp_table[1].ip_addr = pEth->cfg_ip_server;
+	memcpy(pEth->arp_table[1].hw_addr, pEth->cfg_mac_addr, ETHER_ADDR_LEN);
+	pEth->arp_table[1].reg_time = 5;
+
+	drv_arp_table_reg_ip(pEth->cfg_ip_netmask, pEth->cfg_mac_addr, ARP_TABLE_TYPE_ETH, 1555);
+*/
+
+	print_inf("--------------------------------------------------\n");	/* 50 symbols */
+	print_inf("ARP info\n");
+	print_inf("--------------------------------------------------\n");
+	print_inf("Address          HWtype  ST      HWaddress\n");			
+	for (i=0; i< ARP_TABLE_SIZE; i++) {
+		if (pEth->arp_table[i].type != ARP_TABLE_TYPE_NONE){
+
+			print_inf("%s  %s  %6d     %s\n", 
+				drv_ip_to_string(pEth->arp_table[i].ip_addr, &s[0]),
+				((pEth->arp_table[i].type == ARP_TABLE_TYPE_ETH)?"ether":"virt "),
+				pEth->arp_table[i].reg_time,
+				drv_mac_to_string(pEth->arp_table[i].hw_addr));		
+		}
+	}
+	print_inf("--------------------------------------------------\n");
+	
+	return;		
+}
+
+uchar drv_arp_table_check_ip(IPaddr_t ip, char **mac)
+{
+	uchar reg_time = 0;
+	unsigned int i;
+
+	for (i=0; i< ARP_TABLE_SIZE; i++) {
+		if (pEth->arp_table[i].ip_addr == ip){
+			reg_time = pEth->arp_table[i].reg_time;
+			*mac = pEth->arp_table[i].hw_addr;
+			break;
+		}
+	}
+
+	return reg_time;
+}
+
+void drv_arp_table_reg_ip(IPaddr_t ip, char *mac, ushort type, unsigned int curr_reg_time)
+{
+	unsigned int i;
+
+	//find the empty place
+	for (i=0; i< ARP_TABLE_SIZE; i++) {
+		if (pEth->arp_table[i].type == ARP_TABLE_TYPE_NONE){
+			pEth->arp_table[i].type = type;
+			pEth->arp_table[i].ip_addr = ip;
+			pEth->arp_table[i].reg_time = curr_reg_time;
+			memcpy(pEth->arp_table[i].hw_addr, mac, ETHER_ADDR_LEN);
+
+			//new entry successfully registered into new place
+			return;
+		}
+	}
+
+	//all empty places are used. resync ARP table 
+	for (i=0; i< ARP_TABLE_SIZE; i++) {
+		if ((curr_reg_time - pEth->arp_table[i].reg_time) >= ARP_TABLE_VALID_PERIOD_SEC) {
+			pEth->arp_table[i].reg_time = 0;
+		}
+	}
+	//and write new entry into first obsolete place
+	for (i=0; i< ARP_TABLE_SIZE; i++) {
+		if (pEth->arp_table[i].reg_time == 0){
+			pEth->arp_table[i].type = type;
+			pEth->arp_table[i].ip_addr = ip;
+			pEth->arp_table[i].reg_time = curr_reg_time;
+			memcpy(pEth->arp_table[i].hw_addr, mac, ETHER_ADDR_LEN);
+
+			//new entry successfully registered into obsolete place
+			return;
+		}
+	}
+
+	//ARP table still is full, analyse the oldest entry and replace it
+	{
+		unsigned int delta = 0; //seconds
+		unsigned int target_index = 0;
+		
+		for (i=0; i< ARP_TABLE_SIZE; i++) {
+			unsigned int curr_delta = curr_reg_time - pEth->arp_table[i].reg_time;
+			if (curr_delta > delta) {
+				delta = curr_delta;
+				target_index = i;
+			}
+		}
+
+		pEth->arp_table[target_index].type = type;
+		pEth->arp_table[target_index].ip_addr = ip;
+		pEth->arp_table[target_index].reg_time = curr_reg_time;
+		memcpy(pEth->arp_table[target_index].hw_addr, mac, ETHER_ADDR_LEN);
+	}
+	
+	//new entry successfully registered insteade the oldest entry
+	return;
 }
 

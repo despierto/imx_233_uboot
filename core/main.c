@@ -48,7 +48,7 @@ void  _start(void)
 
     //viewk system configuration
     drv_eth_info();
-    
+
     //do a test ping
     net_ping_req(10000UL, pEth->cfg_ip_server);
 

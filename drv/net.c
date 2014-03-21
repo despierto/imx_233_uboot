@@ -50,13 +50,26 @@ void net_ping_req(unsigned int timeout_ms, IPaddr_t ip_addr)
     unsigned int data_size = 56;
     unsigned int packet_size = data_size + IP_HDR_SIZE + ICMP_ECHO_HDR_SIZE;
     unsigned int i;
+	unsigned int mac_reg_time;
+	char *dst_mac;
     
     drv_ip_to_string(ip_addr, &ip_str[0]);
 
     //FORMAT: "PING <DNS or incomming IP address> (<IP address>): <size>(<fsize>) bytes of data"
     print_net("PING %s (%s) %d(%d) bytes of data.", ip_str, ip_str, data_size, packet_size);
 
-    
+
+	//check ping  ip at ARP table
+	drv_arp_table_info();
+	mac_reg_time = drv_arp_table_check_ip(ip_addr, &dst_mac);
+
+	print_net(" -- ARP MAC status: mac_reg_time_%d mac: %s", mac_reg_time, drv_mac_to_string(dst_mac));
+
+	drv_arp_table_reg_ip(pEth->cfg_ip_dns, pEth->cfg_mac_addr, ARP_TABLE_TYPE_ETH, 2234);
+
+	
+
+	
     //NetSetTimeout (timeout_ms, PingTimeout);
     //NetSetHandler (PingHandler);
 
@@ -99,7 +112,7 @@ void net_rx_process(void)
                 print_inf("%x ", pA[i]);
             }
             print_inf("] --- \r\n");
-			eth_heap_free(addr);
+			drv_eth_heap_free(addr);
         }
 	
 	}
