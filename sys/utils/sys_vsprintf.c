@@ -656,7 +656,7 @@ static noinline char* put_dec(char *buf, unsigned NUM_TYPE num)
 {
     while (1) {
         unsigned int rem;
-        if (num < 100000)
+        if (num < 100000)   // TODO: number is convernig to string ti unexpected 0 in the middle: instead of 16775200 ->167705200
             return put_dec_trunc(buf, num);
         //rem = do_div(num, 100000);
         rem = (unsigned int)(num % 10000);

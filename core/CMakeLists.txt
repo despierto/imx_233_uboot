@@ -11,6 +11,7 @@ target_link_libraries(xboot pinmux)
 target_link_libraries(xboot clock)
 target_link_libraries(xboot sysutils)
 target_link_libraries(xboot dbguart)
+target_link_libraries(xboot sysheap)
 
 target_link_libraries(xboot ${TARGET_LIBC} ${TARGET_LIBGCC}) # order does matter
 set_target_properties(xboot PROPERTIES LINK_FLAGS "-Map ${PRJ_NAME}.map -T ${CMAKE_SOURCE_DIR}/mach/${TARGET_MACH}/boot/${PRJ_NAME}_link.lds")

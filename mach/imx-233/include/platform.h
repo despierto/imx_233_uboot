@@ -56,27 +56,27 @@
 /*******************************************************************************/
 /* STMP 37xx RTC persistent register 1 bit 10 indicates
   *    that system is being resumed from suspend mode */
-#define RTC_BASE_ADDR           0x8005C000
-#define PERSISTENT_SLEEP_REG    0x8005C070
-#define PERSISTENT_SLEEP_BIT    10
+#define RTC_BASE_ADDR           	0x8005C000
+#define PERSISTENT_SLEEP_REG    	0x8005C070
+#define PERSISTENT_SLEEP_BIT    	10
 
 
 /*******************************************************************************/
 /*                                              OTHER MAPPING                                                                 */
 /*******************************************************************************/
 
-#define ATAGS_BASE_ADDRESS  (SDRAM_BASE + 0x100)
-#define KERNEL_BASE_ADDRESS (SDRAM_BASE + 0x8000)
+#define ATAGS_BASE_ADDRESS  		(SDRAM_BASE + 0x100)
+#define KERNEL_BASE_ADDRESS 		(SDRAM_BASE + 0x8000)
 
-#define SLEEP_STATE_FINGERPRINT 0xdeadbeef
-#define FINGERPRINT             0x00                /* fingerprint offset */
+#define SLEEP_STATE_FINGERPRINT 	0xdeadbeef
+#define FINGERPRINT             	0x00                /* fingerprint offset */
 
 
 /*====================*/
 /* Network definitions                 */
 /*====================*/
-#define NET_PKT_MAX_SIZE        (2048)
-#define NET_PKT_COUNT           (1000)
+#define NET_PKT_MAX_SIZE        	(2048)
+#define NET_PKT_COUNT           	(1000)
 
 
 /*******************************************************************************/
@@ -84,8 +84,8 @@
 /*******************************************************************************/
 
 /* MAP: 0 - base of system RAM*/
-#define SYS_RAM_BASE            (SDRAM_BASE)                            /* 0x40000000 */
-#define SYS_RAM_SIZE            (SDRAM_SIZE)                            /* 0x04000000 */
+#define SYS_RAM_BASE            	(SDRAM_BASE)                            /* 0x40000000 */
+#define SYS_RAM_SIZE            	(SDRAM_SIZE)                            /* 0x04000000 */
 
 #define SYS_RAM_LINUX_BOOT_PARAM_ADDR   (SDRAM_BASE + 0x100)            /* 0x40000100 */
 
@@ -93,13 +93,15 @@
 
 
 /* MAP: 32 KB - offset for kernel image loading */
-#define SYS_RAM_LOAD_ADDR       (SDRAM_BASE + 0x8000)                   /* 0x40008000 */
-#define SYS_RAM_LOAD_SIZE       (0x7F8000)                              /* 8MB - 32KB */
+#define SYS_RAM_LOAD_ADDR       	(SDRAM_BASE + 0x8000)                   /* 0x40008000 */
+#define SYS_RAM_LOAD_SIZE       	(0x7F8000)                              /* 8MB - 32KB */
 
-//GAP: 0x40808000...0x41FFFFFF: ~25MB
+//GAP: 0x40808000...0x40FFFFFF: ~9MB
+#define SYS_RAM_HEAP_ADDR    		(SDRAM_BASE + 0x1000000)                                /* 0x41000000 */
+#define SYS_RAM_HEAP_SIZE    		(0x1000000)                                				/* 16M */
 
 /* MAP: 32 MB - offset for devices queues */
-#define SYS_RAM_ETH_STORAGE_ADDR    (SDRAM_BASE + 0x2000000)                                /* 0x42000000 */
+#define SYS_RAM_ETH_STORAGE_ADDR    (SYS_RAM_HEAP_ADDR + SYS_RAM_HEAP_SIZE)                /* 0x42000000 */
 #define SYS_RAM_ETH_STORAGE_SIZE    (NET_PKT_MAX_SIZE * NET_PKT_COUNT)                     /* 0x1F4000: 2MB*/
 
 #define SYS_RAM_ETH_HEAP_ADDR       (SYS_RAM_ETH_STORAGE_ADDR + SYS_RAM_ETH_STORAGE_SIZE)   /* 0x421F4000 */
@@ -113,32 +115,26 @@
 
 //GAP: 0x421F8100...0x43FFFFFF: ~31MB
 
-#define SYS_RAM_END             (SDRAM_BASE + SDRAM_SIZE)               /* 0x44000000 */
+#define SYS_RAM_END             	(SDRAM_BASE + SDRAM_SIZE)               /* 0x44000000 */
 
 
-
-/*
- * Most of 378x SoC registers are associated with four addresses
- * used for different operations - read/write, set, clear and toggle bits.
- *
- * Some of registers do not implement such feature and, thus, should be
- * accessed/manipulated via single address in common way.
- */
-#define REG_RD(x)       (*(volatile unsigned int *)(x))
-#define REG_WR(x, v)    ((*(volatile unsigned int *)(x)) = (v))
-#define REG_SET(x, v)   ((*(volatile unsigned int *)((x) + 0x04)) = (v))
-#define REG_CLR(x, v)   ((*(volatile unsigned int *)((x) + 0x08)) = (v))
-#define REG_TOG(x, v)   ((*(volatile unsigned int *)((x) + 0x0c)) = (v))
 
 
 /*====================*/
-/* SPI Driver info */
+/* SYS HEAP configuration */
+/*====================*/
+#define	SYS_CACHE_LINE_BYTES		0x20
+
+
+/*====================*/
+/* SPI Driver configuration */
 /*====================*/
 #define CONFIG_SSP_CLK      48000000
 #define CONFIG_SPI_CLK      3000000
 #define CONFIG_SPI_SSP1
 
-#define CPU_CLK_DEVIDER (18) //480MHz
+#define CPU_CLK_DEVIDER 	(18) //480MHz
+
 
 /*====================*/
 /* ETH configuration                    */
@@ -162,6 +158,20 @@
 /*====================*/
 #define CONFIG_SYS_CBSIZE   1024                                        /* Console I/O Buffer Size  */
 #define CONFIG_SYS_PBSIZE   (CONFIG_SYS_CBSIZE+sizeof(CONFIG_SYS_PROMPT)+16)
+
+
+/*====================*/
+/* REGS configuration                */
+/*====================*/
+/*
+ * Most of 378x SoC registers are associated with four addresses used for different operations - read/write, set, clear and toggle bits.
+ * Some of registers do not implement such feature and, thus, should be  accessed/manipulated via single address in common way.
+ */
+#define REG_RD(x)       (*(volatile unsigned int *)(x))
+#define REG_WR(x, v)    ((*(volatile unsigned int *)(x)) = (v))
+#define REG_SET(x, v)   ((*(volatile unsigned int *)((x) + 0x04)) = (v))
+#define REG_CLR(x, v)   ((*(volatile unsigned int *)((x) + 0x08)) = (v))
+#define REG_TOG(x, v)   ((*(volatile unsigned int *)((x) + 0x0c)) = (v))
 
 
 #endif /* __PLATFORM_H__ */

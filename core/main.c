@@ -27,14 +27,26 @@
 #include "pinmux.h"
 #include "spi.h"
 
+/************************************************
+ *              DEFINITIONS                                                *
+ ************************************************/
 #define XBOOT_VERSION_R      1
 #define XBOOT_VERSION_RC     1
+
+
+HEAPHEADER	GlobalHeap;
+PHEAPHEADER	hGlobalHeap;
+
 
 static unsigned int system_time_msec = 0;
 static void initialization(void);
 static void termination(void);
 static void rt_process(void);
 
+
+/************************************************
+  *              ENTRY  FUNCTION                                      *
+  ************************************************/
 void  _start(void)
 {
     unsigned int i, a;
@@ -69,9 +81,57 @@ void  _start(void)
     return;
 }
 
+
+
+/************************************************
+  *              LOCAL  FUNCTIONs                                      *
+  ************************************************/
 static void initialization(void)
 {
     print_log("%s", "Environment initialization");
+
+	/* Global Heap Initialization */
+	hGlobalHeap = sys_heap_init(&GlobalHeap, SYS_RAM_HEAP_ADDR, 
+		SYS_RAM_HEAP_SIZE, SYS_CACHE_LINE_BYTES, GBL_HEAP_BLOCKS_COUNT);
+
+	//heap allocationg test
+	{
+		int	heap_test_rc = SUCCESS;
+		void *ptr1 = sys_heap_alloc(hGlobalHeap, 100);
+		void *ptr2 = sys_heap_alloc(hGlobalHeap, 1000);
+		void *ptr3 = sys_heap_alloc(hGlobalHeap, 10000);
+		void *ptr4 = sys_heap_alloc(hGlobalHeap, 100000);
+		void *ptr5 = sys_heap_alloc(hGlobalHeap, 1000000);		
+		void *ptr6 = sys_heap_alloc(hGlobalHeap, 10000000);				
+		void *ptr7 = sys_heap_alloc(hGlobalHeap, 5000000);				
+
+		if (!ptr1 || !ptr2 || !ptr3 || !ptr4 || !ptr5 || !ptr6 || !ptr7)
+			heap_test_rc |= FAILURE;
+			
+		heap_test_rc |= sys_heap_free(hGlobalHeap, ptr5);
+
+		ptr5 = sys_heap_alloc(hGlobalHeap, 1000000);
+		if (!ptr5)
+			heap_test_rc |= FAILURE;
+
+		heap_test_rc |= sys_heap_free(hGlobalHeap, ptr5);
+		heap_test_rc |= sys_heap_free(hGlobalHeap, ptr3);
+		heap_test_rc |= sys_heap_free(hGlobalHeap, ptr4);		
+		heap_test_rc |= sys_heap_free(hGlobalHeap, ptr6);				
+		heap_test_rc |= sys_heap_free(hGlobalHeap, ptr7);						
+		
+		ptr6 = sys_heap_alloc(hGlobalHeap, 15000000);
+		heap_test_rc |= sys_heap_free(hGlobalHeap, ptr6);
+		heap_test_rc |= sys_heap_free(hGlobalHeap, ptr1);
+ 		heap_test_rc |= sys_heap_free(hGlobalHeap, ptr2);		
+
+		print_inf("[sys] %s", "Heap test... ");
+		if (heap_test_rc == SUCCESS) {
+			print_inf("%s", "PASSED\n");
+		} else {
+			print_inf("%s", "FAILED\n");
+		}
+	}
 
     /* Configure CPU and SSP clocks*/
     init_clocks();

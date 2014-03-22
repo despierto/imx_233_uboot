@@ -19,7 +19,12 @@
  */
 
 ////////////////////////////////////////////////////////////////////////////////
-#include "global.h"
+#include "types.h"
+#include "error.h"
+#include "drv_utils.h"
+#include "platform.h"
+#include "sys_utils.h"
+
 
 #include "registers/regsrtc.h"
 #include "registers/regspower.h"

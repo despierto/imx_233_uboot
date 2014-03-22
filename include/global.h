@@ -27,7 +27,11 @@
 #include "sys_console.h"
 #include "platform.h"
 #include "sys_utils.h"
+#include "sys_heap.h"
 
+
+#define GBL_HEAP_BLOCKS_COUNT	100
+extern PHEAPHEADER hGlobalHeap;
 
 
 #endif /*_GLOBAL_H_*/

@@ -80,7 +80,7 @@
 #define htons(x) ___htons(x)
 #define ntohs(x) ___ntohs(x)
 
-
+#define ROUND_UP(_v, b)	(((U32)(_v)+b-1)&~(b-1))
 
 
 
@@ -137,6 +137,7 @@ uint    sys_checksum(uchar * ptr, int len);
 #define PRINTF_CLK_OK
 #define PRINTF_SPI_OK
 #define PRINTF_PIN_OK
+#define PRINTF_SYS_OK
 
 #undef  printf
 
@@ -173,6 +174,12 @@ void sys_printf(const char *fmt, ...);
 #else  /* PRINTF_DBG_OK */
 #define print_dbg(fmt, args...)
 #endif  /* PRINTF_DBG_OK */
+
+#ifdef PRINTF_SYS_OK
+#define print_sys(fmt, args...) printf("[sys] " fmt "\r\n", ## args)
+#else  /* PRINTF_SYS_OK */
+#define print_sys(fmt, args...)
+#endif  /* PRINTF_SYS_OK */
 
 #ifdef PRINTF_CLK_OK
 #define print_clk(fmt, args...) printf("[clk] " fmt "\r\n", ## args)
