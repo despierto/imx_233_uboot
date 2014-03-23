@@ -25,7 +25,8 @@
 #include "drv_eth.h"
 #include "clkctrl.h"
 #include "pinmux.h"
-#include "spi.h"
+#include "drv_spi.h"
+#include "net.h"
 
 /************************************************
  *              DEFINITIONS                                                *

@@ -23,6 +23,7 @@
 #define __DRV_UTILS_H__
 
 #include "registers/regsdigctl.h"
+#include "types.h"
 
 void drv_delay(unsigned int us);
 
@@ -37,6 +38,12 @@ static inline unsigned int get_tick(void)
     /* in usec */
     return (unsigned int)HW_DIGCTL_MICROSECONDS_RD();
 }
+
+
+IPaddr_t    drv_string_to_ip(char *s);
+char 		*drv_mac_to_string(uchar *mac_out, uchar *mac_in);
+char        *drv_ip_to_string(IPaddr_t ip, uchar *buf);
+void        drv_string_to_mac(const char *addr, uchar *mac);
 
 
 #endif /*__DRV_UTILS_H__*/

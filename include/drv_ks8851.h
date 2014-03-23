@@ -18,8 +18,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __NET_KS8851_H__
-#define __NET_KS8851_H__
+#ifndef __DRV_KS8851_H__
+#define __DRV_KS8851_H__
 
 #include "types.h"
 
@@ -45,21 +45,12 @@
 /************************************************
  *              APIs                                                            *
  ************************************************/
-RESULTCODE  net_ks8851_init(PTR ptr); 
-void        net_ks8851_halt(void);
-U32         net_ks8851_rxfc_get(void);
-U32         net_ks8851_rx(PTR rx_buff);
-RESULTCODE  net_ks8851_tx(VPTR packet, uint length);
-void        net_ks8851_mac_set(const char *ethaddr);
+RESULTCODE  ks8851_init(PTR ptr); 
+void        ks8851_halt(void);
+U32         ks8851_rxfc_get(void);
+U32         ks8851_rx(PTR rx_buff);
+RESULTCODE  ks8851_tx(VPTR packet, uint length);
+void        ks8851_mac_set(const char *ethaddr);
 
-#define net_init(ptr)           net_ks8851_init(ptr)
-#define net_halt()              net_ks8851_halt()
-#define net_rxfc_get()          net_ks8851_rxfc_get()
-#define net_rx(rx_buff)         net_ks8851_rx(rx_buff) 
-#define net_tx(packet, length)  net_ks8851_tx(packet, length)
-#define net_mac_set(ethaddr)    net_ks8851_mac_set(ethaddr)
-
-
-
-#endif /* __NET_KS8851_H__ */
+#endif /* __DRV_KS8851_H__ */
 

@@ -22,41 +22,14 @@
  #define __NET_H__
 
 #include "types.h"
+#include "net_arp.h"
 
 
 /************************************************
  *              PROTOCOL HEADERS DEFINITIONS                *
  ************************************************/
 
-#define VLAN_NONE       4095                /* untagged (0x1000)*/
-#define VLAN_IDMASK     0x0fff              /* mask of valid vlan id */
 
-#define ETHER_ADDR_LEN       6              /* Length of ethernet MAC address */
-#define ETHER_HDR_SIZE      14              /* Ethernet header size */
-#define E802_HDR_SIZE       22              /* 802 ethernet header size */
-
-/* Ethernet header  */
-typedef struct {
-    uchar       et_dest[ETHER_ADDR_LEN];                 /* Destination node */
-    uchar       et_src[ETHER_ADDR_LEN];                  /* Source node */
-    ushort      et_protlen;                 /* Protocol or length */
-    uchar       et_dsap;                    /* 802 DSAP */
-    uchar       et_ssap;                    /* 802 SSAP */
-    uchar       et_ctl;                     /* 802 control */
-    uchar       et_snap1;                   /* SNAP */
-    uchar       et_snap2;
-    uchar       et_snap3;
-    ushort      et_prot;                    /* 802 protocol */
-} Ethernet_t;
-
-/* VLAN Ethernet header */
-typedef struct {
-    uchar       vet_dest[ETHER_ADDR_LEN];                /* Destination node */
-    uchar       vet_src[ETHER_ADDR_LEN];                 /* Source node */
-    ushort      vet_vlan_type;              /* PROT_VLAN */
-    ushort      vet_tag;                    /* TAG of VLAN */
-    ushort      vet_type;                   /* protocol type */
-} VLAN_Ethernet_t;
 
 #define VLAN_ETHER_HDR_SIZE 18              /* VLAN Ethernet header size */
 
@@ -170,7 +143,6 @@ typedef struct {
  *              FUNCTION HEADERS DEFINITIONS                 *
  ************************************************/
 void net_ping_req(unsigned int timeout_ms, IPaddr_t ip);
-void local_net_arp_timeout_check (void);
 void net_rx_process(void);
 
 

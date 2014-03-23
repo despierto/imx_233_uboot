@@ -21,7 +21,7 @@
  */
 
 #include "global.h"
-#include "spi.h"
+#include "drv_spi.h"
 
 /************************************************
  *              DEFINITIONS                                                *

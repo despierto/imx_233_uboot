@@ -19,13 +19,25 @@
  */
 
 #include "global.h"
-#include "net_ks8851.h"
+#include "drv_ks8851.h"
 #include "drv_eth.h"
 
 
 /************************************************
  *              DEFINITIONS                                                *
  ************************************************/
+
+/**
+* Definition of usage ks8851 as physical layer
+*/
+#define net_init(ptr)           ks8851_init(ptr)
+#define net_halt()              ks8851_halt()
+#define net_rxfc_get()          ks8851_rxfc_get()
+#define net_rx(rx_buff)         ks8851_rx(rx_buff) 
+#define net_tx(packet, length)  ks8851_tx(packet, length)
+#define net_mac_set(ethaddr)    ks8851_mac_set(ethaddr)
+
+
 
 //#define SYS_RAM_ETH_ADDR          /* 0x42000000 */
 //#define SYS_RAM_ETH_SIZE          /* 0x10000      */
@@ -107,7 +119,7 @@ int drv_eth_init(void)
     //delay for printing out the print buffer
     sleep_ms(100);
 
-    drv_eth_parse_enetaddr(CONFIG_HW_MAC_ADDR, &pEth->cfg_mac_addr[0]); // "ethaddr"
+    drv_string_to_mac(CONFIG_HW_MAC_ADDR, &pEth->cfg_mac_addr[0]); // "ethaddr"
     pEth->cfg_ip_addr       = drv_string_to_ip(CONFIG_IPADDR);          // "ipaddr"
     pEth->cfg_ip_netmask    = drv_string_to_ip(CONFIG_NETMASK);         // "netmask"
     pEth->cfg_ip_gateway    = drv_string_to_ip(CONFIG_GATEWAYIP);       // "gatewayip"
@@ -119,10 +131,6 @@ int drv_eth_init(void)
 	pEth->rx_pool_get = 0;
 	pEth->rx_pool_put = 0;	
 
-	//arp table init
-	for (i=0; i< ARP_TABLE_SIZE; i++) {
-		pEth->arp_table[i].type = ARP_TABLE_TYPE_NONE;
-	}
 		
     return ret;
 }
@@ -185,7 +193,7 @@ int drv_eth_rx(void)
 		        drv_eth_heap_free(pRxPacket);
 			}
 		} else {
-			print_eth("WARNING: received packed with null payload");
+			print_eth("%s", "WARNING: received packed with null payload");
 		}
 #if 0		
         print_eth("-------- RX packet len %d bytes from %d packets -----------", rx_len, rxfc);
@@ -222,57 +230,7 @@ int drv_eth_tx(volatile void *packet, int length)
     return 0;
 }
 
-void drv_eth_parse_enetaddr(const char *addr, uchar *enetaddr)
-{
-    char *end;
-    int i;
-   
-    for (i = 0; i < 6; ++i) {
-        enetaddr[i] = addr ? simple_strtoul(addr, &end, 16) : 0;
-        if (addr)
-            addr = (*end) ? end + 1 : end;
-    }
-}
 
-IPaddr_t drv_string_to_ip(char *s)
-{
-    IPaddr_t addr;
-    char *e;
-    int i;
-
-    if (s == NULL)
-        return(0);
-
-    for (addr=0, i=0; i<4; ++i) {
-        ulong val = s ? simple_strtoul(s, &e, 10) : 0;
-        
-        addr <<= 8;
-        addr |= (val & 0xFF);
-        if (s) {
-            s = (*e) ? e+1 : e;
-        }
-    }
-
-    return (htonl(addr));
-}
-
-char *drv_ip_to_string(IPaddr_t ip, uchar *buf)
-{
-    sprintf((char *)buf, "%03d.%03d.%03d.%03d", (ip & 0xFF), ((ip >> 8) & 0xFF), ((ip >> 16) & 0xFF), ((ip >> 24) & 0xFF));
-    return (char *)buf;
-}
-
-char *drv_mac_to_string(uchar *mac)
-{
-    char mac_out[64];  
-	//unsigned int len = strnlen(mac, ETHER_ADDR_LEN);
-	//if (len != ETHER_ADDR_LEN) {
-	//	print_err("unexpected length (%d) of incoming mac address (%s)", len, mac);
-	//}
-	sprintf(mac_out, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-
-    return (char *)mac_out;
-}
 
 void drv_eth_info(void)
 {
@@ -307,7 +265,7 @@ PTR         drv_eth_heap_alloc(void)
             
         print_eth("[dbg] ---> net heap alloc: addr_%x", (U32)addr);
     } else {
-        print_err("network heap is full");
+        print_err("%s", "network heap is full");
         addr = NULL;
     }
     
@@ -328,7 +286,7 @@ int         drv_eth_heap_free(PTR ptr)
     pList = &pEthHeapCtx->list[index];
     
     if (!pList->status) {
-        print_err("double free operation: blocked");
+        print_err("%s", "double free operation: blocked");
         return FAILURE;
     }
 
@@ -359,7 +317,7 @@ static unsigned int drv_eth_rx_put(unsigned int addr, unsigned int size)
 		next_put = 0;
 
 	if (next_put == pEth->rx_pool_get) {
-		print_err("eth rx pool overflow");
+		print_err("%s", "eth rx pool overflow");
 		return 1;
 	}
 
@@ -408,119 +366,5 @@ static int drv_eth_heap_init(void)
     print_eth(" - next AI[%d]_%x FI[%d]_%x", 0, pEthHeapCtx->next_alloc_item, i, (U32)pEthHeapCtx->next_free_item);
 
     return SUCCESS;
-}
-
-void drv_arp_table_info(void)
-{
-	unsigned int i;
-	uchar s[15];
-
-/*
-	//test
-	pEth->arp_table[0].type = ARP_TABLE_TYPE_ETH;
-	pEth->arp_table[0].ip_addr = pEth->cfg_ip_addr;
-	pEth->arp_table[0].reg_time = 250;
-	memcpy(pEth->arp_table[0].hw_addr, pEth->cfg_mac_addr, ETHER_ADDR_LEN);
-
-	pEth->arp_table[1].type = ARP_TABLE_TYPE_VIRT;
-	pEth->arp_table[1].ip_addr = pEth->cfg_ip_server;
-	memcpy(pEth->arp_table[1].hw_addr, pEth->cfg_mac_addr, ETHER_ADDR_LEN);
-	pEth->arp_table[1].reg_time = 5;
-
-	drv_arp_table_reg_ip(pEth->cfg_ip_netmask, pEth->cfg_mac_addr, ARP_TABLE_TYPE_ETH, 1555);
-*/
-
-	print_inf("--------------------------------------------------\n");	/* 50 symbols */
-	print_inf("ARP info\n");
-	print_inf("--------------------------------------------------\n");
-	print_inf("Address          HWtype  ST      HWaddress\n");			
-	for (i=0; i< ARP_TABLE_SIZE; i++) {
-		if (pEth->arp_table[i].type != ARP_TABLE_TYPE_NONE){
-
-			print_inf("%s  %s  %6d     %s\n", 
-				drv_ip_to_string(pEth->arp_table[i].ip_addr, &s[0]),
-				((pEth->arp_table[i].type == ARP_TABLE_TYPE_ETH)?"ether":"virt "),
-				pEth->arp_table[i].reg_time,
-				drv_mac_to_string(pEth->arp_table[i].hw_addr));		
-		}
-	}
-	print_inf("--------------------------------------------------\n");
-	
-	return;		
-}
-
-uchar drv_arp_table_check_ip(IPaddr_t ip, char **mac)
-{
-	uchar reg_time = 0;
-	unsigned int i;
-
-	for (i=0; i< ARP_TABLE_SIZE; i++) {
-		if (pEth->arp_table[i].ip_addr == ip){
-			reg_time = pEth->arp_table[i].reg_time;
-			*mac = pEth->arp_table[i].hw_addr;
-			break;
-		}
-	}
-
-	return reg_time;
-}
-
-void drv_arp_table_reg_ip(IPaddr_t ip, char *mac, ushort type, unsigned int curr_reg_time)
-{
-	unsigned int i;
-
-	//find the empty place
-	for (i=0; i< ARP_TABLE_SIZE; i++) {
-		if (pEth->arp_table[i].type == ARP_TABLE_TYPE_NONE){
-			pEth->arp_table[i].type = type;
-			pEth->arp_table[i].ip_addr = ip;
-			pEth->arp_table[i].reg_time = curr_reg_time;
-			memcpy(pEth->arp_table[i].hw_addr, mac, ETHER_ADDR_LEN);
-
-			//new entry successfully registered into new place
-			return;
-		}
-	}
-
-	//all empty places are used. resync ARP table 
-	for (i=0; i< ARP_TABLE_SIZE; i++) {
-		if ((curr_reg_time - pEth->arp_table[i].reg_time) >= ARP_TABLE_VALID_PERIOD_SEC) {
-			pEth->arp_table[i].reg_time = 0;
-		}
-	}
-	//and write new entry into first obsolete place
-	for (i=0; i< ARP_TABLE_SIZE; i++) {
-		if (pEth->arp_table[i].reg_time == 0){
-			pEth->arp_table[i].type = type;
-			pEth->arp_table[i].ip_addr = ip;
-			pEth->arp_table[i].reg_time = curr_reg_time;
-			memcpy(pEth->arp_table[i].hw_addr, mac, ETHER_ADDR_LEN);
-
-			//new entry successfully registered into obsolete place
-			return;
-		}
-	}
-
-	//ARP table still is full, analyse the oldest entry and replace it
-	{
-		unsigned int delta = 0; //seconds
-		unsigned int target_index = 0;
-		
-		for (i=0; i< ARP_TABLE_SIZE; i++) {
-			unsigned int curr_delta = curr_reg_time - pEth->arp_table[i].reg_time;
-			if (curr_delta > delta) {
-				delta = curr_delta;
-				target_index = i;
-			}
-		}
-
-		pEth->arp_table[target_index].type = type;
-		pEth->arp_table[target_index].ip_addr = ip;
-		pEth->arp_table[target_index].reg_time = curr_reg_time;
-		memcpy(pEth->arp_table[target_index].hw_addr, mac, ETHER_ADDR_LEN);
-	}
-	
-	//new entry successfully registered insteade the oldest entry
-	return;
 }
 

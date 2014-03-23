@@ -21,7 +21,7 @@
 #include "global.h"
 #include "drv_eth.h"
 #include "drv_utils.h"
-
+#include "net.h"
 
 /************************************************
  *              DEFINITIONS                                                *
@@ -39,6 +39,7 @@ int local_net_set_ipv4_hdr(volatile uchar * pkt, ushort payload_len, ushort frag
 int local_net_set_icmp_hdr(volatile uchar * pkt, uchar type, uchar code, ushort id);
 void local_net_arp_request (void);
 int local_net_set_arp_hdr(volatile uchar * pkt);
+void local_net_arp_timeout_check (void);
 
 
 /************************************************
@@ -52,7 +53,8 @@ void net_ping_req(unsigned int timeout_ms, IPaddr_t ip_addr)
     unsigned int i;
 	unsigned int mac_reg_time;
 	char *dst_mac;
-    
+	char mac_out[64];
+	
     drv_ip_to_string(ip_addr, &ip_str[0]);
 
     //FORMAT: "PING <DNS or incomming IP address> (<IP address>): <size>(<fsize>) bytes of data"
@@ -60,12 +62,12 @@ void net_ping_req(unsigned int timeout_ms, IPaddr_t ip_addr)
 
 
 	//check ping  ip at ARP table
-	drv_arp_table_info();
-	mac_reg_time = drv_arp_table_check_ip(ip_addr, &dst_mac);
+	arp_table_info();
+	mac_reg_time = arp_table_check_ip(ip_addr, &dst_mac);
 
-	print_net(" -- ARP MAC status: mac_reg_time_%d mac: %s", mac_reg_time, drv_mac_to_string(dst_mac));
+	print_net(" -- ARP MAC status: mac_reg_time_%d mac: %s", mac_reg_time, drv_mac_to_string(&mac_out, dst_mac));
 
-	drv_arp_table_reg_ip(pEth->cfg_ip_dns, pEth->cfg_mac_addr, ARP_TABLE_TYPE_ETH, 2234);
+	arp_table_reg_ip(pEth->cfg_ip_dns, pEth->cfg_mac_addr, ARP_TABLE_TYPE_ETH, 2234);
 
 	
 
@@ -197,7 +199,7 @@ int local_net_set_ipv4_hdr(volatile uchar * pkt, ushort payload_len, ushort frag
     ip->ip_p     = prot;
     memcpy((void*)&ip->ip_src, (void*)pEth->cfg_ip_addr, sizeof(IPaddr_t));
     memcpy((void*)&ip->ip_dst, (void*)&ip_dst, sizeof(IPaddr_t));
-    ip->ip_sum   = ~(sys_checksum ((uchar *)ip, IP_HDR_SIZE / 2));    
+    ip->ip_sum   = ~(sys_checksum ((ushort *)ip, IP_HDR_SIZE / 2));    
     
     return IP_HDR_SIZE;
 }
@@ -215,7 +217,7 @@ int local_net_set_icmp_hdr(volatile uchar * pkt, uchar type, uchar code, ushort 
             icmp->icmp_code = code;
             icmp->icmp_id = id;
             icmp->icmp_sn = htons (pEth->PingSeqNo++);
-            icmp->icmp_sum = ~(sys_checksum ((uchar *)icmp, ICMP_ECHO_HDR_SIZE / 2));
+            icmp->icmp_sum = ~(sys_checksum ((ushort *)icmp, ICMP_ECHO_HDR_SIZE / 2));
 
             icmp_hdr_size = ICMP_ECHO_HDR_SIZE;
             

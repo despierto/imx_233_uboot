@@ -62,9 +62,9 @@ Additional Features. In addition to offering all of the features of a Layer 2 co
  ************************************************************************************************************************************/
 
 #include "global.h"
-#include "net_ks8851.h"
+#include "drv_ks8851.h"
 #include "drv/regs_ks8851.h"
-#include "spi.h"
+#include "drv_spi.h"
 
 
 
@@ -117,7 +117,7 @@ uint 			ks_get_rx_addres_filter(uint option);
   *              GLOBAL FUNCTIONS                                      *
   ************************************************/
 
-RESULTCODE  net_ks8851_init(PTR ptr)
+RESULTCODE  ks8851_init(PTR ptr)
 {
     RESULTCODE  ret = 0;
     U16         chip_id;
@@ -147,7 +147,7 @@ RESULTCODE  net_ks8851_init(PTR ptr)
     ks->fid = 0;
 
     ks_mac_default_set();
-    //net_ks8851_mac_set("AA:BB:CC:DD:EE:FF");
+    //ks8851_mac_set("AA:BB:CC:DD:EE:FF");
 
     ks_config(NET_RX_FILTER_HASH_ONLY_W_PHYS_ADDR_PASSED);
 
@@ -159,7 +159,7 @@ RESULTCODE  net_ks8851_init(PTR ptr)
     return ret;
 }
 
-void        net_ks8851_halt(void)
+void        ks8851_halt(void)
 {
     print_net("%s", "KS-8851 network device halt");
 
@@ -178,7 +178,7 @@ void        net_ks8851_halt(void)
     return;
 }
 
-U32         net_ks8851_rxfc_get(void)
+U32         ks8851_rxfc_get(void)
 {
     U32 rxfc, status;
         
@@ -194,7 +194,7 @@ U32         net_ks8851_rxfc_get(void)
     return rxfc;
 }
 
-U32         net_ks8851_rx(PTR rx_buff)
+U32         ks8851_rx(PTR rx_buff)
 {
     uint    rxh;
     ushort  rxlen, status;
@@ -229,7 +229,7 @@ U32         net_ks8851_rx(PTR rx_buff)
     return (U32)rxlen;
 }
 
-RESULTCODE  net_ks8851_tx(VPTR packet, U32 length)
+RESULTCODE  ks8851_tx(VPTR packet, U32 length)
 {
     ushort fid = 0;
     ushort txsr;
@@ -279,7 +279,7 @@ RESULTCODE  net_ks8851_tx(VPTR packet, U32 length)
     return 0;
 }
 
-void net_ks8851_mac_set(const char *ethaddr)
+void ks8851_mac_set(const char *ethaddr)
 {
     int i;
     uchar mac[6];

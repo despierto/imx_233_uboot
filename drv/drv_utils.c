@@ -20,6 +20,9 @@
 
 #include <stdio.h>
 #include "drv_utils.h"
+#include "drv_eth.h"
+#include "sys_utils.h"
+
 
 void drv_delay(unsigned int us)
 {
@@ -35,5 +38,54 @@ void drv_delay(unsigned int us)
     return;
 }
 
+IPaddr_t drv_string_to_ip(char *s)
+{
+    IPaddr_t addr;
+    char *e;
+    int i;
 
+    if (s == NULL)
+        return(0);
+
+    for (addr=0, i=0; i<4; ++i) {
+        ulong val = s ? simple_strtoul(s, &e, 10) : 0;
+        
+        addr <<= 8;
+        addr |= (val & 0xFF);
+        if (s) {
+            s = (*e) ? e+1 : e;
+        }
+    }
+
+    return (htonl(addr));
+}
+
+char *drv_ip_to_string(IPaddr_t ip, uchar *buf)
+{
+    sprintf((char *)buf, "%03d.%03d.%03d.%03d", (ip & 0xFF), ((ip >> 8) & 0xFF), ((ip >> 16) & 0xFF), ((ip >> 24) & 0xFF));
+    return (char *)buf;
+}
+
+char *drv_mac_to_string(uchar *mac_out, uchar *mac_in)
+{
+	//unsigned int len = strnlen(mac, ETHER_ADDR_LEN);
+	//if (len != ETHER_ADDR_LEN) {
+	//	print_err("unexpected length (%d) of incoming mac address (%s)", len, mac);
+	//}
+	sprintf((char *)mac_out, "%02X:%02X:%02X:%02X:%02X:%02X", mac_in[0], mac_in[1], mac_in[2], mac_in[3], mac_in[4], mac_in[5]);
+
+    return (char *)mac_out;
+}
+
+void drv_string_to_mac(const char *addr, uchar *mac)
+{
+    char *end;
+    int i;
+   
+    for (i = 0; i < 6; ++i) {
+        mac[i] = addr ? simple_strtoul(addr, &end, 16) : 0;
+        if (addr)
+            addr = (*end) ? end + 1 : end;
+    }
+}
 

@@ -153,12 +153,12 @@ void sys_print_error(const char* filename, const char* funcname, const int nrow)
     return;
 }
 
-int sys_checksum_ok(uchar * ptr, int len)
+int sys_checksum_ok(ushort * ptr, int len)
 {
     return !((sys_checksum(ptr, len) + 1) & 0xfffe);
 }
 
-uint sys_checksum(uchar * ptr, int len)
+uint sys_checksum(ushort * ptr, int len)
 {
     ulong   xsum;
     ushort *p = (ushort *)ptr;

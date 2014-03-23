@@ -46,5 +46,6 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DCODEPROTENA")
 
 add_subdirectory(sys)
 add_subdirectory(drv)
+add_subdirectory(net)
 add_subdirectory(mach)
 add_subdirectory(core)

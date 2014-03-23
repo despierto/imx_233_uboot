@@ -34,4 +34,7 @@
 extern PHEAPHEADER hGlobalHeap;
 
 
+#define malloc(size)	sys_heap_alloc(hGlobalHeap, size)
+#define free(ptr)		sys_heap_free(hGlobalHeap, ptr)
+
 #endif /*_GLOBAL_H_*/

@@ -18,11 +18,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
- #ifndef __DRV_ETH_H__
- #define __DRV_ETH_H__
+#ifndef __DRV_ETH_H__
+#define __DRV_ETH_H__
 
-#include "net.h"
-
+#include "types.h"
+#include "platform.h"
 
 #define	GBL_ETH_DIAG_ENA
 
@@ -34,53 +34,67 @@
 #define ETH_PKTSIZE             1518
 #define ETH_PKTSIZE_ALIGN       1536
 #define ETH_PKTALIGN            32
-#define ETH_PKTBUFSRX           4                               /* Rx MAX supported by ks8851 is 12KB */
-#define ETH_PKTBUFSTX           1                               /* Tx MAX supported by ks8851 is 6KB */
+#define ETH_PKTBUFSRX           4           /* Rx MAX supported by ks8851 is 12KB */
+#define ETH_PKTBUFSTX           1           /* Tx MAX supported by ks8851 is 6KB */
 
 #define ETH_RX_POOL_SIZE        256
+
+#define VLAN_NONE       		4095        /* untagged (0x1000)*/
+#define VLAN_IDMASK     		0x0fff      /* mask of valid vlan id */
+
+#define ETHER_ADDR_LEN       	6      		/* Length of ethernet MAC address */
+#define ETHER_HDR_SIZE      	14        	/* Ethernet header size */
+#define E802_HDR_SIZE       	22         	/* 802 ethernet header size */
+
+/* Ethernet header  */
+typedef struct {
+    uchar       et_dest[ETHER_ADDR_LEN];    /* Destination node */
+    uchar       et_src[ETHER_ADDR_LEN];     /* Source node */
+    ushort      et_protlen;                 /* Protocol or length */
+    uchar       et_dsap;                    /* 802 DSAP */
+    uchar       et_ssap;                    /* 802 SSAP */
+    uchar       et_ctl;                     /* 802 control */
+    uchar       et_snap1;                   /* SNAP */
+    uchar       et_snap2;
+    uchar       et_snap3;
+    ushort      et_prot;                    /* 802 protocol */
+} Ethernet_t;
+
+/* VLAN Ethernet header */
+typedef struct {
+    uchar       vet_dest[ETHER_ADDR_LEN];   /* Destination node */
+    uchar       vet_src[ETHER_ADDR_LEN];    /* Source node */
+    ushort      vet_vlan_type;              /* PROT_VLAN */
+    ushort      vet_tag;                    /* TAG of VLAN */
+    ushort      vet_type;                   /* protocol type */
+} VLAN_Ethernet_t;
 
 typedef struct _ETH_POOL_ {
     U32         addr;
     U32         size;    
 }ETH_POOL, *PETH_POOL;
 
-
-#define ARP_TABLE_SIZE				10
-#define ARP_TABLE_TYPE_NONE			0
-#define ARP_TABLE_TYPE_ETH			1
-#define ARP_TABLE_TYPE_VIRT			2
-#define ARP_TABLE_VALID_PERIOD_SEC	30	/* 255 max */
-#define ARP_TABLE_TTL_OBSOLETE		0
-
-typedef struct _ARP_TABLE_
-{
-	IPaddr_t		ip_addr;
-	uchar       	hw_addr[ETHER_ADDR_LEN];
-	ushort 			type;	
-	unsigned int 	reg_time;										/* time in sen when MAC addr wa placed into cache. 0 sec means MAC address is obsolete */
-} ARP_TABLE, *PARP_TABLE;
-
 //declarations
 typedef struct _ETH_CTX_ {
-    volatile uchar *NetTxPackets[ETH_PKTBUFSTX];                        /* Transmit packets */
-    volatile uchar *NetRxPackets[ETH_PKTBUFSRX];                        /* Receive packets */
+    volatile uchar *NetTxPackets[ETH_PKTBUFSTX]; 		/* Transmit packets */
+    volatile uchar *NetRxPackets[ETH_PKTBUFSRX];   		/* Receive packets */
 
-    volatile uchar *NetArpWaitTxPacket;                             /* THE transmit packet */
+    volatile uchar *NetArpWaitTxPacket;               	/* THE transmit packet */
     unsigned int    NetArpWaitTxPacketSize;
 
-    unsigned int    Status;                                         /* disabled */
+    unsigned int    Status;                         	/* disabled */
     char            BootFile[CONFIG_BOOTFILE_SIZE];
     unsigned int    linux_load_addr;
 
-    uchar           *NetArpWaitPacketMAC;                            /* MAC address of waiting packet's destination */
+    uchar           *NetArpWaitPacketMAC;           	/* MAC address of waiting packet's destination */
     IPaddr_t        NetArpWaitPacketIP;
     IPaddr_t        NetArpWaitReplyIP;
 
-    unsigned int    NetArpWaitTimerStart;                           /* in usec */
+    unsigned int    NetArpWaitTimerStart;             	/* in usec */
     unsigned int    NetArpWaitTry;
 
-    ushort          NetIPID;                                        /* IP packet ID */
-    ushort          PingSeqNo;                                      /* PING request counter */
+    ushort          NetIPID;                          	/* IP packet ID */
+    ushort          PingSeqNo;                        	/* PING request counter */
     
     uchar           cfg_mac_addr[ETHER_ADDR_LEN];
     IPaddr_t        cfg_ip_addr;
@@ -90,11 +104,9 @@ typedef struct _ETH_CTX_ {
     IPaddr_t        cfg_ip_dns;
     IPaddr_t        cfg_ip_vlan;
     
-	ETH_POOL		rx_pool[ETH_RX_POOL_SIZE];						/* queue of incomming packets */
+	ETH_POOL		rx_pool[ETH_RX_POOL_SIZE];			/* queue of incomming packets */
 	unsigned int	rx_pool_get;
 	unsigned int	rx_pool_put;	
-
-	ARP_TABLE		arp_table[ARP_TABLE_SIZE];
 }ETH_CTX, *PETH_CTX;
 
 typedef struct _ETH_HEAP_LIST_ {
@@ -160,28 +172,17 @@ static inline int is_valid_ether_addr(const uchar * addr)
     return !is_multicast_ether_addr(addr) && !is_zero_ether_addr(addr);
 }
 
-
-
-
-
-
-
 int         drv_eth_init(void);
 void        drv_eth_halt(void);
+
 int         drv_eth_rx(void);
 unsigned int drv_eth_rx_get(unsigned int *addr);
 int         drv_eth_tx(volatile void *packet, int length);
-void        drv_eth_parse_enetaddr(const char *addr, uchar *enetaddr);
-IPaddr_t    drv_string_to_ip(char *s);
-char *		drv_mac_to_string(uchar *mac);
-char        *drv_ip_to_string(IPaddr_t ip, uchar *buf);
+
 void        drv_eth_info(void);
 
 PTR         drv_eth_heap_alloc(void);
 int         drv_eth_heap_free(PTR ptr);
 
-void 		drv_arp_table_info(void);
-uchar 		drv_arp_table_check_ip(IPaddr_t ip, char **mac);
-void 		drv_arp_table_reg_ip(IPaddr_t ip, char *mac, ushort type, unsigned int sys_time);
-
 #endif /* __DRV_ETH_H__ */
+
