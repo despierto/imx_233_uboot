@@ -23,7 +23,7 @@
 
 #include "types.h"
 #include "net_arp.h"
-
+#include "net_datalink.h"
 
 /************************************************
  *              PROTOCOL HEADERS DEFINITIONS                *
@@ -142,8 +142,10 @@ typedef struct {
 /************************************************
  *              FUNCTION HEADERS DEFINITIONS                 *
  ************************************************/
-void net_ping_req(unsigned int timeout_ms, IPaddr_t ip);
-void net_rx_process(void);
+int 	net_init(void);
+int	 	net_close(void);
+void	net_ping_req(unsigned int timeout_ms, IPaddr_t ip);
+void 	net_rx_process(void);
 
 
 

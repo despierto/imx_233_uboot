@@ -20,9 +20,7 @@
 
 #include <stdio.h>
 #include "drv_utils.h"
-#include "drv_eth.h"
 #include "sys_utils.h"
-
 
 void drv_delay(unsigned int us)
 {

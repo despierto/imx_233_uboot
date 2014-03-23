@@ -61,7 +61,7 @@
 /* CLKCTRL_FRAC register bits, bit fields and values */
 #define CLKSEQ_BYPASS_SSP   (1 << 5)
 
-void init_clocks(void);
+int init_clocks(void);
 
 #endif /* __CLKCTRL_H__ */
 

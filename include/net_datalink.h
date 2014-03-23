@@ -1,7 +1,7 @@
-/*
- * iMX233 HW pin mux init
+/**
+ * Data link layer header file
  *
- * Copyright (c) 2013 X-boot GITHUB team
+ * Copyright (c) 2014 X-boot GITHUB team
   *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,22 +18,30 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "global.h"
-#include "pinmux.h"
+ #ifndef __NET_DATALINK_H__
+ #define __NET_DATALINK_H__
 
-void init_pinmux(void)
-{
-    //print_pin("%s", "Configure SSP1 pins for ENC28j60: 8maA");
-        
-    /*  */
-    REG_CLR(PINCTRL_BASE + PINCTRL_MUXSEL(4), 0x00003fff);
+#include "types.h"
+#include "platform.h"
+#include "drv_eth.h"
 
-    REG_CLR(PINCTRL_BASE + PINCTRL_DRIVE(8), 0X03333333);
-    REG_SET(PINCTRL_BASE + PINCTRL_DRIVE(8), 0x01111111);
 
-    REG_CLR(PINCTRL_BASE + PINCTRL_PULL(2), 0x0000003f);
-    sleep_ms(10);
-    
-    return;
-}
+/************************************************
+ *              DEFINITIONS         					       *
+ ************************************************/
+typedef struct _ETH_PKT_ {
+    ETH_HDR		header;
+    U8			*payload;    
+}ETH_PKT, *PETH_PKT;
+
+
+/************************************************
+ *              FUNCTIONs								*
+ ************************************************/
+int datalink_open(void);
+int datalink_close(void);
+
+
+
+#endif /* __NET_DATALINK_H__ */
 

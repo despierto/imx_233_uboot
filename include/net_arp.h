@@ -22,7 +22,7 @@
  #define __NET_ARP_H__
 
 #include "types.h"
-#include "drv_eth.h"
+#include "net_datalink.h"
 
 
 /************************************************

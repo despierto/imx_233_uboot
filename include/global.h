@@ -28,7 +28,7 @@
 #include "platform.h"
 #include "sys_utils.h"
 #include "sys_heap.h"
-#include "drv_eth.h"
+#include "net_datalink.h"
 
 
 #define GBL_HEAP_BLOCKS_COUNT	100

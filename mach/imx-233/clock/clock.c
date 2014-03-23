@@ -26,14 +26,14 @@
 #define MHz             (1000 * KHz)
 #define IO_DIVIDER      (18)
 
-void init_clocks(void)
+int init_clocks(void)
 {
     U32 ssp_source_clk, ssp_clk;
     U32 ssp_div = 1;
     U32 val = 0;
     U32 devider;
 
-    print_clk("%s", "Initialize clocks");
+    //print_clk("%s", "Initialize clocks");
 
     /* Configure CPU IO clock  */
 
@@ -45,9 +45,10 @@ void init_clocks(void)
     val = HW_CLKCTRL_FRAC_RD();
     devider = (val & BM_CLKCTRL_FRAC_CPUFRAC);
     if (CPU_CLK_DEVIDER != devider) {
-        print_err("CPU frequency wasn't adjusted, read devider is (%d)", devider);
+        //print_err("CPU frequency wasn't adjusted, read devider is (%d)", devider);
+        return  FAILURE;
     } else {
-        print_clk(" - check CPU frequency: %d Hz", 480*(18*1000000/devider)); 
+       // print_clk(" - check CPU frequency: %d Hz", 480*(18*1000000/devider)); 
     }
 
     /* Set SSP CLK to desired value  */
@@ -79,9 +80,9 @@ void init_clocks(void)
     REG_SET(CLKCTRL_BASE + CLKCTRL_CLKSEQ, CLKSEQ_BYPASS_SSP);
     REG_CLR(CLKCTRL_BASE + CLKCTRL_CLKSEQ, CLKSEQ_BYPASS_SSP);
 
-    print_clk(" - SSP clock was initialized with frequenct %d Hz", ssp_source_clk);     
+    //print_clk(" - SSP clock was initialized with frequenct %d Hz", ssp_source_clk);     
     sleep_ms(10);
     
-    return;
+    return SUCCESS;
 }
 

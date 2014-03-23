@@ -33,7 +33,7 @@
 #define SPI_STOP            0x2         /* Unlock CS signal */
 
 /* Init SSPx interface, must be called first */
-void spi_init(void);
+int spi_init(void);
 
 /* Set phase, polarity and CS number (SS0, SS1, SS2)  */
 void spi_set_cfg(unsigned int bus, unsigned int cs, unsigned long mode);

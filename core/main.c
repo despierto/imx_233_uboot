@@ -19,10 +19,70 @@
  */
 
 /*************************************************
+ *                   STRUCTURE                                              *
+ *************************************************/
+/*
+
+-------------------------------------------
+	cmgr:
+	- command "ping"
+-------------------------------------------
+	net_app:
+	- net_app_ping
+-------------------------------------------
+	net:
+	- net_alloc_ip
+	- net_alloc_icmp
+	- net_send_ip
+	- net_send_icmp
+	- net_rx_task
+		|-- ICMP processing
+		|-- placing packet to appropriate queue (TCP, UDC, etc)
+-------------------------------------------
+	net_datalink:					<-- net_arp
+	- datalink_open
+	- datalink_tx_alloc
+	- datalink_tx_send
+		|-- add MAC addresses, type
+		|-- ARP processing				
+		|-- place packet into tx queue		
+	- datalink_close
+	- datalink_task
+		|--process rx queue
+		|	|-- process ethernet header
+		|	|-- place incoming packet into net rx queue
+	- datalink_rx_get_pkt
+-------------------------------------------
+	drv_eth:
+	- drv_eth_init
+	- drv_eth_halt
+	- drv_eth_rx
+	- drv_eth_rx_get
+	- drv_eth_tx
+	- drv_eth_info
+	- drv_eth_heap_alloc
+	- drv_eth_heap_free
+	- drv_eth_mac_is_valid
+	- drv_eth_mac_is_multicast
+	- drv_eth_mac_is_zero
+-------------------------------------------
+	drv_ks8851: 
+	- ks8851_init 
+	- ks8851_halt
+	- ks8851_rxfc_get
+	- ks8851_rx
+	- ks8851_tx
+	- ks8851_mac_set
+-------------------------------------------
+                         ||
+-------------------------------------------
+	[Chip  KS8851 ethernet PHY & MAC]
+
+*/
+/*************************************************
  *                   X-BOOT entry                *
  *************************************************/
 #include "global.h"
-#include "drv_eth.h"
 #include "clkctrl.h"
 #include "pinmux.h"
 #include "drv_spi.h"
@@ -41,10 +101,10 @@ PGBL_CTX	pGblCtx;
 
 
 static unsigned int system_time_msec = 0;
-static void initialization(void);
+static int initialization(void);
 static void termination(void);
 static void rt_process(void);
-
+void 		gbl_pring_info(void);
 
 /************************************************
   *              ENTRY  FUNCTION                                      *
@@ -58,10 +118,14 @@ void  _start(void)
     print_inf("%s %s\r\n", __DATE__, __TIME__);
     print_inf("Version: %d.%d\r\n\r\n", XBOOT_VERSION_R, XBOOT_VERSION_RC);
 
-    initialization();
+    if (initialization()) {
+		print_err("%s", "stop processing: initialization not competed");
+		while(1);
+		return;
+	}
 
-    //viewk system configuration
-    drv_eth_info();
+    //view system configuration
+    //gbl_pring_info();
 
     //do a test ping
     net_ping_req(10000UL, pGblCtx->cfg_ip_server);
@@ -79,7 +143,6 @@ void  _start(void)
     }
 
     termination();
-        
     return;
 }
 
@@ -88,8 +151,9 @@ void  _start(void)
 /************************************************
   *              LOCAL  FUNCTIONs                                      *
   ************************************************/
-static void initialization(void)
+static int initialization(void)
 {
+	int rc = SUCCESS;
     print_log("%s", "Environment initialization");
 
 	/* Global Heap Initialization */
@@ -127,11 +191,12 @@ static void initialization(void)
 		heap_test_rc |= sys_heap_free(hGlobalHeap, ptr1);
  		heap_test_rc |= sys_heap_free(hGlobalHeap, ptr2);		
 
-		print_inf("[sys] %s", "Heap test... ");
+		//print_inf("[sys] %s", "Heap test... ");
 		if (heap_test_rc == SUCCESS) {
-			print_inf("%s", "PASSED\n");
+			//print_inf("%s", "PASSED\n");
 		} else {
-			print_inf("%s", "FAILED\n");
+			//print_inf("%s", "FAILED\n");
+			return FAILURE;
 		}
 	}
 
@@ -140,18 +205,17 @@ static void initialization(void)
 	memset((void *)pGblCtx, 0, sizeof(GBL_CTX));
 
     /* Configure CPU and SSP clocks*/
-    init_clocks();
+    rc |= init_clocks();
    
     /* Configure SSP1 pins*/
     init_pinmux();
 
     /* Configure SPI on SSP1*/
-    spi_init();
+    rc |= spi_init();
 
-    /* Configure Ethernt device*/
-    drv_eth_init();
+   	rc |= net_init();
 
-    return;
+    return rc;
 }
 
 static void rt_process(void)
@@ -165,8 +229,25 @@ static void termination(void)
 {
     print_log("%s", "Environment termination");
 
-    drv_eth_halt();
+	net_close();
 
     return;
 }
 
+void gbl_pring_info(void)
+{
+    uchar s[15];
+    
+    print_eth("%s", "Ethernet configuration:");
+    print_eth(" - ipaddr:       %s", drv_ip_to_string(pGblCtx->cfg_ip_addr, &s[0]));
+    print_eth(" - netmask:      %s", drv_ip_to_string(pGblCtx->cfg_ip_netmask, &s[0]));
+    print_eth(" - gatewayip:    %s", drv_ip_to_string(pGblCtx->cfg_ip_gateway, &s[0]));
+    print_eth(" - serverip:     %s", drv_ip_to_string(pGblCtx->cfg_ip_server, &s[0]));
+    print_eth(" - dnsip:        %s", drv_ip_to_string(pGblCtx->cfg_ip_dns, &s[0]));
+    print_eth(" - vlanip:       %s", drv_ip_to_string(pGblCtx->cfg_ip_vlan, &s[0]));
+
+	drv_eth_info();
+	arp_table_info();
+	
+    return;
+}

@@ -135,7 +135,7 @@
 #define CONFIG_VLANIP           "127.0.0.1"
 #define CONFIG_VLANNETMASK      "255.0.0.0"
 #define CONFIG_BOOTDELAY        3                               /* sec */
-#define CONFIG_HW_MAC_ADDR      "00:1F:F2:00:00:00"             /* default HW MAC address */
+#define CONFIG_HW_MAC_ADDR      "00:1F:F3:00:00:00"             /* default HW MAC address */
 
 
 /*====================*/

@@ -109,7 +109,7 @@ void *sys_heap_alloc(PHEAPHEADER hp, U32 size)
 				if (new_block) {
 					hp->pheap_block_list->next_block = new_block->next_block;
 				} else {
-					print_err("%s", "no more free heap blocks");
+					print_err("%s", "no blocks");
 					return ptr;
 				}
 		
@@ -137,7 +137,7 @@ void *sys_heap_alloc(PHEAPHEADER hp, U32 size)
 	} while ((U32)current_block != (U32)head_block);
 
 	if (ptr == NULL) {
-		print_err("%s", "no more free heap memory");
+		print_err("%s", "no mem");
 	}
 
 	return ptr;
@@ -151,7 +151,7 @@ int sys_heap_free(PHEAPHEADER hp, void * ptr)
 	int rc = FAILURE;
 
 	if (ptr == NULL) {
-		print_err("%s", "incomming ptr is null");
+		//print_err("%s", "incomming ptr is null");
 		return rc;
 	}
 

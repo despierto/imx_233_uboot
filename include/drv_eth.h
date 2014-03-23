@@ -58,6 +58,14 @@ typedef struct {
     ushort      et_prot;                    /* 802 protocol */
 } Ethernet_t;
 
+/* Ethernet 2 header  */
+typedef struct tagETH_HDR{
+    uchar       dest[ETHER_ADDR_LEN];    	/* Destination node */
+    uchar       src[ETHER_ADDR_LEN];     	/* Source node */
+    ushort      protlen;                 	/* Protocol or length */
+} ETH_HDR, *PETH_HDR;
+
+
 /* VLAN Ethernet header */
 typedef struct {
     uchar       vet_dest[ETHER_ADDR_LEN];   /* Destination node */
@@ -74,9 +82,10 @@ typedef struct _ETH_POOL_ {
 
 //declarations
 typedef struct _ETH_CTX_ {
-	ETH_POOL		rx_pool[ETH_RX_POOL_SIZE];			/* queue of incomming packets */
+	ETH_POOL		rx_pool[ETH_RX_POOL_SIZE];		/* queue of incomming packets */
 	unsigned int	rx_pool_get;
 	unsigned int	rx_pool_put;	
+	uchar       	curr_src_mac[ETHER_ADDR_LEN];	/* Destination node */
 }ETH_CTX, *PETH_CTX;
 
 typedef struct _ETH_HEAP_LIST_ {
@@ -102,43 +111,20 @@ typedef struct _ETH_HEAP_CTX_
  *              FUNCTIONS                                                  *
  ************************************************/
 
-/**
- * is_zero_ether_addr - Determine if give Ethernet address is all zeros.
- * @addr: Pointer to a six-byte array containing the Ethernet address
- *
- * Return true if the address is all zeroes.
- */
-static inline int is_zero_ether_addr(const uchar *addr)
+static inline int drv_eth_mac_is_zero(const uchar *addr)
 {
     return !(addr[0] | addr[1] | addr[2] | addr[3] | addr[4] | addr[5]);
 }
 
-/**
- * is_multicast_ether_addr - Determine if the Ethernet address is a multicast.
- * @addr: Pointer to a six-byte array containing the Ethernet address
- *
- * Return true if the address is a multicast address.
- * By definition the broadcast address is also a multicast address.
- */
-static inline int is_multicast_ether_addr(const uchar *addr)
+static inline int drv_eth_mac_is_multicast(const uchar *addr)
 {
     return (0x01 & addr[0]);
 }
 
-/**
- * is_valid_ether_addr - Determine if the given Ethernet address is valid
- * @addr: Pointer to a six-byte array containing the Ethernet address
- *
- * Check that the Ethernet address (MAC) is not 00:00:00:00:00:00, is not
- * a multicast address, and is not FF:FF:FF:FF:FF:FF.
- *
- * Return true if the address is valid.
- */
-static inline int is_valid_ether_addr(const uchar * addr)
+static inline int drv_eth_mac_is_valid(const uchar * addr)
 {
-    /* FF:FF:FF:FF:FF:FF is a multicast address so we don't need to
-     * explicitly check for it here. */
-    return !is_multicast_ether_addr(addr) && !is_zero_ether_addr(addr);
+    /* FF:FF:FF:FF:FF:FF is a multicast address so we don't need to explicitly check for it here. */
+    return !drv_eth_mac_is_multicast(addr) && !drv_eth_mac_is_zero(addr);
 }
 
 int         drv_eth_init(void);

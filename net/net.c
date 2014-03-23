@@ -19,8 +19,6 @@
  */
 
 #include "global.h"
-#include "drv_eth.h"
-#include "drv_utils.h"
 #include "net.h"
 
 /************************************************
@@ -45,6 +43,65 @@ void local_net_arp_timeout_check (void);
 /************************************************
  *              GLOBAL FUNCTIONS                                      *
  ************************************************/
+int net_init(void)
+{
+	int rc;
+	U32 i;
+	
+	print_net("%s", "Network initialization");
+
+	//set config
+	drv_string_to_mac(CONFIG_HW_MAC_ADDR, &pGblCtx->cfg_mac_addr[0]); 	   // "ethaddr"
+    pGblCtx->cfg_ip_addr       = drv_string_to_ip(CONFIG_IPADDR);          // "ipaddr"
+    pGblCtx->cfg_ip_netmask    = drv_string_to_ip(CONFIG_NETMASK);         // "netmask"
+    pGblCtx->cfg_ip_gateway    = drv_string_to_ip(CONFIG_GATEWAYIP);       // "gatewayip"
+    pGblCtx->cfg_ip_server     = drv_string_to_ip(CONFIG_SERVERIP);        // "serverip"
+    pGblCtx->cfg_ip_dns        = drv_string_to_ip(CONFIG_DNSIP);           // "dnsip"
+    pGblCtx->cfg_ip_vlan       = drv_string_to_ip(CONFIG_VLANIP);          // "vlanip"
+
+    //delay for printing out the print buffer
+    sleep_ms(100);
+
+	rc = datalink_open();
+    
+    //setup packet buffers, aligned correctly
+    for (i = 0; i < ETH_PKTBUFSTX; i++) {
+        pGblCtx->NetTxPackets[i] = (uchar *)drv_eth_heap_alloc();
+        //print_eth(" - Net TX packet[%d]: addr (0x%x) count (%d)", i, (unsigned int)pGblCtx->NetTxPackets[i], ETH_PKTBUFSTX);        
+    }
+    for (i = 0; i < ETH_PKTBUFSRX; i++) {
+        pGblCtx->NetRxPackets[i] = (uchar *)drv_eth_heap_alloc();
+        //print_eth(" - Net RX packet[%d]: addr (0x%x) count (%d)", i, (unsigned int)pGblCtx->NetRxPackets[i], i+1);                
+    }
+
+    pGblCtx->NetArpWaitTxPacket = (uchar *)drv_eth_heap_alloc();
+    pGblCtx->NetArpWaitTxPacketSize = 0;
+    //print_eth(" - Net Arp Tx packet: base (0x%x) count (%d)", (unsigned int)pGblCtx->NetArpWaitTxPacket, 1);
+    
+    pGblCtx->Status = 0;
+    copy_filename(pGblCtx->BootFile, CONFIG_BOOTFILE, CONFIG_BOOTFILE_SIZE);    
+    pGblCtx->linux_load_addr = SYS_RAM_LOAD_ADDR;
+    
+    pGblCtx->NetArpWaitPacketMAC = NULL;
+    pGblCtx->NetArpWaitPacketIP = 0;
+    pGblCtx->NetArpWaitReplyIP = 0;
+    pGblCtx->NetArpWaitTimerStart = 0;
+    pGblCtx->NetArpWaitTry = 0;
+    
+	return rc;
+}
+
+int net_close(void)
+{
+	int rc;
+	
+	//print_net("%s", "Network termination");
+	rc = datalink_close();
+
+	return rc;
+}
+
+
 void net_ping_req(unsigned int timeout_ms, IPaddr_t ip_addr)
 {
     uchar ip_str[15];
@@ -61,15 +118,6 @@ void net_ping_req(unsigned int timeout_ms, IPaddr_t ip_addr)
     print_net("PING %s (%s) %d(%d) bytes of data.", ip_str, ip_str, data_size, packet_size);
 
 
-	//check ping  ip at ARP table
-	arp_table_info();
-	mac_reg_time = arp_table_check_ip(ip_addr, &dst_mac);
-
-	print_net(" -- ARP MAC status: mac_reg_time_%d mac: %s", mac_reg_time, drv_mac_to_string((uchar *)&mac_out, (uchar *)dst_mac));
-
-	arp_table_reg_ip(pGblCtx->cfg_ip_dns, (char *)pGblCtx->cfg_mac_addr, ARP_TABLE_TYPE_ETH, 2234);
-
-	
 
 	
     //NetSetTimeout (timeout_ms, PingTimeout);
@@ -89,7 +137,7 @@ void net_ping_req(unsigned int timeout_ms, IPaddr_t ip_addr)
         //sleep_ms(50);
     }
 
-    print_net("Exit from net loop with state (%d)", net_state);
+    print_net("Exit: state (%d)", net_state);
     
     return;
 }

@@ -33,12 +33,12 @@ PETH_CTX		pEth = NULL;
 /**
 * Definition of usage ks8851 as physical layer
 */
-#define net_init(ptr)           ks8851_init(ptr)
-#define net_halt()              ks8851_halt()
-#define net_rxfc_get()          ks8851_rxfc_get()
-#define net_rx(rx_buff)         ks8851_rx(rx_buff) 
-#define net_tx(packet, length)  ks8851_tx(packet, length)
-#define net_mac_set(ethaddr)    ks8851_mac_set(ethaddr)
+#define drv_net_init(ptr)           ks8851_init(ptr)
+#define drv_net_halt()              ks8851_halt()
+#define drv_net_rxfc_get()          ks8851_rxfc_get()
+#define drv_net_rx(rx_buff)         ks8851_rx(rx_buff) 
+#define drv_net_tx(packet, length)  ks8851_tx(packet, length)
+#define drv_net_mac_set(ethaddr)    ks8851_mac_set(ethaddr)
 
 
 static int 			drv_eth_heap_init(void);
@@ -68,40 +68,15 @@ int drv_eth_init(void)
 
     drv_eth_halt();
     
-    //net driver initialization
+    //eth ctx initialization
     print_eth("%s", "Net environment initialization");
 	pEth = (PETH_CTX)malloc(sizeof(ETH_CTX));
 	assert(pEth);
     memset(pEth, 0, sizeof(ETH_CTX));
     print_eth(" - Eth CTX base (0x%x) size (%d) bytes", (unsigned int)pEth, sizeof(ETH_CTX));
 
-    
-    //setup packet buffers, aligned correctly
-    for (i = 0; i < ETH_PKTBUFSTX; i++) {
-        pGblCtx->NetTxPackets[i] = (uchar *)drv_eth_heap_alloc();
-        print_eth(" - Net TX packet[%d]: addr (0x%x) count (%d)", i, (unsigned int)pGblCtx->NetTxPackets[i], ETH_PKTBUFSTX);        
-    }
-    for (i = 0; i < ETH_PKTBUFSRX; i++) {
-        pGblCtx->NetRxPackets[i] = (uchar *)drv_eth_heap_alloc();
-        print_eth(" - Net RX packet[%d]: addr (0x%x) count (%d)", i, (unsigned int)pGblCtx->NetRxPackets[i], i+1);                
-    }
-
-    pGblCtx->NetArpWaitTxPacket = (uchar *)drv_eth_heap_alloc();
-    pGblCtx->NetArpWaitTxPacketSize = 0;
-    print_eth(" - Net Arp Tx packet: base (0x%x) count (%d)", (unsigned int)pGblCtx->NetArpWaitTxPacket, 1);
-    
-    pGblCtx->Status = 0;
-    copy_filename(pGblCtx->BootFile, CONFIG_BOOTFILE, CONFIG_BOOTFILE_SIZE);    
-    pGblCtx->linux_load_addr = SYS_RAM_LOAD_ADDR;
-    
-    pGblCtx->NetArpWaitPacketMAC = NULL;
-    pGblCtx->NetArpWaitPacketIP = 0;
-    pGblCtx->NetArpWaitReplyIP = 0;
-    pGblCtx->NetArpWaitTimerStart = 0;
-    pGblCtx->NetArpWaitTry = 0;
-
-    ret = net_init(NULL);
-
+    ret = drv_net_init(NULL);
+	
     if (ret) {
         drv_eth_halt(); 
         pGblCtx->Status = 0;
@@ -111,21 +86,12 @@ int drv_eth_init(void)
         pGblCtx->Status = 1;
     }
 
-    //delay for printing out the print buffer
-    sleep_ms(100);
-
-    drv_string_to_mac(CONFIG_HW_MAC_ADDR, &pGblCtx->cfg_mac_addr[0]); // "ethaddr"
-    pGblCtx->cfg_ip_addr       = drv_string_to_ip(CONFIG_IPADDR);          // "ipaddr"
-    pGblCtx->cfg_ip_netmask    = drv_string_to_ip(CONFIG_NETMASK);         // "netmask"
-    pGblCtx->cfg_ip_gateway    = drv_string_to_ip(CONFIG_GATEWAYIP);       // "gatewayip"
-    pGblCtx->cfg_ip_server     = drv_string_to_ip(CONFIG_SERVERIP);        // "serverip"
-    pGblCtx->cfg_ip_dns        = drv_string_to_ip(CONFIG_DNSIP);           // "dnsip"
-    pGblCtx->cfg_ip_vlan       = drv_string_to_ip(CONFIG_VLANIP);          // "vlanip"
+	memcpy((void *)pEth->curr_src_mac, (void *)pGblCtx->cfg_mac_addr, ETHER_ADDR_LEN);
+	drv_net_mac_set((char *)pEth->curr_src_mac);
 
 	//rx pool init
 	pEth->rx_pool_get = 0;
 	pEth->rx_pool_put = 0;	
-
 		
     return ret;
 }
@@ -154,7 +120,7 @@ unsigned int drv_eth_rx_get(unsigned int *addr)
 void drv_eth_halt(void)
 {
     print_eth("%s", "Halt Ethernet driver");
-    net_halt();
+    drv_net_halt();
     sleep_ms(100);
 }
 
@@ -163,14 +129,13 @@ int drv_eth_rx(void)
     U32 rx_len, rxfc, i;
     PTR pRxPacket;
 
-    rxfc = net_rxfc_get();
-    //print_eth("-------- RX %d packets -----------", rxfc);
+    rxfc = drv_net_rxfc_get();
     for (; rxfc != 0; rxfc--) {
 
         pRxPacket = drv_eth_heap_alloc();
         assert(pRxPacket);
         
-        rx_len = net_rx(pRxPacket);
+        rx_len = drv_net_rx(pRxPacket);
 		if (rx_len < NET_HW_RX_HEADER_SIZE) {
 			print_eth("WARNING: received packed with unexpected size (%d)", rx_len);
 			continue;
@@ -221,24 +186,12 @@ int drv_eth_tx(void *packet, int length)
     }
 #endif
 
-    net_tx(packet, length);
+    drv_net_tx(packet, length);
     return 0;
 }
 
-
-
 void drv_eth_info(void)
 {
-    uchar s[15];
-    
-    print_eth("%s", "Ethernet configuration:");
-    print_eth(" - ipaddr:       %s", drv_ip_to_string(pGblCtx->cfg_ip_addr, &s[0]));
-    print_eth(" - netmask:      %s", drv_ip_to_string(pGblCtx->cfg_ip_netmask, &s[0]));
-    print_eth(" - gatewayip:    %s", drv_ip_to_string(pGblCtx->cfg_ip_gateway, &s[0]));
-    print_eth(" - serverip:     %s", drv_ip_to_string(pGblCtx->cfg_ip_server, &s[0]));
-    print_eth(" - dnsip:        %s", drv_ip_to_string(pGblCtx->cfg_ip_dns, &s[0]));
-    print_eth(" - vlanip:       %s", drv_ip_to_string(pGblCtx->cfg_ip_vlan, &s[0]));
-
     print_eth("%s", "Network heap status:");
     print_eth(" - alloc count:  %d", pEthHeapCtx->stats_alloc);
     print_eth(" - free  count:  %d", pEthHeapCtx->stats_free);
@@ -258,7 +211,7 @@ PTR         drv_eth_heap_alloc(void)
         pEthHeapCtx->stats_alloc++;
         pEthHeapCtx->stats_balance++;
             
-        print_eth("[dbg] ---> net heap alloc: addr_%x", (U32)addr);
+        //print_eth("[dbg] ---> net heap alloc: addr_%x", (U32)addr);
     } else {
         print_err("%s", "network heap is full");
         addr = NULL;
@@ -285,7 +238,7 @@ int         drv_eth_heap_free(PTR ptr)
         return FAILURE;
     }
 
-    print_eth("[dbg] ---> net heap free: addr_%x", (U32)ptr);
+    //print_eth("[dbg] ---> net heap free: addr_%x", (U32)ptr);
 
     pList->next = NULL;
     pList->status = 0;

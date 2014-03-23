@@ -129,7 +129,7 @@ uint    sys_checksum(ushort * ptr, int len);
 
 #define PRINTF_LOG_OK
 #define PRINTF_ERR_OK
-#define PRINTF_DBG_OK
+//#define PRINTF_DBG_OK
 
 #define PRINTF_INF_OK
 #define PRINTF_NET_OK
