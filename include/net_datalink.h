@@ -36,6 +36,11 @@ typedef struct _ETH_PKT_ {
 
 typedef struct _DATALINK_CTX_ {
 	char       	curr_src_mac[ETHER_ADDR_LEN];	/* Destination node */
+
+	ETH_POOL		tx_pool[ETH_RX_POOL_SIZE];		/* queue of incomming packets */
+	unsigned int	tx_pool_get;
+	unsigned int	tx_pool_put;	
+	
 }DATALINK_CTX, *PDATALINK_CTX;
 
 

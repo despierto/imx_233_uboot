@@ -22,7 +22,6 @@
  #define __NET_H__
 
 #include "types.h"
-#include "net_arp.h"
 #include "net_datalink.h"
 
 /************************************************

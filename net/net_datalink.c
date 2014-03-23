@@ -20,7 +20,7 @@
 
 #include "global.h"
 #include "net_datalink.h"
-
+#include "net_arp.h"
 
 /************************************************
  *              DEFINITIONS                                                *
@@ -46,6 +46,8 @@ int datalink_open(void)
 	if (rc)
 		return rc;
 
+	arp_table_set_valid_period(ARP_TABLE_VALID_PERIOD_SEC);
+
 	//init dala link ctx
 	pDataLinkCtx = (PDATALINK_CTX)malloc(sizeof(DATALINK_CTX));
 	assert(pDataLinkCtx);
@@ -54,9 +56,6 @@ int datalink_open(void)
 	//setup mac address
 	memcpy((void *)pDataLinkCtx->curr_src_mac, (void *)pGblCtx->cfg_mac_addr, ETHER_ADDR_LEN);
 	drv_eth_mac_set(pDataLinkCtx->curr_src_mac);
-
-	
-
 
 	return rc;
 }
@@ -80,29 +79,36 @@ PETH_PKT datalink_tx_alloc(void)
 	return (PETH_PKT)drv_eth_heap_alloc();
 }
 
-int datalink_tx_send(PETH_PKT pEthPkt, IPaddr_t dst_ip)
+int datalink_tx_send(PETH_PKT pEthPkt, IPaddr_t dst_ip, ushort type)
 {
 	int rc = SUCCESS;
+	uchar *dst_mac;
 
 	if (pEthPkt == NULL) {
 		print_err("%s", "packet to send it null");
 		return FAILURE;
 	}
 
-/*
-	//set src ip
-	memcpy ((void *)pEthPkt->header.src, (void *)addr, 6);
-    memcpy ((void *)et->et_src, (void *)pGblCtx->cfg_mac_addr, 6);
+	//set src mac
+	memcpy ((void *)pEthPkt->header.src, (void *)pDataLinkCtx->curr_src_mac, ETHER_ADDR_LEN);
 
-	mac_reg_time = arp_table_check_ip(ip_addr, &dst_mac);
+	//check presence of ip address at ARP table
+	dst_mac = arp_table_get_mac(dst_ip);
 
-	print_net(" -- ARP MAC status: mac_reg_time_%d mac: %s", mac_reg_time, drv_mac_to_string((uchar *)&mac_out, (uchar *)dst_mac));
+	if (dst_mac == NULL) {
+		//no mac or mac is obsolete: needed send request and update mac
+		
+		//mac_reg_time = arp_table_get_mac(ip_addr, &dst_mac);
+		//arp_table_reg_ip(pGblCtx->cfg_ip_dns, (char *)pGblCtx->cfg_mac_addr, ARP_TABLE_TYPE_ETH, 2234);
 
-	arp_table_reg_ip(pGblCtx->cfg_ip_dns, (char *)pGblCtx->cfg_mac_addr, ARP_TABLE_TYPE_ETH, 2234);
-
+		if (dst_mac == NULL)
+			return FAILURE;
+	} 
 	
+	//set dst mac
+    memcpy ((void *)pEthPkt->header.dst, (void *)dst_mac, ETHER_ADDR_LEN);
 
-*/
+	pEthPkt->header.type = type;
 
 	return rc;
 }

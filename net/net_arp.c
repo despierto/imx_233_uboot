@@ -26,6 +26,7 @@
  *              DEFINITIONS                                                *
  ************************************************/
 static PARP_TABLE 	pArpTable = NULL;
+static unsigned int arp_table_valid_period_sec = ARP_TABLE_VALID_PERIOD_SEC;
 
 
 /************************************************
@@ -82,23 +83,36 @@ void arp_table_info(void)
 	return;		
 }
 
-uchar arp_table_check_ip(IPaddr_t ip, char **mac)
+uchar *arp_table_get_mac(IPaddr_t ip)
 {
-	uchar reg_time = 0;
+	unsigned int reg_time = 0;
+	uchar *mac = NULL;
 	unsigned int i;
 
 	for (i=0; i< ARP_TABLE_SIZE; i++) {
 		if (pArpTable[i].ip_addr == ip){
 			reg_time = pArpTable[i].reg_time;
-			*mac = pArpTable[i].hw_addr;
+			mac = pArpTable[i].hw_addr;
 			break;
 		}
 	}
 
-	return reg_time;
+	if (mac != NULL) {
+		unsigned int time_diff = get_time_diff(reg_time, get_time_s());
+		if (time_diff > arp_table_valid_period_sec)
+			mac = NULL;
+	}
+
+	return mac;
 }
 
-void arp_table_reg_ip(IPaddr_t ip, char *mac, ushort type, unsigned int curr_reg_time)
+void arp_table_set_valid_period(unsigned int valid_period_sec)
+{
+	arp_table_valid_period_sec = valid_period_sec;
+	return;
+}
+
+void arp_table_reg_ip(IPaddr_t ip, char *mac, ushort type)
 {
 	unsigned int i;
 
@@ -107,7 +121,7 @@ void arp_table_reg_ip(IPaddr_t ip, char *mac, ushort type, unsigned int curr_reg
 		if (pArpTable[i].type == ARP_TABLE_TYPE_NONE){
 			pArpTable[i].type = type;
 			pArpTable[i].ip_addr = ip;
-			pArpTable[i].reg_time = curr_reg_time;
+			pArpTable[i].reg_time = get_time_s();
 			memcpy(pArpTable[i].hw_addr, mac, ETHER_ADDR_LEN);
 
 			//new entry successfully registered into new place
@@ -117,7 +131,7 @@ void arp_table_reg_ip(IPaddr_t ip, char *mac, ushort type, unsigned int curr_reg
 
 	//all empty places are used. resync ARP table 
 	for (i=0; i< ARP_TABLE_SIZE; i++) {
-		if ((curr_reg_time - pArpTable[i].reg_time) >= ARP_TABLE_VALID_PERIOD_SEC) {
+		if (get_time_diff(pArpTable[i].reg_time, get_time_s()) > arp_table_valid_period_sec) {
 			pArpTable[i].reg_time = 0;
 		}
 	}
@@ -126,7 +140,7 @@ void arp_table_reg_ip(IPaddr_t ip, char *mac, ushort type, unsigned int curr_reg
 		if (pArpTable[i].reg_time == 0){
 			pArpTable[i].type = type;
 			pArpTable[i].ip_addr = ip;
-			pArpTable[i].reg_time = curr_reg_time;
+			pArpTable[i].reg_time = get_time_s();
 			memcpy(pArpTable[i].hw_addr, mac, ETHER_ADDR_LEN);
 
 			//new entry successfully registered into obsolete place
@@ -138,18 +152,19 @@ void arp_table_reg_ip(IPaddr_t ip, char *mac, ushort type, unsigned int curr_reg
 	{
 		unsigned int delta = 0; //seconds
 		unsigned int target_index = 0;
+		unsigned int curr_time = get_time_s();
 		
 		for (i=0; i< ARP_TABLE_SIZE; i++) {
-			unsigned int curr_delta = curr_reg_time - pArpTable[i].reg_time;
-			if (curr_delta > delta) {
-				delta = curr_delta;
+			unsigned int time_diff = get_time_diff(pArpTable[i].reg_time, get_time_s());	
+			if (time_diff > delta) {
+				delta = time_diff;
 				target_index = i;
 			}
 		}
 
 		pArpTable[target_index].type = type;
 		pArpTable[target_index].ip_addr = ip;
-		pArpTable[target_index].reg_time = curr_reg_time;
+		pArpTable[target_index].reg_time = curr_time;
 		memcpy(pArpTable[target_index].hw_addr, mac, ETHER_ADDR_LEN);
 	}
 	

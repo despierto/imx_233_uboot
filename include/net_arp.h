@@ -50,9 +50,9 @@ typedef struct _ARP_TABLE_
 int 		arp_table_create(void);
 int 		arp_table_destroy(void);
 void 		arp_table_info(void);
-uchar 		arp_table_check_ip(IPaddr_t ip, char **mac);
-void 		arp_table_reg_ip(IPaddr_t ip, char *mac, ushort type, unsigned int sys_time);
-
+uchar 		*arp_table_get_mac(IPaddr_t ip);
+void 		arp_table_reg_ip(IPaddr_t ip, char *mac, ushort type);
+void 		arp_table_set_valid_period(unsigned int valid_period_sec);
 
 
 

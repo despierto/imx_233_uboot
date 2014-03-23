@@ -113,6 +113,8 @@ void 		gbl_pring_info(void);
 void  _start(void)
 {
     unsigned int i, a;
+	unsigned int time_ms;
+	unsigned int time_s;
 
     print_inf("\r\n");
     print_inf("--- IMX-233: X-BOOT initialization ---\r\n");
@@ -134,8 +136,11 @@ void  _start(void)
     print_log("%s", "Entry to the main loop...");
     while(1)
     {
+		time_ms = get_time_ms();
+		time_s = get_time_s();		
+	
         if (system_time_msec%5000 == 0)
-          print_inf("[%d sec] Next cycle...\r\n", system_time_msec/1000);
+          print_inf("[%d sec] Next cycle...[mst_%d st_%d]\r\n", system_time_msec/1000, time_ms, time_s);
 
         rt_process();
         

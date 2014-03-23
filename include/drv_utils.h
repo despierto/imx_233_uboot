@@ -23,6 +23,7 @@
 #define __DRV_UTILS_H__
 
 #include "registers/regsdigctl.h"
+#include "registers/regsrtc.h"
 #include "types.h"
 
 void drv_delay(unsigned int us);
@@ -38,6 +39,20 @@ static inline unsigned int get_tick(void)
     /* in usec */
     return (unsigned int)HW_DIGCTL_MICROSECONDS_RD();
 }
+
+static inline unsigned int get_time_ms(void) 
+{
+    /* in msec */
+    return (unsigned int)HW_RTC_MILLISECONDS_RD();
+}
+
+static inline unsigned int get_time_s(void) 
+{
+    /* in msec */
+    return (unsigned int)HW_RTC_SECONDS_RD();
+}
+
+#define get_time_diff(last_time, new_time)	((new_time > last_time) ? (new_time - last_time) : (0xFFFFFFFF - last_time + new_time))
 
 
 IPaddr_t    drv_string_to_ip(char *s);

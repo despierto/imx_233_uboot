@@ -60,9 +60,9 @@ typedef struct {
 
 /* Ethernet 2 header  */
 typedef struct tagETH_HDR{
-    uchar       dest[ETHER_ADDR_LEN];    	/* Destination node */
+    uchar       dst[ETHER_ADDR_LEN];    	/* Destination node */
     uchar       src[ETHER_ADDR_LEN];     	/* Source node */
-    ushort      protlen;                 	/* Protocol or length */
+    ushort      type;                 	/* Protocol or length */
 } ETH_HDR, *PETH_HDR;
 
 
