@@ -35,10 +35,11 @@ int arp_table_create(void)
 {
 	unsigned int i;
 
-	print_net("ARP table creation");	
-	pArpTable = malloc(ARP_TABLE_SIZE * sizeof(ARP_TABLE));
-
+	pArpTable = (PARP_TABLE)malloc(ARP_TABLE_SIZE * sizeof(ARP_TABLE));
 	assert(pArpTable);
+	memset((void *)pArpTable, 0, ARP_TABLE_SIZE * sizeof(ARP_TABLE));
+	
+	print_net("ARP table creation: pArpTable_0x%x size_%d ", (U32)pArpTable, ARP_TABLE_SIZE);	
 	
 	for (i=0; i< ARP_TABLE_SIZE; i++) {
 		pArpTable[i].type = ARP_TABLE_TYPE_NONE;
@@ -49,12 +50,12 @@ int arp_table_create(void)
 
 int arp_table_destroy(void)
 {
-	print_net("ARP table destroying");
-	free(pArpTable);
+	print_net("%s", "ARP table destroying");
+	if (pArpTable)	
+		free(pArpTable);
 
 	return SUCCESS;
 }
-
 
 void arp_table_info(void)
 {
@@ -73,7 +74,7 @@ void arp_table_info(void)
 				drv_ip_to_string(pArpTable[i].ip_addr, &s[0]),
 				((pArpTable[i].type == ARP_TABLE_TYPE_ETH)?"ether":"virt "),
 				pArpTable[i].reg_time,
-				drv_mac_to_string(&mac, pArpTable[i].hw_addr));		
+				drv_mac_to_string((uchar *)&mac, pArpTable[i].hw_addr));		
 		}
 	}
 	print_inf("--------------------------------------------------\n");

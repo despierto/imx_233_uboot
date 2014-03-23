@@ -34,8 +34,6 @@
 #define ETH_PKTSIZE             1518
 #define ETH_PKTSIZE_ALIGN       1536
 #define ETH_PKTALIGN            32
-#define ETH_PKTBUFSRX           4           /* Rx MAX supported by ks8851 is 12KB */
-#define ETH_PKTBUFSTX           1           /* Tx MAX supported by ks8851 is 6KB */
 
 #define ETH_RX_POOL_SIZE        256
 
@@ -76,34 +74,6 @@ typedef struct _ETH_POOL_ {
 
 //declarations
 typedef struct _ETH_CTX_ {
-    volatile uchar *NetTxPackets[ETH_PKTBUFSTX]; 		/* Transmit packets */
-    volatile uchar *NetRxPackets[ETH_PKTBUFSRX];   		/* Receive packets */
-
-    volatile uchar *NetArpWaitTxPacket;               	/* THE transmit packet */
-    unsigned int    NetArpWaitTxPacketSize;
-
-    unsigned int    Status;                         	/* disabled */
-    char            BootFile[CONFIG_BOOTFILE_SIZE];
-    unsigned int    linux_load_addr;
-
-    uchar           *NetArpWaitPacketMAC;           	/* MAC address of waiting packet's destination */
-    IPaddr_t        NetArpWaitPacketIP;
-    IPaddr_t        NetArpWaitReplyIP;
-
-    unsigned int    NetArpWaitTimerStart;             	/* in usec */
-    unsigned int    NetArpWaitTry;
-
-    ushort          NetIPID;                          	/* IP packet ID */
-    ushort          PingSeqNo;                        	/* PING request counter */
-    
-    uchar           cfg_mac_addr[ETHER_ADDR_LEN];
-    IPaddr_t        cfg_ip_addr;
-    IPaddr_t        cfg_ip_netmask;
-    IPaddr_t        cfg_ip_gateway;    
-    IPaddr_t        cfg_ip_server;
-    IPaddr_t        cfg_ip_dns;
-    IPaddr_t        cfg_ip_vlan;
-    
 	ETH_POOL		rx_pool[ETH_RX_POOL_SIZE];			/* queue of incomming packets */
 	unsigned int	rx_pool_get;
 	unsigned int	rx_pool_put;	
@@ -123,10 +93,9 @@ typedef struct _ETH_HEAP_CTX_
     U32             stats_alloc;
     U32             stats_free;
     U32             stats_balance;
-    
+    U32             storage_base;    
+    U32             storage_end;    	
 }ETH_HEAP_CTX, *PETH_HEAP_CTX;
-
-extern PETH_CTX        pEth;
 
 
 /************************************************
@@ -177,7 +146,7 @@ void        drv_eth_halt(void);
 
 int         drv_eth_rx(void);
 unsigned int drv_eth_rx_get(unsigned int *addr);
-int         drv_eth_tx(volatile void *packet, int length);
+int         drv_eth_tx(void *packet, int length);
 
 void        drv_eth_info(void);
 

@@ -97,8 +97,8 @@ typedef struct _NET_KS8851_INF_ {
     union KS8851_TX_HDR txh;
 }NET_KS8851_INF, *PNET_KS8851_INF;
 
-static PNET_KS8851_INF ks = (PNET_KS8851_INF)SYS_RAM_NET_CTX_ADDR;
-
+PNET_KS8851_INF ks = NULL;
+	
 static void     ks_reg8_write(ushort reg, ushort val);
 static void     ks_reg16_write(ushort reg, ushort val);
 static void     ks_reg_read(ushort op, uchar *rxb, ushort len);
@@ -136,12 +136,10 @@ RESULTCODE  ks8851_init(PTR ptr)
         return KS_ERR;
     }
     print_net(" - ks8851 chip ID=0x%x", chip_id);
-   
-    if (sizeof(NET_KS8851_INF) > SYS_RAM_NET_CTX_SIZE) {
-        print_err("Size of NET_KS8851_INF CTX (%d) is out of ranges in (%d) bytes", sizeof(NET_KS8851_INF), SYS_RAM_NET_CTX_SIZE);
-        return KS_ERR;
-    }
-    print_net(" - Allocation of NET_KS8851_INF CTX at (0x%x), size (%d)", (unsigned int)ks, sizeof(NET_KS8851_INF));
+
+	ks = (PNET_KS8851_INF)malloc(sizeof(NET_KS8851_INF));
+	assert(ks);
+	print_net(" - Allocation of NET_KS8851_INF CTX at (0x%x), size (%d)", (unsigned int)ks, sizeof(NET_KS8851_INF));
     memset((void *)ks, 0, sizeof(NET_KS8851_INF));
 
     ks->fid = 0;
@@ -229,7 +227,7 @@ U32         ks8851_rx(PTR rx_buff)
     return (U32)rxlen;
 }
 
-RESULTCODE  ks8851_tx(VPTR packet, U32 length)
+RESULTCODE  ks8851_tx(PTR packet, U32 length)
 {
     ushort fid = 0;
     ushort txsr;

@@ -22,6 +22,9 @@
 #include "drv_ks8851.h"
 #include "drv_eth.h"
 
+PETH_HEAP_CTX 	pEthHeapCtx = NULL;
+PETH_CTX		pEth = NULL;
+
 
 /************************************************
  *              DEFINITIONS                                                *
@@ -38,13 +41,7 @@
 #define net_mac_set(ethaddr)    ks8851_mac_set(ethaddr)
 
 
-
-//#define SYS_RAM_ETH_ADDR          /* 0x42000000 */
-//#define SYS_RAM_ETH_SIZE          /* 0x10000      */
-PETH_CTX                pEth = (PETH_CTX)SYS_RAM_ETH_CTX_ADDR;
-static PETH_HEAP_CTX    pEthHeapCtx = (PETH_HEAP_CTX)SYS_RAM_ETH_HEAP_ADDR;
-
-static int drv_eth_heap_init(void);
+static int 			drv_eth_heap_init(void);
 static unsigned int drv_eth_rx_put(unsigned int addr, unsigned int size);
 
 /************************************************
@@ -55,7 +52,7 @@ int drv_eth_init(void)
     int ret = 0;
     unsigned int i;
     PTR addr;
-    
+	
     drv_eth_heap_init();
 
     addr = drv_eth_heap_alloc();
@@ -73,59 +70,57 @@ int drv_eth_init(void)
     
     //net driver initialization
     print_eth("%s", "Net environment initialization");
-    if (sizeof(ETH_CTX) > (unsigned int)SYS_RAM_ETH_CTX_SIZE) {
-        print_err("Size of ETH CTX (%d) bytes is out of ranges (%d) bytes", sizeof(ETH_CTX), SYS_RAM_ETH_CTX_SIZE);        
-        return FAILURE;
-    }
+	pEth = (PETH_CTX)malloc(sizeof(ETH_CTX));
+	assert(pEth);
     memset(pEth, 0, sizeof(ETH_CTX));
     print_eth(" - Eth CTX base (0x%x) size (%d) bytes", (unsigned int)pEth, sizeof(ETH_CTX));
 
     
     //setup packet buffers, aligned correctly
     for (i = 0; i < ETH_PKTBUFSTX; i++) {
-        pEth->NetTxPackets[i] = (volatile uchar *)drv_eth_heap_alloc();
-        print_eth(" - Net TX packet[%d]: addr (0x%x) count (%d)", i, (unsigned int)pEth->NetTxPackets[i], ETH_PKTBUFSTX);        
+        pGblCtx->NetTxPackets[i] = (uchar *)drv_eth_heap_alloc();
+        print_eth(" - Net TX packet[%d]: addr (0x%x) count (%d)", i, (unsigned int)pGblCtx->NetTxPackets[i], ETH_PKTBUFSTX);        
     }
     for (i = 0; i < ETH_PKTBUFSRX; i++) {
-        pEth->NetRxPackets[i] = (volatile uchar *)drv_eth_heap_alloc();
-        print_eth(" - Net RX packet[%d]: addr (0x%x) count (%d)", i, (unsigned int)pEth->NetRxPackets[i], i+1);                
+        pGblCtx->NetRxPackets[i] = (uchar *)drv_eth_heap_alloc();
+        print_eth(" - Net RX packet[%d]: addr (0x%x) count (%d)", i, (unsigned int)pGblCtx->NetRxPackets[i], i+1);                
     }
 
-    pEth->NetArpWaitTxPacket = (volatile uchar *)drv_eth_heap_alloc();
-    pEth->NetArpWaitTxPacketSize = 0;
-    print_eth(" - Net Arp Tx packet: base (0x%x) count (%d)", (unsigned int)pEth->NetArpWaitTxPacket, 1);
+    pGblCtx->NetArpWaitTxPacket = (uchar *)drv_eth_heap_alloc();
+    pGblCtx->NetArpWaitTxPacketSize = 0;
+    print_eth(" - Net Arp Tx packet: base (0x%x) count (%d)", (unsigned int)pGblCtx->NetArpWaitTxPacket, 1);
     
-    pEth->Status = 0;
-    copy_filename(pEth->BootFile, CONFIG_BOOTFILE, CONFIG_BOOTFILE_SIZE);    
-    pEth->linux_load_addr = SYS_RAM_LOAD_ADDR;
+    pGblCtx->Status = 0;
+    copy_filename(pGblCtx->BootFile, CONFIG_BOOTFILE, CONFIG_BOOTFILE_SIZE);    
+    pGblCtx->linux_load_addr = SYS_RAM_LOAD_ADDR;
     
-    pEth->NetArpWaitPacketMAC = NULL;
-    pEth->NetArpWaitPacketIP = 0;
-    pEth->NetArpWaitReplyIP = 0;
-    pEth->NetArpWaitTimerStart = 0;
-    pEth->NetArpWaitTry = 0;
+    pGblCtx->NetArpWaitPacketMAC = NULL;
+    pGblCtx->NetArpWaitPacketIP = 0;
+    pGblCtx->NetArpWaitReplyIP = 0;
+    pGblCtx->NetArpWaitTimerStart = 0;
+    pGblCtx->NetArpWaitTry = 0;
 
     ret = net_init(NULL);
 
     if (ret) {
         drv_eth_halt(); 
-        pEth->Status = 0;
+        pGblCtx->Status = 0;
         print_err("%s", "ethernet initialization wasn't completed");
     } else {
         print_eth("%s", "Ethernel was successfully started");
-        pEth->Status = 1;
+        pGblCtx->Status = 1;
     }
 
     //delay for printing out the print buffer
     sleep_ms(100);
 
-    drv_string_to_mac(CONFIG_HW_MAC_ADDR, &pEth->cfg_mac_addr[0]); // "ethaddr"
-    pEth->cfg_ip_addr       = drv_string_to_ip(CONFIG_IPADDR);          // "ipaddr"
-    pEth->cfg_ip_netmask    = drv_string_to_ip(CONFIG_NETMASK);         // "netmask"
-    pEth->cfg_ip_gateway    = drv_string_to_ip(CONFIG_GATEWAYIP);       // "gatewayip"
-    pEth->cfg_ip_server     = drv_string_to_ip(CONFIG_SERVERIP);        // "serverip"
-    pEth->cfg_ip_dns        = drv_string_to_ip(CONFIG_DNSIP);           // "dnsip"
-    pEth->cfg_ip_vlan       = drv_string_to_ip(CONFIG_VLANIP);          // "vlanip"
+    drv_string_to_mac(CONFIG_HW_MAC_ADDR, &pGblCtx->cfg_mac_addr[0]); // "ethaddr"
+    pGblCtx->cfg_ip_addr       = drv_string_to_ip(CONFIG_IPADDR);          // "ipaddr"
+    pGblCtx->cfg_ip_netmask    = drv_string_to_ip(CONFIG_NETMASK);         // "netmask"
+    pGblCtx->cfg_ip_gateway    = drv_string_to_ip(CONFIG_GATEWAYIP);       // "gatewayip"
+    pGblCtx->cfg_ip_server     = drv_string_to_ip(CONFIG_SERVERIP);        // "serverip"
+    pGblCtx->cfg_ip_dns        = drv_string_to_ip(CONFIG_DNSIP);           // "dnsip"
+    pGblCtx->cfg_ip_vlan       = drv_string_to_ip(CONFIG_VLANIP);          // "vlanip"
 
 	//rx pool init
 	pEth->rx_pool_get = 0;
@@ -211,7 +206,7 @@ int drv_eth_rx(void)
     return 0;
 }
 
-int drv_eth_tx(volatile void *packet, int length)
+int drv_eth_tx(void *packet, int length)
 {
 
 #if 0 //def GBL_ETH_DIAG_ENA
@@ -237,12 +232,12 @@ void drv_eth_info(void)
     uchar s[15];
     
     print_eth("%s", "Ethernet configuration:");
-    print_eth(" - ipaddr:       %s", drv_ip_to_string(pEth->cfg_ip_addr, &s[0]));
-    print_eth(" - netmask:      %s", drv_ip_to_string(pEth->cfg_ip_netmask, &s[0]));
-    print_eth(" - gatewayip:    %s", drv_ip_to_string(pEth->cfg_ip_gateway, &s[0]));
-    print_eth(" - serverip:     %s", drv_ip_to_string(pEth->cfg_ip_server, &s[0]));
-    print_eth(" - dnsip:        %s", drv_ip_to_string(pEth->cfg_ip_dns, &s[0]));
-    print_eth(" - vlanip:       %s", drv_ip_to_string(pEth->cfg_ip_vlan, &s[0]));
+    print_eth(" - ipaddr:       %s", drv_ip_to_string(pGblCtx->cfg_ip_addr, &s[0]));
+    print_eth(" - netmask:      %s", drv_ip_to_string(pGblCtx->cfg_ip_netmask, &s[0]));
+    print_eth(" - gatewayip:    %s", drv_ip_to_string(pGblCtx->cfg_ip_gateway, &s[0]));
+    print_eth(" - serverip:     %s", drv_ip_to_string(pGblCtx->cfg_ip_server, &s[0]));
+    print_eth(" - dnsip:        %s", drv_ip_to_string(pGblCtx->cfg_ip_dns, &s[0]));
+    print_eth(" - vlanip:       %s", drv_ip_to_string(pGblCtx->cfg_ip_vlan, &s[0]));
 
     print_eth("%s", "Network heap status:");
     print_eth(" - alloc count:  %d", pEthHeapCtx->stats_alloc);
@@ -277,12 +272,12 @@ int         drv_eth_heap_free(PTR ptr)
     PETH_HEAP_LIST pList;
     U32 index;
 
-    if (((U32)ptr < SYS_RAM_ETH_STORAGE_ADDR) || ((U32)ptr >= (SYS_RAM_ETH_STORAGE_ADDR + SYS_RAM_ETH_STORAGE_SIZE))) {
+    if (((U32)ptr < pEthHeapCtx->storage_base) || ((U32)ptr >= pEthHeapCtx->storage_end)) {
         print_err("PTR (0x%x) is out of network heap range", (unsigned int)ptr);
         return FAILURE;
     }
 
-    index = ((U32)ptr - SYS_RAM_ETH_STORAGE_ADDR)/NET_PKT_MAX_SIZE;
+    index = ((U32)ptr - pEthHeapCtx->storage_base)/NET_PKT_MAX_SIZE;
     pList = &pEthHeapCtx->list[index];
     
     if (!pList->status) {
@@ -334,28 +329,31 @@ static unsigned int drv_eth_rx_put(unsigned int addr, unsigned int size)
 static int drv_eth_heap_init(void)
 {
     U32 i;
+	U32 storage_base;
 
     print_eth("%s", "Network heap initialization");
 
-    if (sizeof(ETH_HEAP_CTX) > (unsigned int)SYS_RAM_ETH_HEAP_SIZE) {
-        print_err("Size of eth heap ctx (%d) bytes is out of ranges (%d) bytes", sizeof(ETH_HEAP_CTX), SYS_RAM_ETH_HEAP_SIZE);        
-        return FAILURE;
-    }
+	pEthHeapCtx = (PETH_HEAP_CTX)malloc(sizeof(ETH_HEAP_CTX));
+	assert(pEthHeapCtx);
     memset(pEthHeapCtx, 0, sizeof(ETH_HEAP_CTX));
     print_eth(" - eth heap ctx base (0x%x) size (%d) bytes", (unsigned int)pEthHeapCtx, sizeof(ETH_HEAP_CTX));
 
-    if (sizeof(ETH_HEAP_CTX) > (unsigned int)SYS_RAM_ETH_HEAP_SIZE) {
-        print_err("Size of eth heap ctx (%d) bytes is out of ranges (%d) bytes", sizeof(ETH_HEAP_CTX), SYS_RAM_ETH_HEAP_SIZE);        
-        return FAILURE;
-    }
+	storage_base = (U32)malloc(NET_PKT_MAX_SIZE * (NET_PKT_COUNT + 1));
+
+	//align to 0x800
+	storage_base = storage_base + (NET_PKT_MAX_SIZE -1);	
+	storage_base -= storage_base % NET_PKT_MAX_SIZE;
+	
+	pEthHeapCtx->storage_base = storage_base;
+	pEthHeapCtx->storage_end = storage_base + NET_PKT_MAX_SIZE * NET_PKT_COUNT;	
 
     for (i=0; i<(NET_PKT_COUNT - 1); i++) {
-        pEthHeapCtx->list[i].addr = (U32)(SYS_RAM_ETH_STORAGE_ADDR + NET_PKT_MAX_SIZE * i);
+        pEthHeapCtx->list[i].addr = (U32)(storage_base + NET_PKT_MAX_SIZE * i);
         pEthHeapCtx->list[i].next = (U32 *)&pEthHeapCtx->list[i+1];
         pEthHeapCtx->list[i].status = 0;
         //print_eth("   [%d] addr_%x next_%x", i, pEthHeapCtx->list[i].addr, (U32)pEthHeapCtx->list[i].next);
     }
-    pEthHeapCtx->list[i].addr = (U32)(SYS_RAM_ETH_STORAGE_ADDR + NET_PKT_MAX_SIZE * i);
+    pEthHeapCtx->list[i].addr = (U32)(storage_base + NET_PKT_MAX_SIZE * i);
     pEthHeapCtx->list[i].next = NULL;
     pEthHeapCtx->list[i].status = 0;
     //print_eth("   [%d] addr_%x next_%x", i, pEthHeapCtx->list[i].addr, (U32)pEthHeapCtx->list[i].next);

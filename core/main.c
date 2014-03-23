@@ -34,9 +34,10 @@
 #define XBOOT_VERSION_R      1
 #define XBOOT_VERSION_RC     1
 
-
 HEAPHEADER	GlobalHeap;
 PHEAPHEADER	hGlobalHeap;
+
+PGBL_CTX	pGblCtx;
 
 
 static unsigned int system_time_msec = 0;
@@ -63,7 +64,7 @@ void  _start(void)
     drv_eth_info();
 
     //do a test ping
-    net_ping_req(10000UL, pEth->cfg_ip_server);
+    net_ping_req(10000UL, pGblCtx->cfg_ip_server);
 
     print_log("%s", "Entry to the main loop...");
     while(1)
@@ -133,6 +134,10 @@ static void initialization(void)
 			print_inf("%s", "FAILED\n");
 		}
 	}
+
+	/* Init global ctx */
+	pGblCtx = (PGBL_CTX)malloc(sizeof(GBL_CTX));
+	memset((void *)pGblCtx, 0, sizeof(GBL_CTX));
 
     /* Configure CPU and SSP clocks*/
     init_clocks();

@@ -96,25 +96,10 @@
 #define SYS_RAM_LOAD_ADDR       	(SDRAM_BASE + 0x8000)                   /* 0x40008000 */
 #define SYS_RAM_LOAD_SIZE       	(0x7F8000)                              /* 8MB - 32KB */
 
-//GAP: 0x40808000...0x40FFFFFF: ~9MB
-#define SYS_RAM_HEAP_ADDR    		(SDRAM_BASE + 0x1000000)                                /* 0x41000000 */
-#define SYS_RAM_HEAP_SIZE    		(0x1000000)                                				/* 16M */
+//GAP: 0x40808000...0x41FFFFFF: ~15MB
 
-/* MAP: 32 MB - offset for devices queues */
-#define SYS_RAM_ETH_STORAGE_ADDR    (SYS_RAM_HEAP_ADDR + SYS_RAM_HEAP_SIZE)                /* 0x42000000 */
-#define SYS_RAM_ETH_STORAGE_SIZE    (NET_PKT_MAX_SIZE * NET_PKT_COUNT)                     /* 0x1F4000: 2MB*/
-
-#define SYS_RAM_ETH_HEAP_ADDR       (SYS_RAM_ETH_STORAGE_ADDR + SYS_RAM_ETH_STORAGE_SIZE)   /* 0x421F4000 */
-#define SYS_RAM_ETH_HEAP_SIZE       (0x3000)                                                /*  12288*/
-
-#define SYS_RAM_ETH_CTX_ADDR        (SYS_RAM_ETH_HEAP_ADDR + SYS_RAM_ETH_HEAP_SIZE)         /* 0x421F7000 */
-#define SYS_RAM_ETH_CTX_SIZE        (0x1000)                                                 /* 256KB*/
-
-#define SYS_RAM_NET_CTX_ADDR        (SYS_RAM_ETH_CTX_ADDR + SYS_RAM_ETH_CTX_SIZE)           /* 0x421F8000 */
-#define SYS_RAM_NET_CTX_SIZE        (0x100)                                                 /* 256KB*/
-
-//GAP: 0x421F8100...0x43FFFFFF: ~31MB
-
+#define SYS_RAM_HEAP_ADDR    		(SDRAM_BASE + 0x2000000)                /* 0x42000000 */
+#define SYS_RAM_HEAP_SIZE    		(0x2000000)                             /* 32M */
 #define SYS_RAM_END             	(SDRAM_BASE + SDRAM_SIZE)               /* 0x44000000 */
 
 
