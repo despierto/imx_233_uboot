@@ -34,6 +34,10 @@ typedef struct _ETH_PKT_ {
     U8			*payload;    
 }ETH_PKT, *PETH_PKT;
 
+typedef struct _DATALINK_CTX_ {
+	char       	curr_src_mac[ETHER_ADDR_LEN];	/* Destination node */
+}DATALINK_CTX, *PDATALINK_CTX;
+
 
 /************************************************
  *              FUNCTIONs								*

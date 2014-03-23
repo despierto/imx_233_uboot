@@ -86,9 +86,6 @@ int drv_eth_init(void)
         pGblCtx->Status = 1;
     }
 
-	memcpy((void *)pEth->curr_src_mac, (void *)pGblCtx->cfg_mac_addr, ETHER_ADDR_LEN);
-	drv_net_mac_set((char *)pEth->curr_src_mac);
-
 	//rx pool init
 	pEth->rx_pool_get = 0;
 	pEth->rx_pool_put = 0;	
@@ -251,6 +248,15 @@ int         drv_eth_heap_free(PTR ptr)
     return SUCCESS;
 }
 
+int			drv_eth_mac_set(char * mac)
+{
+	print_eth("---> mac (%02X:%02X:%02X:%02X:%02X:%02X)", 
+		mac[0], mac[1], mac[2],
+		mac[3], mac[4], mac[5]);
+
+	drv_net_mac_set(mac);
+	return SUCCESS;
+}
 
 /************************************************
  *              LOCAL FUNCTIONS                                        *

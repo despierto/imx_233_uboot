@@ -277,34 +277,18 @@ RESULTCODE  ks8851_tx(PTR packet, U32 length)
     return 0;
 }
 
-void ks8851_mac_set(const char *ethaddr)
+void ks8851_mac_set(const char *mac)
 {
     int i;
-    uchar mac[6];
     char testmac[64];  
 
-    print_net("%s", "------>  WARNING: here is bug in sscanf <-----");
-    print_net("---> in HW MAC addr (%s)", ethaddr);
-
-    //sys_sscanf(ethaddr, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", 
-    sys_sscanf(ethaddr, "%02X:%02X:%02X:%02X:%02X:%02X", 
-        &mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5]);
-
-    //TODO: verification mac ranges
-
-    print_net("---> split: %02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    for(i = 0; i < ETH_ALEN; i++)
+        ks_reg8_write(KS_MAR(i), mac[i]);
 
     sprintf(testmac, "%02X:%02X:%02X:%02X:%02X:%02X",
         mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
-    if(strcmp(ethaddr, testmac)) {
-        for(i = 0; i < ETH_ALEN; i++)
-            ks_reg8_write(KS_MAR(i), mac[i]);
-
-        print_net("Set HW MAC addr (%s)", testmac);
-    } else {
-        print_err("Incomming MAC (%s) is wrong. Resulting MAC is (%s)", ethaddr, testmac);
-    }
+    print_net("Set HW MAC addr (%s)", testmac);
 
     return;
 }

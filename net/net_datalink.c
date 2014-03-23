@@ -25,6 +25,7 @@
 /************************************************
  *              DEFINITIONS                                                *
  ************************************************/
+PDATALINK_CTX pDataLinkCtx = NULL;
 
 
 
@@ -36,10 +37,25 @@ int datalink_open(void)
 	int rc = SUCCESS;
 
 	/* Configure Ethernt device*/
-    drv_eth_init();
+    rc = drv_eth_init();
+	if (rc)
+		return rc;
 
 	/* Create ARM table */
-	arp_table_create();
+	rc = arp_table_create();
+	if (rc)
+		return rc;
+
+	//init dala link ctx
+	pDataLinkCtx = (PDATALINK_CTX)malloc(sizeof(DATALINK_CTX));
+	assert(pDataLinkCtx);
+	memset((void *)pDataLinkCtx, 0, sizeof(DATALINK_CTX));
+
+	//setup mac address
+	memcpy((void *)pDataLinkCtx->curr_src_mac, (void *)pGblCtx->cfg_mac_addr, ETHER_ADDR_LEN);
+	drv_eth_mac_set(pDataLinkCtx->curr_src_mac);
+
+	
 
 
 	return rc;

@@ -62,6 +62,7 @@
 	- drv_eth_info
 	- drv_eth_heap_alloc
 	- drv_eth_heap_free
+	- drv_eth_mac_set
 	- drv_eth_mac_is_valid
 	- drv_eth_mac_is_multicast
 	- drv_eth_mac_is_zero

@@ -85,7 +85,6 @@ typedef struct _ETH_CTX_ {
 	ETH_POOL		rx_pool[ETH_RX_POOL_SIZE];		/* queue of incomming packets */
 	unsigned int	rx_pool_get;
 	unsigned int	rx_pool_put;	
-	uchar       	curr_src_mac[ETHER_ADDR_LEN];	/* Destination node */
 }ETH_CTX, *PETH_CTX;
 
 typedef struct _ETH_HEAP_LIST_ {
@@ -138,6 +137,7 @@ void        drv_eth_info(void);
 
 PTR         drv_eth_heap_alloc(void);
 int         drv_eth_heap_free(PTR ptr);
+int			drv_eth_mac_set(char * mac);
 
 #endif /* __DRV_ETH_H__ */
 
