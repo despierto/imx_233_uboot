@@ -114,7 +114,7 @@ unsigned int strlen(const char * s);
 /* sys_vfprintf.h */
 int     sprintf(char * buf, const char *fmt, ...);
 int     sys_sscanf(const char * buf, const char * fmt, ...);
-unsigned long simple_strtoul(const char *cp,char **endp,unsigned int base);
+unsigned long strtoul(const char *cp,char **endp,unsigned int base);
 int     sys_checksum_ok(ushort * ptr, int len);
 uint    sys_checksum(ushort * ptr, int len);
 

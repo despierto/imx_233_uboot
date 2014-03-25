@@ -219,7 +219,9 @@ static int initialization(void)
     /* Configure SPI on SSP1*/
     rc |= spi_init();
 
-       rc |= net_init();
+    rc |= net_init();
+
+	rc |= cmgr_init();
 
     return rc;
 }

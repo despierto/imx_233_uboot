@@ -87,7 +87,9 @@
 #define SYS_RAM_BASE                (SDRAM_BASE)                            /* 0x40000000 */
 #define SYS_RAM_SIZE                (SDRAM_SIZE)                            /* 0x04000000 */
 
-#define SYS_RAM_LINUX_BOOT_PARAM_ADDR   (SDRAM_BASE + 0x100)            /* 0x40000100 */
+/* text, data, bss */
+
+#define SYS_RAM_LINUX_BOOT_PARAM_ADDR   (SDRAM_BASE + 0x10000)            	/* 0x40010000  = 1MB*/
 
 
 

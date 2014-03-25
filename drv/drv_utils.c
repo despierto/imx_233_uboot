@@ -46,7 +46,7 @@ IPaddr_t drv_string_to_ip(char *s)
         return(0);
 
     for (addr=0, i=0; i<4; ++i) {
-        ulong val = s ? simple_strtoul(s, &e, 10) : 0;
+        ulong val = s ? strtoul(s, &e, 10) : 0;
         
         addr <<= 8;
         addr |= (val & 0xFF);
@@ -81,7 +81,7 @@ void drv_string_to_mac(const char *addr, uchar *mac)
     int i;
    
     for (i = 0; i < 6; ++i) {
-        mac[i] = addr ? simple_strtoul(addr, &end, 16) : 0;
+        mac[i] = addr ? strtoul(addr, &end, 16) : 0;
         if (addr)
             addr = (*end) ? end + 1 : end;
     }

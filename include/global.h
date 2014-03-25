@@ -24,11 +24,12 @@
 #include "types.h"
 #include "error.h"
 #include "drv_utils.h"
-#include "sys_console.h"
 #include "platform.h"
 #include "sys_utils.h"
 #include "sys_heap.h"
 #include "net_datalink.h"
+#include "sys_cmgr.h"
+
 
 
 #define GBL_HEAP_BLOCKS_COUNT    100

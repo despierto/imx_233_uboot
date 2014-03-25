@@ -253,6 +253,10 @@ typedef unsigned short  ushort;
 typedef unsigned int    uint;
 typedef unsigned long   ulong;
 
+#ifndef __nop
+    #define __nop() asm volatile ("mov r0,r0" ::)
+    #define __NOP()	
+#endif
 
 
 #endif /* __TYPES_H__ */
