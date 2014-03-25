@@ -265,12 +265,12 @@ void hw_power_Enable5vPlugInDetect(bool bEnable)
             if(bEnable)
             {
                 hw_power_SetVbusValidInterruptPolarity(
-			HW_POWER_CHECK_5V_CONNECTED);
+            HW_POWER_CHECK_5V_CONNECTED);
             }
             else
             {
                 hw_power_SetVbusValidInterruptPolarity(
-			HW_POWER_CHECK_5V_DISCONNECTED);
+            HW_POWER_CHECK_5V_DISCONNECTED);
             }
             break;
 
@@ -284,12 +284,12 @@ void hw_power_Enable5vPlugInDetect(bool bEnable)
             if(bEnable)
             {
                 hw_power_SetVdd5vGtVddioInterruptPolarity(
-			HW_POWER_CHECK_5V_CONNECTED);
+            HW_POWER_CHECK_5V_CONNECTED);
             }
             else
             {
                 hw_power_SetVdd5vGtVddioInterruptPolarity(
-			HW_POWER_CHECK_5V_DISCONNECTED);
+            HW_POWER_CHECK_5V_DISCONNECTED);
             }
 
             break;
@@ -322,12 +322,12 @@ void hw_power_Enable5vUnplugDetect(bool bEnable)
             if(bEnable)
             {
                 hw_power_SetVbusValidInterruptPolarity(
-			HW_POWER_CHECK_5V_DISCONNECTED);
+            HW_POWER_CHECK_5V_DISCONNECTED);
             }
             else
             {
                 hw_power_SetVbusValidInterruptPolarity(
-			HW_POWER_CHECK_5V_CONNECTED);
+            HW_POWER_CHECK_5V_CONNECTED);
             }
             break;
 
@@ -342,12 +342,12 @@ void hw_power_Enable5vUnplugDetect(bool bEnable)
             if(bEnable)
             {
                 hw_power_SetVdd5vGtVddioInterruptPolarity(
-			HW_POWER_CHECK_5V_DISCONNECTED);
+            HW_POWER_CHECK_5V_DISCONNECTED);
             }
             else
             {
                 hw_power_SetVdd5vGtVddioInterruptPolarity(
-			HW_POWER_CHECK_5V_CONNECTED);
+            HW_POWER_CHECK_5V_CONNECTED);
             }
             break;
 

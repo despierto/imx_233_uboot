@@ -141,10 +141,10 @@ typedef struct {
 /************************************************
  *              FUNCTION HEADERS DEFINITIONS                 *
  ************************************************/
-int 	net_init(void);
-int	 	net_close(void);
-void	net_ping_req(unsigned int timeout_ms, IPaddr_t ip);
-void 	net_rx_process(void);
+int     net_init(void);
+int         net_close(void);
+void    net_ping_req(unsigned int timeout_ms, IPaddr_t ip);
+void     net_rx_process(void);
 
 
 

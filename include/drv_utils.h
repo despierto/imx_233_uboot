@@ -52,11 +52,11 @@ static inline unsigned int get_time_s(void)
     return (unsigned int)HW_RTC_SECONDS_RD();
 }
 
-#define get_time_diff(last_time, new_time)	((new_time > last_time) ? (new_time - last_time) : (0xFFFFFFFF - last_time + new_time))
+#define get_time_diff(last_time, new_time)    ((new_time > last_time) ? (new_time - last_time) : (0xFFFFFFFF - last_time + new_time))
 
 
 IPaddr_t    drv_string_to_ip(char *s);
-char 		*drv_mac_to_string(uchar *mac_out, uchar *mac_in);
+char         *drv_mac_to_string(uchar *mac_out, uchar *mac_in);
 char        *drv_ip_to_string(IPaddr_t ip, uchar *buf);
 void        drv_string_to_mac(const char *addr, uchar *mac);
 

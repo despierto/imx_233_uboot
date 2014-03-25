@@ -73,8 +73,8 @@ IcollCtrlRegisterEnums_t;
 //! This function enables the ICOLL interrupt. Set bEnable to 1, to enable
 //! the Interrupt defined in eIrqVectorNumber.
 //!
-//! \param[in]	 eIrqVectorNumber  The ICOLL irq to enable/disable.
-//! \param[in]	 bEnable Flag to enable or disable (TRUE = enable).
+//! \param[in]     eIrqVectorNumber  The ICOLL irq to enable/disable.
+//! \param[in]     bEnable Flag to enable or disable (TRUE = enable).
 //! \retval      TRUE   Previous state was enabled.
 //! \retval      FALSE   Previous state was disabled.
 ////////////////////////////////////////////////////////////////////////////////
@@ -110,7 +110,7 @@ void hw_icoll_SoftTrigger(ICOLL_IRQ_enums_t eIrqVectorNumber, bool bEnable);
 //! \note Only 1 parameter can be set at a time.
 ////////////////////////////////////////////////////////////////////////////////
 bool hw_icoll_CtrlRegisterUpdate(IcollCtrlRegisterEnums_t ControlRegisterField,
-	 bool bSet);
+     bool bSet);
 
 #endif //__HW_ICOLL_H
 

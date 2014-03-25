@@ -593,7 +593,7 @@ hw_power_PowerSource_t hw_power_GetVddioPowerSource(void)
             //------------------------------------------------------------------
 
             if(hw_power_GetVddioLinRegOffset() ==
-		HW_POWER_LINREG_OFFSET_LINREG_MODE)
+        HW_POWER_LINREG_OFFSET_LINREG_MODE)
             {
                 return HW_POWER_LINREG_DCDC_OFF;
             }
@@ -615,7 +615,7 @@ hw_power_PowerSource_t hw_power_GetVddioPowerSource(void)
             //------------------------------------------------------------------
 
             if(hw_power_GetVdddLinRegOffset() ==
-		HW_POWER_LINREG_OFFSET_DCDC_MODE)
+        HW_POWER_LINREG_OFFSET_DCDC_MODE)
             {
                 return HW_POWER_DCDC_LINREG_ON;
             }
@@ -630,7 +630,7 @@ hw_power_PowerSource_t hw_power_GetVddioPowerSource(void)
             //------------------------------------------------------------------
 
             if(hw_power_GetVddioLinRegOffset() ==
-		HW_POWER_LINREG_OFFSET_LINREG_MODE)
+        HW_POWER_LINREG_OFFSET_LINREG_MODE)
             {
                 return HW_POWER_LINREG_DCDC_OFF;
             }
@@ -644,7 +644,7 @@ hw_power_PowerSource_t hw_power_GetVddioPowerSource(void)
         //----------------------------------------------------------------------
 
             if(hw_power_GetVdddLinRegOffset() ==
-		HW_POWER_LINREG_OFFSET_DCDC_MODE)
+        HW_POWER_LINREG_OFFSET_DCDC_MODE)
             {
                 return HW_POWER_DCDC_LINREG_ON;
             }
@@ -762,7 +762,7 @@ RtStatus_t hw_power_SetVddaPowerSource(hw_power_PowerSource_t eSource)
 
             //------------------------------------------------------------------
             // Turn on the VDDA DCDC converter output and turn off the LinReg
-	    // output.
+        // output.
             //------------------------------------------------------------------
             BF_CLR(POWER_VDDACTRL, DISABLE_FET);
             BF_CLR(POWER_VDDACTRL, ENABLE_LINREG);
@@ -1335,7 +1335,7 @@ void hw_power_Enable2p5(bool bEnable)
 uint32_t hw_power_GetCharge4p2CurrentLimit( void )
 {
     return hw_power_ConvertSettingToCurrent(
-	HW_POWER_5VCTRL.B.CHARGE_4P2_ILIMIT );
+    HW_POWER_5VCTRL.B.CHARGE_4P2_ILIMIT );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1470,73 +1470,73 @@ void hw_power_Enable4p2DcdcInput( bool bEnable )
     // STMP378x experiences a false 5V brownout when this bitfield is set,
     // so we need to temporarily disable the 5V brownout.
     //--------------------------------------------------------------------------
-	// Save the current 5V brownout setting so we can restore it later.
-	bool orig_vbusvalid_5vdetect=false;
-	bool orig_pwd_bo=false;
-	uint8_t orig_vbusvalid_threshold;
-	bool bPrev5vBoPwrdn;
-	bool bPrev5vDroop;
+    // Save the current 5V brownout setting so we can restore it later.
+    bool orig_vbusvalid_5vdetect=false;
+    bool orig_pwd_bo=false;
+    uint8_t orig_vbusvalid_threshold;
+    bool bPrev5vBoPwrdn;
+    bool bPrev5vDroop;
 
-	bPrev5vBoPwrdn = hw_power_Enable5vBrownoutPowerdown( false );
-	bPrev5vDroop = hw_power_EnableVdd5vDroopInterrupt( false );
+    bPrev5vBoPwrdn = hw_power_Enable5vBrownoutPowerdown( false );
+    bPrev5vDroop = hw_power_EnableVdd5vDroopInterrupt( false );
 
-	if(bEnable)
-	{
-		/* recording orignal values that will be modified
-		* temporarlily to handle a chip bug.  See chip errata
-		* for CQ ENGR00115837
-		*/
-		orig_vbusvalid_threshold =
-				(HW_POWER_5VCTRL_RD() & BM_POWER_5VCTRL_VBUSVALID_TRSH)
-				>> BP_POWER_5VCTRL_VBUSVALID_TRSH;
+    if(bEnable)
+    {
+        /* recording orignal values that will be modified
+        * temporarlily to handle a chip bug.  See chip errata
+        * for CQ ENGR00115837
+        */
+        orig_vbusvalid_threshold =
+                (HW_POWER_5VCTRL_RD() & BM_POWER_5VCTRL_VBUSVALID_TRSH)
+                >> BP_POWER_5VCTRL_VBUSVALID_TRSH;
 
-		if(HW_POWER_5VCTRL_RD() & BM_POWER_5VCTRL_VBUSVALID_5VDETECT)
-			orig_vbusvalid_5vdetect = true;
+        if(HW_POWER_5VCTRL_RD() & BM_POWER_5VCTRL_VBUSVALID_5VDETECT)
+            orig_vbusvalid_5vdetect = true;
 
-		if(HW_POWER_MINPWR_RD() & BM_POWER_MINPWR_PWD_BO)
-			orig_pwd_bo=true;
+        if(HW_POWER_MINPWR_RD() & BM_POWER_MINPWR_PWD_BO)
+            orig_pwd_bo=true;
 
-		/* disable mechanisms that get erroneously tripped by
-		* when setting the DCDC4P2 EN_DCDC
-		*/
-		HW_POWER_5VCTRL_CLR(BM_POWER_5VCTRL_VBUSVALID_5VDETECT);
-		HW_POWER_5VCTRL_CLR(BF_POWER_5VCTRL_VBUSVALID_TRSH(0x7));
-		HW_POWER_5VCTRL_SET(BM_POWER_MINPWR_PWD_BO);
+        /* disable mechanisms that get erroneously tripped by
+        * when setting the DCDC4P2 EN_DCDC
+        */
+        HW_POWER_5VCTRL_CLR(BM_POWER_5VCTRL_VBUSVALID_5VDETECT);
+        HW_POWER_5VCTRL_CLR(BF_POWER_5VCTRL_VBUSVALID_TRSH(0x7));
+        HW_POWER_5VCTRL_SET(BM_POWER_MINPWR_PWD_BO);
 
-	    BF_SET(POWER_DCDC4P2, ENABLE_DCDC);
+        BF_SET(POWER_DCDC4P2, ENABLE_DCDC);
 
-		// Allow settling time for the DC-DC.
-		hw_digctl_MicrosecondWait( 21 );
+        // Allow settling time for the DC-DC.
+        hw_digctl_MicrosecondWait( 21 );
 
-		HW_POWER_5VCTRL_SET(BF_POWER_5VCTRL_VBUSVALID_TRSH(
-				orig_vbusvalid_threshold));
+        HW_POWER_5VCTRL_SET(BF_POWER_5VCTRL_VBUSVALID_TRSH(
+                orig_vbusvalid_threshold));
 
-		if(orig_vbusvalid_5vdetect){
-			HW_POWER_5VCTRL_SET(BM_POWER_5VCTRL_VBUSVALID_5VDETECT);
-		}
+        if(orig_vbusvalid_5vdetect){
+            HW_POWER_5VCTRL_SET(BM_POWER_5VCTRL_VBUSVALID_5VDETECT);
+        }
 
-		if(!orig_pwd_bo){
-			HW_POWER_5VCTRL_CLR(BM_POWER_MINPWR_PWD_BO);
-		}
+        if(!orig_pwd_bo){
+            HW_POWER_5VCTRL_CLR(BM_POWER_MINPWR_PWD_BO);
+        }
 
 
 
-		// Restore the 5V brownout setting.
-		hw_power_ClearVbusValidInterrupt();
-		hw_power_Enable5vBrownoutPowerdown( bPrev5vBoPwrdn );
-		hw_power_ClearVdd5vDroopInterrupt();
-		hw_power_EnableVdd5vDroopInterrupt( bPrev5vDroop );
-	}
-	else
-		BF_CLR(POWER_DCDC4P2, ENABLE_DCDC);
+        // Restore the 5V brownout setting.
+        hw_power_ClearVbusValidInterrupt();
+        hw_power_Enable5vBrownoutPowerdown( bPrev5vBoPwrdn );
+        hw_power_ClearVdd5vDroopInterrupt();
+        hw_power_EnableVdd5vDroopInterrupt( bPrev5vDroop );
+    }
+    else
+        BF_CLR(POWER_DCDC4P2, ENABLE_DCDC);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 //! See hw_power.h for details.
 ////////////////////////////////////////////////////////////////////////////////
 void hw_power_Configure4p2DropoutControl(
-	hw_power_4p2DropoutMargin_t eDropoutMargin,
-	hw_power_4p2SourceSelect_t  eSourceSelect)
+    hw_power_4p2DropoutMargin_t eDropoutMargin,
+    hw_power_4p2SourceSelect_t  eSourceSelect)
 {
     uint8_t Margin = 0;
     uint8_t Source = 0;

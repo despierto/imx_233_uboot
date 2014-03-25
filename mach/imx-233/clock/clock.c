@@ -87,9 +87,9 @@ int init_clocks(void)
     //print_clk(" - SSP clock was initialized with frequenct %d Hz", ssp_source_clk);     
     sleep_ms(10);
 
-	//reset rtc clock
-	HW_RTC_MILLISECONDS_WR(0);
-	HW_RTC_SECONDS_WR(0);	
+    //reset rtc clock
+    HW_RTC_MILLISECONDS_WR(0);
+    HW_RTC_SECONDS_WR(0);    
    
     return SUCCESS;
 }

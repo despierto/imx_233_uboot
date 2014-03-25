@@ -141,18 +141,18 @@ void ddi_power_Execute5VoltsToBatteryHandoff(void)
 
     //--------------------------------------------------------------------------
     if(hw_power_GetVdddPowerSource() == HW_POWER_EXTERNAL_SOURCE_5V)
-	{
-		// When powered from external sources, we need to temporarily
-		// increase the target to prevent the DCDC from fighting
-		// with the external source.  PMI will change the target to
-		// the correct voltage after the source transition.
-		hw_power_SetVdddBrownoutValue(175);
-		hw_power_SetVdddValue(1575);
-		ddi_power_WaitForVdddStable();
-		hw_power_SetVdddBrownoutValue(125);
-	}
+    {
+        // When powered from external sources, we need to temporarily
+        // increase the target to prevent the DCDC from fighting
+        // with the external source.  PMI will change the target to
+        // the correct voltage after the source transition.
+        hw_power_SetVdddBrownoutValue(175);
+        hw_power_SetVdddValue(1575);
+        ddi_power_WaitForVdddStable();
+        hw_power_SetVdddBrownoutValue(125);
+    }
 
-	hw_power_SetVdddPowerSource(HW_POWER_DCDC_LINREG_READY);
+    hw_power_SetVdddPowerSource(HW_POWER_DCDC_LINREG_READY);
 
     //--------------------------------------------------------------------------
     // Power VDDA and VDDIO from the DCDC.

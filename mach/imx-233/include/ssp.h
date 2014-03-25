@@ -46,7 +46,7 @@
 /* CTRL0 bits, bit fields and values */
 #define CTRL0_SFTRST        (0x1 << 31)
 #define CTRL0_CLKGATE       (0x1 << 30)
-#define	CTRL0_RUN           (0x1 << 29)
+#define    CTRL0_RUN           (0x1 << 29)
 #define CTRL0_LOCK_CS       (0x1 << 27)
 #define CTRL0_IGNORE_CRC    (0x1 << 26)
 #define CTRL0_DATA_XFER     (0x1 << 24)

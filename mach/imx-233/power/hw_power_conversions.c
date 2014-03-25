@@ -53,7 +53,7 @@ static const VoltVbusTable_t s_VoltVbusTable[] =
 };
 
 static uint16_t s_u16VoltVbusTableNumEntries =
-	( sizeof( s_VoltVbusTable )/sizeof( VoltVbusTable_t ) );
+    ( sizeof( s_VoltVbusTable )/sizeof( VoltVbusTable_t ) );
 
 ////////////////////////////////////////////////////////////////////////////////
 // Code
@@ -171,7 +171,7 @@ uint16_t hw_power_ConvertBattToSetting(uint16_t u16Batt, uint16_t u16BattMode)
 //! See hw_power.h for details.
 ////////////////////////////////////////////////////////////////////////////////
 uint16_t hw_power_ConvertSettingToBatt(uint16_t u16Setting,
-	uint16_t u16BattMode)
+    uint16_t u16BattMode)
 {
     // Li-Ion or alkaline battery mode.
     if( u16BattMode == 0 || u16BattMode == 1 )
@@ -192,7 +192,7 @@ uint16_t hw_power_ConvertBattBoToSetting(uint16_t u16BattBo)
 
     // Calculate the equation constant.
       LiIonEqnConst =
-	BATT_BRWNOUT_LIION_BASE_MV_378x - BATT_BRWNOUT_LIION_CEILING_OFFSET_MV;
+    BATT_BRWNOUT_LIION_BASE_MV_378x - BATT_BRWNOUT_LIION_CEILING_OFFSET_MV;
 
         return ((u16BattBo - LiIonEqnConst) / BATT_BRWNOUT_LIION_LEVEL_STEP_MV);
 }
@@ -215,7 +215,7 @@ uint16_t hw_power_ConvertSettingToBattBo(uint16_t u16Setting)
 //! See hw_power.h for details.
 ////////////////////////////////////////////////////////////////////////////////
 hw_power_VbusValidThresh_t hw_power_ConvertVoltToVbusThresh(
-	uint16_t u16ThreshVolt )
+    uint16_t u16ThreshVolt )
 {
     uint8_t i;
 

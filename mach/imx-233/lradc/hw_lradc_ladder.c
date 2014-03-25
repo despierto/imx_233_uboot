@@ -40,7 +40,7 @@ RtStatus_t hw_lradc_InitLadder(hw_lradc_Channel_t       eChannel,
         return (ERROR_HW_LRADC_CH_NOT_PRESENT);
 
     if ( (BF_RD(LRADC_CTRL0, SFTRST) != 0) ||
-		(BF_RD(LRADC_CTRL0, CLKGATE) != 0) )
+        (BF_RD(LRADC_CTRL0, CLKGATE) != 0) )
     {
         // Clean On-chip ground ref and set LRADC clock
         hw_lradc_Init(FALSE, LRADC_CLOCK_6MHZ);
@@ -92,9 +92,9 @@ uint16_t hw_lradc_MeasureVddio(void)
 
      // wait for completion
      while (BF_RD( LRADC_CTRL1, LRADC6_IRQ ) !=
-	BV_LRADC_CTRL1_LRADC6_IRQ__PENDING)
+    BV_LRADC_CTRL1_LRADC6_IRQ__PENDING)
      {
-	 // Wait for channel 6 completion.
+     // Wait for channel 6 completion.
      }
 
      // Clear the interrupt flag

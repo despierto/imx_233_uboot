@@ -34,99 +34,99 @@ PDATALINK_CTX pDataLinkCtx = NULL;
  ************************************************/
 int datalink_open(void)
 {
-	int rc = SUCCESS;
+    int rc = SUCCESS;
 
-	/* Configure Ethernt device*/
+    /* Configure Ethernt device*/
     rc = drv_eth_init();
-	if (rc)
-		return rc;
+    if (rc)
+        return rc;
 
-	/* Create ARM table */
-	rc = arp_table_create();
-	if (rc)
-		return rc;
+    /* Create ARM table */
+    rc = arp_table_create();
+    if (rc)
+        return rc;
 
-	arp_table_set_valid_period(ARP_TABLE_VALID_PERIOD_SEC);
+    arp_table_set_valid_period(ARP_TABLE_VALID_PERIOD_SEC);
 
-	//init dala link ctx
-	pDataLinkCtx = (PDATALINK_CTX)malloc(sizeof(DATALINK_CTX));
-	assert(pDataLinkCtx);
-	memset((void *)pDataLinkCtx, 0, sizeof(DATALINK_CTX));
+    //init dala link ctx
+    pDataLinkCtx = (PDATALINK_CTX)malloc(sizeof(DATALINK_CTX));
+    assert(pDataLinkCtx);
+    memset((void *)pDataLinkCtx, 0, sizeof(DATALINK_CTX));
 
-	//setup mac address
-	memcpy((void *)pDataLinkCtx->curr_src_mac, (void *)pGblCtx->cfg_mac_addr, ETHER_ADDR_LEN);
-	drv_eth_mac_set(pDataLinkCtx->curr_src_mac);
+    //setup mac address
+    memcpy((void *)pDataLinkCtx->curr_src_mac, (void *)pGblCtx->cfg_mac_addr, ETHER_ADDR_LEN);
+    drv_eth_mac_set(pDataLinkCtx->curr_src_mac);
 
-	return rc;
+    return rc;
 }
 
 int datalink_close(void)
 {
-	int rc = SUCCESS;
+    int rc = SUCCESS;
 
-	/* Create ARM table */
-	arp_table_destroy();
+    /* Create ARM table */
+    arp_table_destroy();
 
-	/* Stop Ethernt device*/	
+    /* Stop Ethernt device*/    
     drv_eth_halt();
 
 
-	return rc;
+    return rc;
 }
 
 PETH_PKT datalink_tx_alloc(void)
 {
-	return (PETH_PKT)drv_eth_heap_alloc();
+    return (PETH_PKT)drv_eth_heap_alloc();
 }
 
 int datalink_tx_send(PETH_PKT pEthPkt, IPaddr_t dst_ip, ushort type)
 {
-	int rc = SUCCESS;
-	uchar *dst_mac;
+    int rc = SUCCESS;
+    uchar *dst_mac;
 
-	if (pEthPkt == NULL) {
-		print_err("%s", "packet to send it null");
-		return FAILURE;
-	}
+    if (pEthPkt == NULL) {
+        print_err("%s", "packet to send it null");
+        return FAILURE;
+    }
 
-	//set src mac
-	memcpy ((void *)pEthPkt->header.src, (void *)pDataLinkCtx->curr_src_mac, ETHER_ADDR_LEN);
+    //set src mac
+    memcpy ((void *)pEthPkt->header.src, (void *)pDataLinkCtx->curr_src_mac, ETHER_ADDR_LEN);
 
-	//check presence of ip address at ARP table
-	dst_mac = arp_table_get_mac(dst_ip);
+    //check presence of ip address at ARP table
+    dst_mac = arp_table_get_mac(dst_ip);
 
-	if (dst_mac == NULL) {
-		//no mac or mac is obsolete: needed send request and update mac
-		
-		//mac_reg_time = arp_table_get_mac(ip_addr, &dst_mac);
-		//arp_table_reg_ip(pGblCtx->cfg_ip_dns, (char *)pGblCtx->cfg_mac_addr, ARP_TABLE_TYPE_ETH, 2234);
+    if (dst_mac == NULL) {
+        //no mac or mac is obsolete: needed send request and update mac
+        
+        //mac_reg_time = arp_table_get_mac(ip_addr, &dst_mac);
+        //arp_table_reg_ip(pGblCtx->cfg_ip_dns, (char *)pGblCtx->cfg_mac_addr, ARP_TABLE_TYPE_ETH, 2234);
 
-		if (dst_mac == NULL)
-			return FAILURE;
-	} 
-	
-	//set dst mac
+        if (dst_mac == NULL)
+            return FAILURE;
+    } 
+    
+    //set dst mac
     memcpy ((void *)pEthPkt->header.dst, (void *)dst_mac, ETHER_ADDR_LEN);
 
-	pEthPkt->header.type = type;
+    pEthPkt->header.type = type;
 
-	return rc;
+    return rc;
 }
 
 int datalink_rx_get_pkt(void)
 {
-	int rc = SUCCESS;
+    int rc = SUCCESS;
 
 
-	return rc;
+    return rc;
 }
 
 int datalink_task(void)
 {
-	int rc = SUCCESS;
+    int rc = SUCCESS;
 
 
-	return rc;
+    return rc;
 }
 
 

@@ -205,77 +205,77 @@ void hw_power_EnableDcdc(bool bEnable)
     // STMP378x experiences a false 5V brownout when this bitfield is set,
     // so we need to temporarily disable the 5V brownout.
     //--------------------------------------------------------------------------
-	// Save the current 5V brownout setting so we can restore it later.
-	bool orig_vbusvalid_5vdetect=false;
-	bool orig_pwd_bo=false;
-	uint8_t orig_vbusvalid_threshold;
-	bool bPrev5vBoPwrdn;
-	bool bPrev5vDroop;
+    // Save the current 5V brownout setting so we can restore it later.
+    bool orig_vbusvalid_5vdetect=false;
+    bool orig_pwd_bo=false;
+    uint8_t orig_vbusvalid_threshold;
+    bool bPrev5vBoPwrdn;
+    bool bPrev5vDroop;
 
-	bPrev5vBoPwrdn = hw_power_Enable5vBrownoutPowerdown( false );
-	bPrev5vDroop = hw_power_EnableVdd5vDroopInterrupt( false );
+    bPrev5vBoPwrdn = hw_power_Enable5vBrownoutPowerdown( false );
+    bPrev5vDroop = hw_power_EnableVdd5vDroopInterrupt( false );
 
-	if(bEnable)
-	{
-		if(HW_POWER_5VCTRL.B.ENABLE_DCDC==1)
-			return;
+    if(bEnable)
+    {
+        if(HW_POWER_5VCTRL.B.ENABLE_DCDC==1)
+            return;
 
-		/* recording orignal values that will be modified
-		* temporarlily to handle a chip bug.  See chip errata
-		* for CQ ENGR00115837
-		*/
-		orig_vbusvalid_threshold =
-				(HW_POWER_5VCTRL_RD() & BM_POWER_5VCTRL_VBUSVALID_TRSH)
-				>> BP_POWER_5VCTRL_VBUSVALID_TRSH;
+        /* recording orignal values that will be modified
+        * temporarlily to handle a chip bug.  See chip errata
+        * for CQ ENGR00115837
+        */
+        orig_vbusvalid_threshold =
+                (HW_POWER_5VCTRL_RD() & BM_POWER_5VCTRL_VBUSVALID_TRSH)
+                >> BP_POWER_5VCTRL_VBUSVALID_TRSH;
 
-		if(HW_POWER_5VCTRL_RD() & BM_POWER_5VCTRL_VBUSVALID_5VDETECT)
-			orig_vbusvalid_5vdetect = true;
+        if(HW_POWER_5VCTRL_RD() & BM_POWER_5VCTRL_VBUSVALID_5VDETECT)
+            orig_vbusvalid_5vdetect = true;
 
-		if(HW_POWER_MINPWR_RD() & BM_POWER_MINPWR_PWD_BO)
-			orig_pwd_bo=true;
+        if(HW_POWER_MINPWR_RD() & BM_POWER_MINPWR_PWD_BO)
+            orig_pwd_bo=true;
 
-		/* disable mechanisms that get erroneously tripped by
-		* when setting the DCDC4P2 EN_DCDC
-		*/
-		HW_POWER_5VCTRL_CLR(BM_POWER_5VCTRL_VBUSVALID_5VDETECT);
-		HW_POWER_5VCTRL_CLR(BF_POWER_5VCTRL_VBUSVALID_TRSH(0x7));
-		HW_POWER_5VCTRL_SET(BM_POWER_MINPWR_PWD_BO);
+        /* disable mechanisms that get erroneously tripped by
+        * when setting the DCDC4P2 EN_DCDC
+        */
+        HW_POWER_5VCTRL_CLR(BM_POWER_5VCTRL_VBUSVALID_5VDETECT);
+        HW_POWER_5VCTRL_CLR(BF_POWER_5VCTRL_VBUSVALID_TRSH(0x7));
+        HW_POWER_5VCTRL_SET(BM_POWER_MINPWR_PWD_BO);
 
-		/* DCDC_XFER is necessary when first powering on the DCDC
-		 * regardless if the source is 4p2 or battery
-		 */
-		HW_POWER_5VCTRL_SET(BM_POWER_5VCTRL_DCDC_XFER);
+        /* DCDC_XFER is necessary when first powering on the DCDC
+         * regardless if the source is 4p2 or battery
+         */
+        HW_POWER_5VCTRL_SET(BM_POWER_5VCTRL_DCDC_XFER);
 
-		hw_digctl_MicrosecondWait( 20 );
+        hw_digctl_MicrosecondWait( 20 );
 
-		HW_POWER_5VCTRL_CLR(BM_POWER_5VCTRL_DCDC_XFER);
+        HW_POWER_5VCTRL_CLR(BM_POWER_5VCTRL_DCDC_XFER);
 
-	        BF_SET(POWER_5VCTRL, ENABLE_DCDC);
+            BF_SET(POWER_5VCTRL, ENABLE_DCDC);
 
-		// Allow settling time for the DC-DC.
-		hw_digctl_MicrosecondWait( 21 );
+        // Allow settling time for the DC-DC.
+        hw_digctl_MicrosecondWait( 21 );
 
-		HW_POWER_5VCTRL_SET(BF_POWER_5VCTRL_VBUSVALID_TRSH(
-				orig_vbusvalid_threshold));
+        HW_POWER_5VCTRL_SET(BF_POWER_5VCTRL_VBUSVALID_TRSH(
+                orig_vbusvalid_threshold));
 
-		if(orig_vbusvalid_5vdetect){
-			HW_POWER_5VCTRL_SET(BM_POWER_5VCTRL_VBUSVALID_5VDETECT);
-		}
+        if(orig_vbusvalid_5vdetect){
+            HW_POWER_5VCTRL_SET(BM_POWER_5VCTRL_VBUSVALID_5VDETECT);
+        }
 
-		if(!orig_pwd_bo){
-			HW_POWER_5VCTRL_CLR(BM_POWER_MINPWR_PWD_BO);
-		}
+        if(!orig_pwd_bo){
+            HW_POWER_5VCTRL_CLR(BM_POWER_MINPWR_PWD_BO);
+        }
 
 
 
-		// Restore the 5V brownout setting.
-		hw_power_ClearVbusValidInterrupt();
-		hw_power_Enable5vBrownoutPowerdown( bPrev5vBoPwrdn );
-		hw_power_ClearVdd5vDroopInterrupt();
-		hw_power_EnableVdd5vDroopInterrupt( bPrev5vDroop );
-	}
-	else
-		BF_CLR(POWER_5VCTRL, ENABLE_DCDC);
+        // Restore the 5V brownout setting.
+        hw_power_ClearVbusValidInterrupt();
+        hw_power_Enable5vBrownoutPowerdown( bPrev5vBoPwrdn );
+        hw_power_ClearVdd5vDroopInterrupt();
+        hw_power_EnableVdd5vDroopInterrupt( bPrev5vDroop );
+    }
+    else
+        BF_CLR(POWER_5VCTRL, ENABLE_DCDC);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

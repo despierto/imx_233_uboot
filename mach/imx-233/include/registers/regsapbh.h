@@ -85,11 +85,11 @@ typedef union
 #define HW_APBH_CTRL0_RD()      (HW_APBH_CTRL0.U)
 #define HW_APBH_CTRL0_WR(v)     (HW_APBH_CTRL0.U = (v))
 #define HW_APBH_CTRL0_SET(v)    \
-	((*(volatile reg32_t *) HW_APBH_CTRL0_SET_ADDR) = (v))
+    ((*(volatile reg32_t *) HW_APBH_CTRL0_SET_ADDR) = (v))
 #define HW_APBH_CTRL0_CLR(v)    \
-	((*(volatile reg32_t *) HW_APBH_CTRL0_CLR_ADDR) = (v))
+    ((*(volatile reg32_t *) HW_APBH_CTRL0_CLR_ADDR) = (v))
 #define HW_APBH_CTRL0_TOG(v)    \
-	((*(volatile reg32_t *) HW_APBH_CTRL0_TOG_ADDR) = (v))
+    ((*(volatile reg32_t *) HW_APBH_CTRL0_TOG_ADDR) = (v))
 #endif
 
 
@@ -129,7 +129,7 @@ typedef union
 #define BM_APBH_CTRL0_AHB_BURST8_EN      0x20000000
 
 #define BF_APBH_CTRL0_AHB_BURST8_EN(v)   (((v) << 29) & \
-	BM_APBH_CTRL0_AHB_BURST8_EN)
+    BM_APBH_CTRL0_AHB_BURST8_EN)
 
 #ifndef __LANGUAGE_ASM__
 #define BW_APBH_CTRL0_AHB_BURST8_EN(v)   BF_CS1(APBH_CTRL0, AHB_BURST8_EN, v)
@@ -141,7 +141,7 @@ typedef union
 #define BM_APBH_CTRL0_APB_BURST4_EN      0x10000000
 
 #define BF_APBH_CTRL0_APB_BURST4_EN(v)   (((v) << 28) & \
-	BM_APBH_CTRL0_APB_BURST4_EN)
+    BM_APBH_CTRL0_APB_BURST4_EN)
 
 #ifndef __LANGUAGE_ASM__
 #define BW_APBH_CTRL0_APB_BURST4_EN(v)   BF_CS1(APBH_CTRL0, APB_BURST4_EN, v)
@@ -153,7 +153,7 @@ typedef union
 #define BM_APBH_CTRL0_RESET_CHANNEL      0x00FF0000
 
 #define BF_APBH_CTRL0_RESET_CHANNEL(v)   (((v) << 16) & \
-	BM_APBH_CTRL0_RESET_CHANNEL)
+    BM_APBH_CTRL0_RESET_CHANNEL)
 
 #ifndef __LANGUAGE_ASM__
 #define BW_APBH_CTRL0_RESET_CHANNEL(v)   (HW_APBH_CTRL0.B.RESET_CHANNEL = (v))
@@ -174,7 +174,7 @@ typedef union
 #define BM_APBH_CTRL0_CLKGATE_CHANNEL      0x0000FF00
 
 #define BF_APBH_CTRL0_CLKGATE_CHANNEL(v)   \
-	(((v) << 8) & BM_APBH_CTRL0_CLKGATE_CHANNEL)
+    (((v) << 8) & BM_APBH_CTRL0_CLKGATE_CHANNEL)
 
 #ifndef __LANGUAGE_ASM__
 #define BW_APBH_CTRL0_CLKGATE_CHANNEL(v) (HW_APBH_CTRL0.B.CLKGATE_CHANNEL = (v))
@@ -195,7 +195,7 @@ typedef union
 #define BM_APBH_CTRL0_FREEZE_CHANNEL      0x000000FF
 
 #define BF_APBH_CTRL0_FREEZE_CHANNEL(v)   \
-	(((v) << 0) & BM_APBH_CTRL0_FREEZE_CHANNEL)
+    (((v) << 0) & BM_APBH_CTRL0_FREEZE_CHANNEL)
 
 #ifndef __LANGUAGE_ASM__
 #define BW_APBH_CTRL0_FREEZE_CHANNEL(v)   (HW_APBH_CTRL0.B.FREEZE_CHANNEL = (v))
@@ -258,11 +258,11 @@ typedef union
 #define HW_APBH_CTRL1_RD()      (HW_APBH_CTRL1.U)
 #define HW_APBH_CTRL1_WR(v)     (HW_APBH_CTRL1.U = (v))
 #define HW_APBH_CTRL1_SET(v)    \
-	((*(volatile reg32_t *) HW_APBH_CTRL1_SET_ADDR) = (v))
+    ((*(volatile reg32_t *) HW_APBH_CTRL1_SET_ADDR) = (v))
 #define HW_APBH_CTRL1_CLR(v)    \
-	((*(volatile reg32_t *) HW_APBH_CTRL1_CLR_ADDR) = (v))
+    ((*(volatile reg32_t *) HW_APBH_CTRL1_CLR_ADDR) = (v))
 #define HW_APBH_CTRL1_TOG(v)    \
-	((*(volatile reg32_t *) HW_APBH_CTRL1_TOG_ADDR) = (v))
+    ((*(volatile reg32_t *) HW_APBH_CTRL1_TOG_ADDR) = (v))
 #endif
 
 

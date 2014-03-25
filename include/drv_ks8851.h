@@ -40,7 +40,7 @@
 #define NET_RX_FILTER_HASH_ONLY_W_PHYS_ADDR_PASSED      10
 #define NET_RX_FILTER_PERFECT_W_PHYS_ADDR_PASSED        11
 
-#define NET_HW_RX_HEADER_SIZE							8
+#define NET_HW_RX_HEADER_SIZE                            8
 
 /************************************************
  *              APIs                                                            *

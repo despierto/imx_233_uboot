@@ -56,27 +56,27 @@
 /*******************************************************************************/
 /* STMP 37xx RTC persistent register 1 bit 10 indicates
   *    that system is being resumed from suspend mode */
-#define RTC_BASE_ADDR           	0x8005C000
-#define PERSISTENT_SLEEP_REG    	0x8005C070
-#define PERSISTENT_SLEEP_BIT    	10
+#define RTC_BASE_ADDR               0x8005C000
+#define PERSISTENT_SLEEP_REG        0x8005C070
+#define PERSISTENT_SLEEP_BIT        10
 
 
 /*******************************************************************************/
 /*                                              OTHER MAPPING                                                                 */
 /*******************************************************************************/
 
-#define ATAGS_BASE_ADDRESS  		(SDRAM_BASE + 0x100)
-#define KERNEL_BASE_ADDRESS 		(SDRAM_BASE + 0x8000)
+#define ATAGS_BASE_ADDRESS          (SDRAM_BASE + 0x100)
+#define KERNEL_BASE_ADDRESS         (SDRAM_BASE + 0x8000)
 
-#define SLEEP_STATE_FINGERPRINT 	0xdeadbeef
-#define FINGERPRINT             	0x00                /* fingerprint offset */
+#define SLEEP_STATE_FINGERPRINT     0xdeadbeef
+#define FINGERPRINT                 0x00                /* fingerprint offset */
 
 
 /*====================*/
 /* Network definitions                 */
 /*====================*/
-#define NET_PKT_MAX_SIZE        	(2048)
-#define NET_PKT_COUNT           	(1000)
+#define NET_PKT_MAX_SIZE            (2048)
+#define NET_PKT_COUNT               (1000)
 
 
 /*******************************************************************************/
@@ -84,8 +84,8 @@
 /*******************************************************************************/
 
 /* MAP: 0 - base of system RAM*/
-#define SYS_RAM_BASE            	(SDRAM_BASE)                            /* 0x40000000 */
-#define SYS_RAM_SIZE            	(SDRAM_SIZE)                            /* 0x04000000 */
+#define SYS_RAM_BASE                (SDRAM_BASE)                            /* 0x40000000 */
+#define SYS_RAM_SIZE                (SDRAM_SIZE)                            /* 0x04000000 */
 
 #define SYS_RAM_LINUX_BOOT_PARAM_ADDR   (SDRAM_BASE + 0x100)            /* 0x40000100 */
 
@@ -93,14 +93,14 @@
 
 
 /* MAP: 32 KB - offset for kernel image loading */
-#define SYS_RAM_LOAD_ADDR       	(SDRAM_BASE + 0x8000)                   /* 0x40008000 */
-#define SYS_RAM_LOAD_SIZE       	(0x7F8000)                              /* 8MB - 32KB */
+#define SYS_RAM_LOAD_ADDR           (SDRAM_BASE + 0x8000)                   /* 0x40008000 */
+#define SYS_RAM_LOAD_SIZE           (0x7F8000)                              /* 8MB - 32KB */
 
 //GAP: 0x40808000...0x41FFFFFF: ~15MB
 
-#define SYS_RAM_HEAP_ADDR    		(SDRAM_BASE + 0x2000000)                /* 0x42000000 */
-#define SYS_RAM_HEAP_SIZE    		(0x2000000)                             /* 32M */
-#define SYS_RAM_END             	(SDRAM_BASE + SDRAM_SIZE)               /* 0x44000000 */
+#define SYS_RAM_HEAP_ADDR            (SDRAM_BASE + 0x2000000)                /* 0x42000000 */
+#define SYS_RAM_HEAP_SIZE            (0x2000000)                             /* 32M */
+#define SYS_RAM_END                 (SDRAM_BASE + SDRAM_SIZE)               /* 0x44000000 */
 
 
 
@@ -108,7 +108,7 @@
 /*====================*/
 /* SYS HEAP configuration */
 /*====================*/
-#define	SYS_CACHE_LINE_BYTES		0x20
+#define    SYS_CACHE_LINE_BYTES        0x20
 
 
 /*====================*/
@@ -118,13 +118,13 @@
 #define CONFIG_SPI_CLK      3000000
 #define CONFIG_SPI_SSP1
 
-#define CPU_CLK_DEVIDER 	(18) //480MHz
+#define CPU_CLK_DEVIDER     (18) //480MHz
 
 
 /*====================*/
 /* ETH configuration                    */
 /*====================*/
-#define CONFIG_BOOTFILE         "zlinux"	                    /* Boot file name */
+#define CONFIG_BOOTFILE         "zlinux"                        /* Boot file name */
 #define CONFIG_BOOTFILE_SIZE    128
 #define CONFIG_SYS_PROMPT       "x-boot> "
 #define CONFIG_NETMASK          "255.255.255.0"

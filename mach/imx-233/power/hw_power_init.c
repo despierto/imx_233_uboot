@@ -76,18 +76,18 @@ RtStatus_t hw_power_Init(void)
     //--------------------------------------------------------------------------
     BF_SET(POWER_BATTMONITOR,EN_BATADJ);
 
-	//----------------------------------------------------------------------
-	// Increase the RCSCALE_THRESHOLD
-	//----------------------------------------------------------------------
-	BF_SET(POWER_LOOPCTRL, RCSCALE_THRESH);
+    //----------------------------------------------------------------------
+    // Increase the RCSCALE_THRESHOLD
+    //----------------------------------------------------------------------
+    BF_SET(POWER_LOOPCTRL, RCSCALE_THRESH);
 
-	//----------------------------------------------------------------------
-	// Increase the RCSCALE level for quick DCDC response to dynamic load
-	//----------------------------------------------------------------------
-	hw_power_EnableRcScale(HW_POWER_RCSCALE_8X_INCR);
+    //----------------------------------------------------------------------
+    // Increase the RCSCALE level for quick DCDC response to dynamic load
+    //----------------------------------------------------------------------
+    hw_power_EnableRcScale(HW_POWER_RCSCALE_8X_INCR);
 
-	hw_power_EnableHalfFets(FALSE);
-	hw_power_EnableDoubleFets(TRUE);
+    hw_power_EnableHalfFets(FALSE);
+    hw_power_EnableDoubleFets(TRUE);
     //--------------------------------------------------------------------------
     // Initialize the variables we use in hw_power driver.
     //--------------------------------------------------------------------------
@@ -99,26 +99,26 @@ RtStatus_t hw_power_Init(void)
         bEnableMasterBattBrownout = HW_POWER_BATTMONITOR.B.PWDN_BATTBRNOUT;
 
         // Initialize the 4p2 and charger variables.  Both the local and the
-	// master have to be true for the variable to be true.
+    // master have to be true for the variable to be true.
 
         bEnableMaster4p2 = HW_POWER_DCDC4P2.B.ENABLE_4P2 &&
-		!HW_POWER_5VCTRL.B.PWD_CHARGE_4P2;
+        !HW_POWER_5VCTRL.B.PWD_CHARGE_4P2;
         bEnableMasterCharge = !HW_POWER_CHARGE.B.PWD_BATTCHRG &&
-		!HW_POWER_5VCTRL.B.PWD_CHARGE_4P2;
+        !HW_POWER_5VCTRL.B.PWD_CHARGE_4P2;
 
 
         bMasterFlagsInitialized = true;
     }
 
-	/* Enable 5V to battery source handoff on detection of 5V
-	 * disconnection.  Get the DCDC control loop ready for
-	 * action.  Leaving DCDC_XFER set causes problems with 4p2
-	 * operation and has other issues so we only leave
-	 * it on long enough to prepare the DCDC control loop
-	 */
-	HW_POWER_5VCTRL_SET(BM_POWER_5VCTRL_DCDC_XFER);
-	hw_digctl_MicrosecondWait(30);
-	HW_POWER_5VCTRL_CLR(BM_POWER_5VCTRL_DCDC_XFER);
+    /* Enable 5V to battery source handoff on detection of 5V
+     * disconnection.  Get the DCDC control loop ready for
+     * action.  Leaving DCDC_XFER set causes problems with 4p2
+     * operation and has other issues so we only leave
+     * it on long enough to prepare the DCDC control loop
+     */
+    HW_POWER_5VCTRL_SET(BM_POWER_5VCTRL_DCDC_XFER);
+    hw_digctl_MicrosecondWait(30);
+    HW_POWER_5VCTRL_CLR(BM_POWER_5VCTRL_DCDC_XFER);
 
 
     return rtn;
@@ -126,9 +126,9 @@ RtStatus_t hw_power_Init(void)
 
 
 RtStatus_t hw_power_InitBatteryMonitor(hw_lradc_DelayTrigger_t eTrigger,
-	 uint32_t u32SamplingInterval)
+     uint32_t u32SamplingInterval)
 {
-	RtStatus_t rtn;
+    RtStatus_t rtn;
 
 
         //----------------------------------------------------------------------
@@ -151,16 +151,16 @@ RtStatus_t hw_power_InitBatteryMonitor(hw_lradc_DelayTrigger_t eTrigger,
 void hw_power_Init4p2EnabledPowerSupply(void)
 {
 
-	if(hw_power_GetBatteryVoltage()>3900)
-		HW_POWER_DCDC4P2.B.CMPTRIP = 0;
-	else
-		HW_POWER_DCDC4P2.B.CMPTRIP = 24;
+    if(hw_power_GetBatteryVoltage()>3900)
+        HW_POWER_DCDC4P2.B.CMPTRIP = 0;
+    else
+        HW_POWER_DCDC4P2.B.CMPTRIP = 24;
 
-	HW_POWER_DCDC4P2.B.TRG = 0;
-	HW_POWER_5VCTRL.B.HEADROOM_ADJ = 0x4;
-	HW_POWER_DCDC4P2.B.DROPOUT_CTRL = 0xA;  //100mV drop before stealing
-		// charging current
-	HW_POWER_5VCTRL.B.CHARGE_4P2_ILIMIT = 0x3f;
+    HW_POWER_DCDC4P2.B.TRG = 0;
+    HW_POWER_5VCTRL.B.HEADROOM_ADJ = 0x4;
+    HW_POWER_DCDC4P2.B.DROPOUT_CTRL = 0xA;  //100mV drop before stealing
+        // charging current
+    HW_POWER_5VCTRL.B.CHARGE_4P2_ILIMIT = 0x3f;
 }
 
 
@@ -177,26 +177,26 @@ RtStatus_t hw_power_InitPowerSupplies(void)
     {
 
         if((Status = hw_power_SetVdddPowerSource(HW_POWER_LINREG_DCDC_READY))
-		 != SUCCESS)
+         != SUCCESS)
             return Status;
         if((Status = hw_power_SetVddaPowerSource(HW_POWER_LINREG_DCDC_READY))
-		 != SUCCESS)
+         != SUCCESS)
             return Status;
         if((Status = hw_power_SetVddioPowerSource(HW_POWER_LINREG_DCDC_READY))
-		 != SUCCESS)
+         != SUCCESS)
             return Status;
     }
     else
     {
 
         if((Status = hw_power_SetVdddPowerSource(HW_POWER_DCDC_LINREG_READY))
-		 != SUCCESS)
+         != SUCCESS)
             return Status;
         if((Status = hw_power_SetVddaPowerSource(HW_POWER_DCDC_LINREG_READY))
-		 != SUCCESS)
+         != SUCCESS)
             return Status;
         if((Status = hw_power_SetVddioPowerSource(HW_POWER_DCDC_LINREG_READY))
-		 != SUCCESS)
+         != SUCCESS)
             return Status;
 
         // Need to make sure the DCDC does not run with a bad or broken battery.
@@ -243,7 +243,7 @@ RtStatus_t hw_power_InitFiq(void)
     // Check the battery.  Don't enable the brownout until the battery has at
     // least reached a level where it can do a handoff.
     u16SafeBattVolt = hw_power_ConvertSettingToBattBo(
-	g_ddi_power_SafeBatteryVoltageCode );
+    g_ddi_power_SafeBatteryVoltageCode );
 
     // Check if the battery level is high enough for DCDC to operate.
     if( hw_power_GetBatteryVoltage() > u16SafeBattVolt )

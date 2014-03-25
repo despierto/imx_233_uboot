@@ -27,25 +27,25 @@
 
 
 /************************************************
- *              DEFINITIONS         					       *
+ *              DEFINITIONS                                    *
  ************************************************/
 typedef struct _ETH_PKT_ {
-    ETH_HDR		header;
-    U8			*payload;    
+    ETH_HDR        header;
+    U8            *payload;    
 }ETH_PKT, *PETH_PKT;
 
 typedef struct _DATALINK_CTX_ {
-	char       	curr_src_mac[ETHER_ADDR_LEN];	/* Destination node */
+    char           curr_src_mac[ETHER_ADDR_LEN];    /* Destination node */
 
-	ETH_POOL		tx_pool[ETH_RX_POOL_SIZE];		/* queue of incomming packets */
-	unsigned int	tx_pool_get;
-	unsigned int	tx_pool_put;	
-	
+    ETH_POOL        tx_pool[ETH_RX_POOL_SIZE];        /* queue of incomming packets */
+    unsigned int    tx_pool_get;
+    unsigned int    tx_pool_put;    
+    
 }DATALINK_CTX, *PDATALINK_CTX;
 
 
 /************************************************
- *              FUNCTIONs								*
+ *              FUNCTIONs                                *
  ************************************************/
 int datalink_open(void);
 int datalink_close(void);

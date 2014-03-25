@@ -174,7 +174,7 @@ RtStatus_t  ddi_power_Init(ddi_power_InitValues_t* pInitValues)
 
 
     //--------------------------------------------------------------------------
-	//Disable Power Down to improve EMI.  Can only be used
+    //Disable Power Down to improve EMI.  Can only be used
     //for release builds because it prevents JTAG debugging
     //--------------------------------------------------------------------------
 #ifndef DEBUG

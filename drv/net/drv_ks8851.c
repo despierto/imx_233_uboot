@@ -98,7 +98,7 @@ typedef struct _NET_KS8851_INF_ {
 }NET_KS8851_INF, *PNET_KS8851_INF;
 
 PNET_KS8851_INF ks = NULL;
-	
+    
 static void     ks_reg8_write(ushort reg, ushort val);
 static void     ks_reg16_write(ushort reg, ushort val);
 static void     ks_reg_read(ushort op, uchar *rxb, ushort len);
@@ -110,7 +110,7 @@ static void     ks_fifo_read(uchar *buff, ushort len);
 void            ks_mac_set(void);
 void            ks_mac_default_set(void);
 static void     ks_config(uint addr_filter);
-uint 			ks_get_rx_addres_filter(uint option);
+uint             ks_get_rx_addres_filter(uint option);
 
 
 /************************************************
@@ -137,9 +137,9 @@ RESULTCODE  ks8851_init(PTR ptr)
     }
     print_net(" - ks8851 chip ID=0x%x", chip_id);
 
-	ks = (PNET_KS8851_INF)malloc(sizeof(NET_KS8851_INF));
-	assert(ks);
-	print_net(" - Allocation of NET_KS8851_INF CTX at (0x%x), size (%d)", (unsigned int)ks, sizeof(NET_KS8851_INF));
+    ks = (PNET_KS8851_INF)malloc(sizeof(NET_KS8851_INF));
+    assert(ks);
+    print_net(" - Allocation of NET_KS8851_INF CTX at (0x%x), size (%d)", (unsigned int)ks, sizeof(NET_KS8851_INF));
     memset((void *)ks, 0, sizeof(NET_KS8851_INF));
 
     ks->fid = 0;
@@ -439,7 +439,7 @@ static void ks_config(uint addr_filter)
                             RXCR1_RXME |        /* multicast enable:        must be enabled */                            
                             RXCR1_RXUE |        /* unicast enable:           must be enabled  */
                             RXCR1_RXE));        /* enable rx block:         must be enabled */
-						  
+                          
     /* transfer entire frames out in one go */
     ks_reg16_write(KS_RXCR2, RXCR2_SRDBL_FRAME);
 

@@ -259,7 +259,7 @@ void hw_power_GetDieTemperature(int16_t * pi16Low, int16_t * pi16High)
 
     // Get the reading in Kelvins
     u16Reading = hw_lradc_MeasureInternalDieTemperature(DIE_TEMP_CHAN_0,
-	DIE_TEMP_CHAN_1);
+    DIE_TEMP_CHAN_1);
 
     // Adjust for error margin
     i16High = u16Reading + TEMP_READING_ERROR_MARGIN;

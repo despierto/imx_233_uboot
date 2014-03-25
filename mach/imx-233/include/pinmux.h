@@ -24,7 +24,7 @@
 
 #include "platform.h"
 
-#define	PINCTRL_BASE        (REGS_BASE + 0x18000)
+#define    PINCTRL_BASE        (REGS_BASE + 0x18000)
 
 #define PINCTRL_CTRL        0x000
 #define PINCTRL_MUXSEL(n)   (0x100 + 0x10*(n))

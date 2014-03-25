@@ -39,7 +39,7 @@
 #define BATT_BRWNOUT_LIION_LEVEL_STEP_MV 40
 //! \brief Constant value to be calculated by preprocessing
 #define BATT_BRWNOUT_LIION_EQN_CONST \
-	(BATT_BRWNOUT_LIION_BASE_MV - BATT_BRWNOUT_LIION_CEILING_OFFSET_MV)
+    (BATT_BRWNOUT_LIION_BASE_MV - BATT_BRWNOUT_LIION_CEILING_OFFSET_MV)
 //! \brief Base voltage to start battery calculations for Alkaline/NiMH
 #define BATT_BRWNOUT_ALKAL_BASE_MV 800
 //! \brief Constant to help with determining whether to round up or not
@@ -48,7 +48,7 @@
 #define BATT_BRWNOUT_ALKAL_LEVEL_STEP_MV 20
 //! \brief Constant value to be calculated by preprocessing
 #define BATT_BRWNOUT_ALKAL_EQN_CONST \
-	(BATT_BRWNOUT_ALKAL_BASE_MV - BATT_BRWNOUT_ALKAL_CEILING_OFFSET_MV)
+    (BATT_BRWNOUT_ALKAL_BASE_MV - BATT_BRWNOUT_ALKAL_CEILING_OFFSET_MV)
 //! \brief Max register code for battery brownout field.
 #define BATT_BRWNOUT_MAX_REG_CODE_378x 0x1F
 
@@ -215,7 +215,7 @@ typedef enum _hw_power_VbusDroopThresh_t
 //! \brief Possible power sources for each power supply
 typedef enum _hw_power_PowerSource_t
 {
-	//! \brief Powered by linear regulator.  DCDC output is gated off and
+    //! \brief Powered by linear regulator.  DCDC output is gated off and
     //! the linreg output is equal to the target.
     HW_POWER_LINREG_DCDC_OFF,
     //! \brief Powered by linear regulator.  DCDC output is not gated off
@@ -223,7 +223,7 @@ typedef enum _hw_power_PowerSource_t
     //! event.  The converters are not enabled when 5V is present. LinReg output
     //! is 25mV below target.
     HW_POWER_LINREG_DCDC_READY,
-	//! \brief Powered by DCDC converter and the LinReg is on. LinReg output
+    //! \brief Powered by DCDC converter and the LinReg is on. LinReg output
     //! is 25mV below target.
     HW_POWER_DCDC_LINREG_ON,
     //! \brief Powered by DCDC converter and the LinReg is off. LinReg output
@@ -232,7 +232,7 @@ typedef enum _hw_power_PowerSource_t
     //! \brief Powered by DCDC converter and the LinReg is ready for the
     //! automatic hardware transfer.  The LinReg output is not enabled and
     //! depends on the 5V presence to enable the LinRegs.  LinReg offset is 25mV
-    //!	 below target.
+    //!     below target.
     HW_POWER_DCDC_LINREG_READY,
     //! \brief Powered by an external source when 5V is present.  This does not
     //! necessarily mean the external source is powered by 5V,but the chip needs
@@ -249,30 +249,30 @@ typedef enum _hw_power_PowerSource_t
 //! \brief Battery charging current magnitudes converted to register settings.
 typedef enum _hw_power_BattChargeCurrentMag_t
 {
- 	//! \brief Current magniude 400mA
+     //! \brief Current magniude 400mA
     HW_POWER_CURRENT_MAG_400 = 0x20,
- 	//! \brief Current magniude 200mA
+     //! \brief Current magniude 200mA
     HW_POWER_CURRENT_MAG_200 = 0x10,
- 	//! \brief Current magniude 100mA
+     //! \brief Current magniude 100mA
     HW_POWER_CURRENT_MAG_100 = 0x08,
- 	//! \brief Current magniude 50mA
+     //! \brief Current magniude 50mA
     HW_POWER_CURRENT_MAG_50  = 0x04,
- 	//! \brief Current magniude 20mA
+     //! \brief Current magniude 20mA
     HW_POWER_CURRENT_MAG_20  = 0x02,
- 	//! \brief Current magniude 10mA
+     //! \brief Current magniude 10mA
     HW_POWER_CURRENT_MAG_10  = 0x01
 } hw_power_BattChargeCurrentMag_t;
 
 //! \brief Linear regulator offset values
 typedef enum _hw_power_LinRegOffsetStep_t
 {
-	//! \brief No offset.  Linear regualator output equals target.
+    //! \brief No offset.  Linear regualator output equals target.
     HW_POWER_LINREG_OFFSET_NO_STEP    = 0,
-	//! \brief Linear regulator is one 25mV step above the target.
+    //! \brief Linear regulator is one 25mV step above the target.
     HW_POWER_LINREG_OFFSET_STEP_ABOVE = 1,
-	//! \brief Linear regulator is one 25mV step below the target.
+    //! \brief Linear regulator is one 25mV step below the target.
     HW_POWER_LINREG_OFFSET_STEP_BELOW = 2,
-	//! \brief Max offset. Linear regulator is one 25mV step above target.
+    //! \brief Max offset. Linear regulator is one 25mV step above target.
     HW_POWER_LINREG_OFFSET_MAX        = 3,
     //! \brief No step is used for LinReg mode.
     HW_POWER_LINREG_OFFSET_LINREG_MODE = HW_POWER_LINREG_OFFSET_NO_STEP,
@@ -284,13 +284,13 @@ typedef enum _hw_power_LinRegOffsetStep_t
 //! \brief Possible RC Scale values to increase transient load response
 typedef enum _hw_power_RcScaleLevels_t
 {
-	//! \brief Use nominal response
+    //! \brief Use nominal response
     HW_POWER_RCSCALE_DISABLED   = 0,
-	//! \brief Increase response by factor of 2
+    //! \brief Increase response by factor of 2
     HW_POWER_RCSCALE_2X_INCR    = 1,
-	//! \brief Increase response by factor of 4
+    //! \brief Increase response by factor of 4
     HW_POWER_RCSCALE_4X_INCR    = 2,
-	//! \brief Increase response by factor of 8
+    //! \brief Increase response by factor of 8
     HW_POWER_RCSCALE_8X_INCR    = 3
 } hw_power_RcScaleLevels_t;
 
@@ -428,7 +428,7 @@ RtStatus_t hw_power_Init(void);
 
 
 RtStatus_t hw_power_InitBatteryMonitor(hw_lradc_DelayTrigger_t eTrigger,
-	 uint32_t u32SamplingInterval);
+     uint32_t u32SamplingInterval);
 RtStatus_t hw_power_InitPowerSupplies(void);
 RtStatus_t hw_power_InitFiq(void);
 
@@ -441,7 +441,7 @@ RtStatus_t hw_power_InitFiq(void);
 //! setting and writes it to the target register.  This function will also
 //! update the DCDC efficiency register field(s) related to Vddd.
 //!
-//! \param[in] 	 u16Vddd_mV - new voltage level in mV
+//! \param[in]      u16Vddd_mV - new voltage level in mV
 //!
 //! \notes This function does not adjust for LinReg offsets
 ////////////////////////////////////////////////////////////////////////////////
@@ -467,7 +467,7 @@ uint16_t hw_power_GetVdddValue(void);
 //! This function converts the brownout offset (as a millivolt value)
 //! to a register setting and writes it to the brownout offset field.
 //!
-//! \param[in] 	 u16VdddBoOffset_mV - offset from target to set brownout
+//! \param[in]      u16VdddBoOffset_mV - offset from target to set brownout
 ////////////////////////////////////////////////////////////////////////////////
 void hw_power_SetVdddBrownoutValue(uint16_t u16VdddBoOffset_mV);
 
@@ -512,7 +512,7 @@ hw_power_PowerSource_t hw_power_GetVdddPowerSource(void);
 //  setting and writes it to the target register.  This function will also
 //  update the DCDC efficiency register field(s) related to Vddio.
 //!
-//! \param[in] 	 u16Vddio_mV - new VDDIO in mV
+//! \param[in]      u16Vddio_mV - new VDDIO in mV
 //  Notes: This function does not adjust for LinReg offsets
 ////////////////////////////////////////////////////////////////////////////////
 void hw_power_SetVddioValue(uint16_t u16Vddio_mV);
@@ -525,7 +525,7 @@ void hw_power_SetVddioValue(uint16_t u16Vddio_mV);
 //  This function converts the register setting for the target and converts
 //  it to a millivolt value. The millivolt value is returned.
 //!
-//! \param[in] 	 void
+//! \param[in]      void
 //!
 //! \param[out]
 //!
@@ -544,7 +544,7 @@ uint16_t hw_power_GetVddioValue(void);
 //  This function converts the brownout offset (as a millivolt value)
 //  to a register setting and writes it to the brownout offset field.
 //!
-//! \param[in] 	 u16VddioBoOffset_mV - offset in mV
+//! \param[in]      u16VddioBoOffset_mV - offset in mV
 //!
 //! \param[out]
 //!
@@ -563,7 +563,7 @@ void hw_power_SetVddioBrownoutValue(uint16_t u16VddioBoOffset_mV);
 //! //  This function converts the register setting for the brownout offset and
 //  converts it to a millivolt value. The millivolt value is returned.
 //!
-//! \param[in] 	 void
+//! \param[in]      void
 //!
 //! \param[out]
 //!
@@ -603,7 +603,7 @@ hw_power_PowerSource_t hw_power_GetVddioPowerSource(void);
 //  setting and writes it to the target register.  This function will also
 //  update the DCDC efficiency register field(s) related to Vdda.
 //!
-//! \param[in] 	 u16Vdda_mV - new VDDA in mV
+//! \param[in]      u16Vdda_mV - new VDDA in mV
 //!
 //! \param[out]
 //!
@@ -622,7 +622,7 @@ void hw_power_SetVddaValue(uint16_t u16Vdda_mV);
 //! This function converts the register setting for the target and converts
 //  it to a millivolt value. The millivolt value is returned.
 //!
-//! \param[in] 	 void
+//! \param[in]      void
 //!
 //! \param[out]
 //!
@@ -641,7 +641,7 @@ uint16_t hw_power_GetVddaValue(void);
 //! This function converts the brownout offset (as a millivolt value)
 //  to a register setting and writes it to the brownout offset field.
 //!
-//! \param[in] 	 u16VddaBoOffset_mV - new VDDA brownout in mV
+//! \param[in]      u16VddaBoOffset_mV - new VDDA brownout in mV
 //!
 //! \notes This function does not adjust for LinReg offsets
 //!
@@ -656,7 +656,7 @@ void hw_power_SetVddaBrownoutValue(uint16_t u16VddaBoOffset_mV);
 //! This function converts the register setting for the brownout offset and
 //  converts it to a millivolt value. The millivolt value is returned.
 //!
-//! \param[in] 	 void
+//! \param[in]      void
 //!
 //! \param[out]
 //!
@@ -720,7 +720,7 @@ void hw_power_UpdateDcFuncvVddio(void);
 //  of the Vddio linreg to zero.  So if bDisable is TRUE
 //  we want the current limit to zero to be TRUE also.
 //!
-//! \param[in] 	 bDisable - TRUE to disable
+//! \param[in]      bDisable - TRUE to disable
 //!
 ////////////////////////////////////////////////////////////////////////////////
 void hw_power_DisableVddioLinearRegulator(bool bDisable);
@@ -732,7 +732,7 @@ void hw_power_DisableVddioLinearRegulator(bool bDisable);
 //!
 //! To disable the VDDA Linreg, we clear the ENABLE_LINREG bit for VDDA
 //!
-//! \param[in] 	 bDisable - TRUE to disable
+//! \param[in]      bDisable - TRUE to disable
 //!
 ////////////////////////////////////////////////////////////////////////////////
 void hw_power_DisableVddaLinearRegulator(bool bDisable);
@@ -744,7 +744,7 @@ void hw_power_DisableVddaLinearRegulator(bool bDisable);
 //!
 //! To disable the VDDD Linreg, we clear the ENABLE_LINREG bit for VDDD
 //!
-//! \param[in] 	 bDisable - TRUE to disable
+//! \param[in]      bDisable - TRUE to disable
 //!/////////////////////////////////////////////////////////////////////////////
 void hw_power_DisableVdddLinearRegulator(bool bDisable);
 
@@ -755,7 +755,7 @@ void hw_power_DisableVdddLinearRegulator(bool bDisable);
 //!
 //! Disables the VDDD, VDDA, and VDDIO linear regulators
 //!
-//! \param[in] 	 bDisable - TRUE to disable
+//! \param[in]      bDisable - TRUE to disable
 //!
 //! \notes None
 //!
@@ -859,7 +859,7 @@ hw_power_5vDetection_t hw_power_GetDetectionMethod( void );
 //!
 //! Sets the interrupt polarity to check for 5V inserted
 //!
-//! \param[in] 	 bEnable - TRUE to enable 5V insertion detection
+//! \param[in]      bEnable - TRUE to enable 5V insertion detection
 //!
 ////////////////////////////////////////////////////////////////////////////////
 void hw_power_Enable5vPlugInDetect(bool bEnable);
@@ -871,7 +871,7 @@ void hw_power_Enable5vPlugInDetect(bool bEnable);
 //!
 //! Sets the interrupt polarity to check for 5V removed
 //!
-//! \param[in] 	 bEnable - TRUE to enable 5V removal detection
+//! \param[in]      bEnable - TRUE to enable 5V removal detection
 //!
 ////////////////////////////////////////////////////////////////////////////////
 void hw_power_Enable5vUnplugDetect(bool bEnable);
@@ -898,7 +898,7 @@ bool hw_power_CheckDcdcTransitionDone(void);
 //! This function will allow the DCDC to remain on while 5V is connected
 //! to manage high power loads.
 //!
-//! \param[in] 	 bEnable - TRUE to enable
+//! \param[in]      bEnable - TRUE to enable
 //!
 ////////////////////////////////////////////////////////////////////////////////
 void hw_power_EnableDcdcDuring5vConnection(bool bEnable);
@@ -949,7 +949,7 @@ uint16_t hw_power_GetBatteryBrownoutCode( void );
 //!
 //! Deprecated function.  Calls hw_power_SetBatteryBrownoutVoltage().
 //!
-//! \param[in] 	 i16BatteryBrownout_mV - new battery brownout voltage in mV
+//! \param[in]      i16BatteryBrownout_mV - new battery brownout voltage in mV
 //!
 //! \retval SUCCESS - New battery brownout voltage has been set
 //!
@@ -1005,7 +1005,7 @@ uint16_t hw_power_GetBatteryVoltage(void);
 //! charger is set up.  This is for debugging purposes. Normally, this is
 //! automatically set by hardware.
 //!
-//! \param[in] 	 u16BattVolt - new battery monitor voltage
+//! \param[in]      u16BattVolt - new battery monitor voltage
 //!
 ////////////////////////////////////////////////////////////////////////////////
 void hw_power_SetBatteryMonitorVoltage(uint16_t u16BattVolt);
@@ -1033,7 +1033,7 @@ uint16_t hw_power_GetMaxBatteryChargeCurrent(void);
 //! current cannot be expressed exactly, then the largest expressible smaller
 //! value will be used. The return reports the actual value that was effected.
 //!
-//! \param[in] 	 u16Threshold - requested threshold current in mA.
+//! \param[in]      u16Threshold - requested threshold current in mA.
 //!
 //! \retval Actual threshold current
 //!
@@ -1083,7 +1083,7 @@ void hw_power_ClearPswitchInterrupt(void);
 //! (bit 18 or 19 in register respectively),
 //! can used to to trigger the Pswitch interrupt
 //!
-//! \param[in] 	 bSource - HW_POWER_STS_PSWITCH_BIT_0 _1
+//! \param[in]      bSource - HW_POWER_STS_PSWITCH_BIT_0 _1
 //!
 ////////////////////////////////////////////////////////////////////////////////
 void hw_power_SetPswitchInterruptSource(bool bSource);
@@ -1096,7 +1096,7 @@ void hw_power_SetPswitchInterruptSource(bool bSource);
 //! Pswitch interrupts can be triggered when Pswitch goes high or low.  This bit
 //! selects the polarity.
 //!
-//! \param[in] 	 bPolarity - HW_POWER_CHECK_PSWITCH_LOW _HIGH
+//! \param[in]      bPolarity - HW_POWER_CHECK_PSWITCH_LOW _HIGH
 //!
 ////////////////////////////////////////////////////////////////////////////////
 void hw_power_SetPswitchInterruptPolarity(bool bPolarity);
@@ -1140,7 +1140,7 @@ void hw_power_ClearLinregOkInterrupt(void);
 //!
 //! (Description here)
 //!
-//! \param[in] 	 bPolarity - HW_POWER_CHECK_5V_DISCONNECTED or
+//! \param[in]      bPolarity - HW_POWER_CHECK_5V_DISCONNECTED or
 //!                          HW_POWER_CHECK_LINEAR_REGULATORS_OK
 //!
 ////////////////////////////////////////////////////////////////////////////////
@@ -1162,7 +1162,7 @@ bool hw_power_GetLinregOkInterruptPolarity(void);
 //!
 //! \fntype Function
 //!
-//! \param[in] 	 bEnable - TRUE to enable
+//! \param[in]      bEnable - TRUE to enable
 //!
 ////////////////////////////////////////////////////////////////////////////////
 void hw_power_EnableDcOkInterrupt(bool bEnable);
@@ -1300,7 +1300,7 @@ bool hw_power_GetVbusValidInterruptPolarity(void);
 //!
 //! \fntype Function
 //!
-//! \param[in] 	 bPolarity - HW_POWER_CHECK_5V_DISCONNECTED or
+//! \param[in]      bPolarity - HW_POWER_CHECK_5V_DISCONNECTED or
 //!                          HW_POWER_CHECK_5V_CONNECTED
 //!
 ////////////////////////////////////////////////////////////////////////////////
@@ -1333,7 +1333,7 @@ void hw_power_ClearVdd5vGtVddioInterrupt(void);
 //!
 //! \fntype Function
 //!
-//! \param[in] 	 bPolarity - HW_POWER_CHECK_5V_DISCONNECTED or
+//! \param[in]      bPolarity - HW_POWER_CHECK_5V_DISCONNECTED or
 //!                          HW_POWER_CHECK_5V_CONNECTED
 //!
 ////////////////////////////////////////////////////////////////////////////////
@@ -1467,7 +1467,7 @@ void hw_power_EnableCurrentLimit(bool bEnable);
 //! Powers down or powers up the battery charge circuit.  The circuit should
 //! only be powered up when 5V is present.
 //!
-//! \param[in] 	 bPowerDown - TRUE to power down, FALSE to power up
+//! \param[in]      bPowerDown - TRUE to power down, FALSE to power up
 //!
 //! \notes The bit is a power down bit so setting the bit
 //! \notes TRUE will power down the circuit
@@ -1484,13 +1484,13 @@ void hw_power_SetPowerDownBatteryCharger(bool bPowerDown);
 //! the target voltage.  This function sets the new value of the offset.
 //!
 //! \param[in] eOffset - HW_POWER_LINREG_OFFSET_NO_STEP
-//!				LinReg output = target voltage
+//!                LinReg output = target voltage
 //!                      HW_POWER_LINREG_OFFSET_STEP_ABOVE
-//!				LinReg output = target voltage + 25mV
+//!                LinReg output = target voltage + 25mV
 //!                      HW_POWER_LINREG_OFFSET_STEP_BELOW
-//!				LinReg output = target voltage - 25mV
+//!                LinReg output = target voltage - 25mV
 //!                      HW_POWER_LINREG_OFFSET_MAX
-//!			        LinReg output = target voltage - 25mV
+//!                    LinReg output = target voltage - 25mV
 //!
 //! \notes None
 //!
@@ -1506,13 +1506,13 @@ void hw_power_SetVdddLinRegOffset(hw_power_LinRegOffsetStep_t eOffset);
 //! the target voltage.  This function sets the new value of the offset.
 //!
 //! \param[in] eOffset - HW_POWER_LINREG_OFFSET_NO_STEP
-//!				LinReg output = target voltage
+//!                LinReg output = target voltage
 //!                      HW_POWER_LINREG_OFFSET_STEP_ABOVE
-//!				LinReg output = target voltage + 25mV
+//!                LinReg output = target voltage + 25mV
 //!                      HW_POWER_LINREG_OFFSET_STEP_BELOW
-//!				LinReg output = target voltage - 25mV
+//!                LinReg output = target voltage - 25mV
 //!                      HW_POWER_LINREG_OFFSET_MAX
-//!			        LinReg output = target voltage - 25mV
+//!                    LinReg output = target voltage - 25mV
 //!
 //! \notes None
 //!
@@ -1528,13 +1528,13 @@ void hw_power_SetVddaLinRegOffset(hw_power_LinRegOffsetStep_t eOffset);
 //! the target voltage.  This function sets the new value of the offset.
 //!
 //! \param[in] eOffset - HW_POWER_LINREG_OFFSET_NO_STEP
-//!				LinReg output = target voltage
+//!                LinReg output = target voltage
 //!                      HW_POWER_LINREG_OFFSET_STEP_ABOVE
-//!				LinReg output = target voltage + 25mV
+//!                LinReg output = target voltage + 25mV
 //!                      HW_POWER_LINREG_OFFSET_STEP_BELOW
-//!				LinReg output = target voltage - 25mV
+//!                LinReg output = target voltage - 25mV
 //!                      HW_POWER_LINREG_OFFSET_MAX
-//!			        LinReg output = target voltage - 25mV
+//!                    LinReg output = target voltage - 25mV
 //!
 //! \notes None
 //!
@@ -1550,13 +1550,13 @@ void hw_power_SetVddioLinRegOffset(hw_power_LinRegOffsetStep_t eOffset);
 //! the target voltage.  This function returns the current value of the offset.
 //!
 //! \param[in] eOffset - HW_POWER_LINREG_OFFSET_NO_STEP
-//!				LinReg output = target voltage
+//!                LinReg output = target voltage
 //!                      HW_POWER_LINREG_OFFSET_STEP_ABOVE
-//!				LinReg output = target voltage + 25mV
+//!                LinReg output = target voltage + 25mV
 //!                      HW_POWER_LINREG_OFFSET_STEP_BELOW
-//!				LinReg output = target voltage - 25mV
+//!                LinReg output = target voltage - 25mV
 //!                      HW_POWER_LINREG_OFFSET_MAX
-//!			        LinReg output = target voltage - 25mV
+//!                    LinReg output = target voltage - 25mV
 //!
 //! \notes None
 //!
@@ -1572,13 +1572,13 @@ hw_power_LinRegOffsetStep_t hw_power_GetVdddLinRegOffset(void);
 //! the target voltage.  This function returns the current value of the offset.
 //!
 //! \param[in] eOffset - HW_POWER_LINREG_OFFSET_NO_STEP
-//!				LinReg output = target voltage
+//!                LinReg output = target voltage
 //!                      HW_POWER_LINREG_OFFSET_STEP_ABOVE
-//!				LinReg output = target voltage + 25mV
+//!                LinReg output = target voltage + 25mV
 //!                      HW_POWER_LINREG_OFFSET_STEP_BELOW
-//!				LinReg output = target voltage - 25mV
+//!                LinReg output = target voltage - 25mV
 //!                      HW_POWER_LINREG_OFFSET_MAX
-//!			        LinReg output = target voltage - 25mV
+//!                    LinReg output = target voltage - 25mV
 //!
 //! \notes None
 //!
@@ -1594,13 +1594,13 @@ hw_power_LinRegOffsetStep_t hw_power_GetVddaLinRegOffset(void);
 //! the target voltage.  This function returns the current value of the offset.
 //!
 //! \param[in] eOffset - HW_POWER_LINREG_OFFSET_NO_STEP
-//!				LinReg output = target voltage
+//!                LinReg output = target voltage
 //!                      HW_POWER_LINREG_OFFSET_STEP_ABOVE
-//!				LinReg output = target voltage + 25mV
+//!                LinReg output = target voltage + 25mV
 //!                      HW_POWER_LINREG_OFFSET_STEP_BELOW
-//!				LinReg output = target voltage - 25mV
+//!                LinReg output = target voltage - 25mV
 //!                      HW_POWER_LINREG_OFFSET_MAX
-//!			        LinReg output = target voltage - 25mV
+//!                    LinReg output = target voltage - 25mV
 //!
 //! \notes None
 //!
@@ -1615,7 +1615,7 @@ hw_power_LinRegOffsetStep_t hw_power_GetVddioLinRegOffset(void);
 //! Enable analog circuit of DCDC converter to respond faster under
 //! transient load conditions.
 //!
-//! \param[in] 	 eLevel - HW_POWER_RCSCALE_DISABLED - normal response
+//! \param[in]      eLevel - HW_POWER_RCSCALE_DISABLED - normal response
 //!                       HW_POWER_RCSCALE_2X_INCR  - 2 times faster response
 //!                       HW_POWER_RCSCALE_4X_INCR  - 4 times faster response
 //!                       HW_POWER_RCSCALE_8X_INCR  - 8 times faster response
@@ -1669,7 +1669,7 @@ void hw_power_PowerDown(void);
 //! on the PSWITCH pin from resetting the chip. It may also be useful increasing
 //! system tolerance of noisy EMI environments.
 //!
-//! \param[in] 	 bDisable - TRUE to disable
+//! \param[in]      bDisable - TRUE to disable
 //!
 ////////////////////////////////////////////////////////////////////////////////
 void hw_power_DisablePowerDown(bool bDisable);
@@ -1848,7 +1848,7 @@ uint16_t hw_power_ConvertBattToSetting(uint16_t u16Batt, uint16_t u16BattMode);
 //! \retval Battery voltage for the given register value.
 ////////////////////////////////////////////////////////////////////////////////
 uint16_t hw_power_ConvertSettingToBatt(uint16_t u16Setting,
-	 uint16_t u16BattMode);
+     uint16_t u16BattMode);
 
 ////////////////////////////////////////////////////////////////////////////////
 //! \brief Converts battery brownout voltage to the register setting.
@@ -1893,7 +1893,7 @@ uint16_t hw_power_ConvertSettingToBattBo(uint16_t u16Setting);
 //! \retval Register setting that corresponds best to requested voltage.
 ////////////////////////////////////////////////////////////////////////////////
 hw_power_VbusValidThresh_t hw_power_ConvertVoltToVbusThresh(
-	uint16_t u16ThreshVolt );
+    uint16_t u16ThreshVolt );
 
 /////////////////////////////////////////////////////////////////////////////////
 //! \brief Converts VBUS threshold register setting to voltage.
@@ -2075,7 +2075,7 @@ bool hw_power_GetVdd5vGtVddio(void);
 //! represented by a bit.If the current value in the argument can't be achieved,
 //! the closet value below the requested value will be used.
 //!
-//! \param[in] 	 u16Current - requested maximum battery charge current in mA
+//! \param[in]      u16Current - requested maximum battery charge current in mA
 //!
 //! \retval Actual maximum current that was set
 //!
@@ -2384,7 +2384,7 @@ void hw_power_Enable4p2DcdcInput( bool bEnable );
 //!
 ////////////////////////////////////////////////////////////////////////////////
 void hw_power_Configure4p2DropoutControl(
-	hw_power_4p2DropoutMargin_t eDropoutMargin,
+    hw_power_4p2DropoutMargin_t eDropoutMargin,
         hw_power_4p2SourceSelect_t  eSourceSelect);
 
 ////////////////////////////////////////////////////////////////////////////////

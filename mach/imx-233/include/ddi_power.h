@@ -53,9 +53,9 @@
 //! \brief Possible power sources for each power supply
 typedef enum _ddi_power_PowerSource_t
 {
-	//! \brief Powered by linear regulator.
+    //! \brief Powered by linear regulator.
     DDI_POWER_LINEAR_REGULATOR,
-	//! \brief Powered by DCDC converter.
+    //! \brief Powered by DCDC converter.
     DDI_POWER_DCDC
 }ddi_power_PowerSource_t;
 

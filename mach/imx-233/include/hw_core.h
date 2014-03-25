@@ -46,7 +46,7 @@ typedef void (*pvoid_void_t)(void);
 ////////////////////////////////////////////////////////////////////////////////
 //!     \brief       Enable or disable the IRQ Interrupt.
 //!     \fntype:     Non-reentrant.
-//!     \param[in]	 bEnable holds the enable/disable flag (true = enable)
+//!     \param[in]     bEnable holds the enable/disable flag (true = enable)
 //!     \retval      bool previous state of IRQ Interrupt.
 ////////////////////////////////////////////////////////////////////////////////
 bool hw_core_EnableIrqInterrupt(bool bEnable);
@@ -54,7 +54,7 @@ bool hw_core_EnableIrqInterrupt(bool bEnable);
 ////////////////////////////////////////////////////////////////////////////////
 //!     \brief       Enable or disable the FIQ Interrupt.
 //!     \fntype:     Non-reentrant.
-//!     \param[in]	 bEnable holds the enable/disable flag (true = enable)
+//!     \param[in]     bEnable holds the enable/disable flag (true = enable)
 //!     \retval      bool previous state of FIQ Interrupt.
 ////////////////////////////////////////////////////////////////////////////////
 bool hw_core_EnableFiqInterrupt(bool bEnable);

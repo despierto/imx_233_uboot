@@ -33,24 +33,24 @@ inline static uint32_t hw_icoll_Priority_Ddi2Hw( IcollPriority_t ePriority )
 {
     uint32_t    uPriority;
 
-	switch ( ePriority )
-	{
-		case ICOLL_PRIORITY_LEVEL_0 :
-			uPriority = BV_ICOLL_INTERRUPTn_PRIORITY__LEVEL0;
-			break;
+    switch ( ePriority )
+    {
+        case ICOLL_PRIORITY_LEVEL_0 :
+            uPriority = BV_ICOLL_INTERRUPTn_PRIORITY__LEVEL0;
+            break;
 
-		case ICOLL_PRIORITY_LEVEL_1 :
-			uPriority = BV_ICOLL_INTERRUPTn_PRIORITY__LEVEL1;
-			break;
+        case ICOLL_PRIORITY_LEVEL_1 :
+            uPriority = BV_ICOLL_INTERRUPTn_PRIORITY__LEVEL1;
+            break;
 
-		case ICOLL_PRIORITY_LEVEL_2 :
-			uPriority = BV_ICOLL_INTERRUPTn_PRIORITY__LEVEL2;
-			break;
+        case ICOLL_PRIORITY_LEVEL_2 :
+            uPriority = BV_ICOLL_INTERRUPTn_PRIORITY__LEVEL2;
+            break;
 
-		case ICOLL_PRIORITY_LEVEL_3 :
-			uPriority = BV_ICOLL_INTERRUPTn_PRIORITY__LEVEL3;
-			break;
-	}
+        case ICOLL_PRIORITY_LEVEL_3 :
+            uPriority = BV_ICOLL_INTERRUPTn_PRIORITY__LEVEL3;
+            break;
+    }
 
     return uPriority;
 }
@@ -64,24 +64,24 @@ inline static IcollPriority_t hw_icoll_Priority_Hw2Ddi( uint32_t uPriority  )
 {
     IcollPriority_t tPriority;
 
-	switch ( uPriority )
-	{
-		case BV_ICOLL_INTERRUPTn_PRIORITY__LEVEL0 :
-			tPriority = ICOLL_PRIORITY_LEVEL_0;
-			break;
+    switch ( uPriority )
+    {
+        case BV_ICOLL_INTERRUPTn_PRIORITY__LEVEL0 :
+            tPriority = ICOLL_PRIORITY_LEVEL_0;
+            break;
 
-		case BV_ICOLL_INTERRUPTn_PRIORITY__LEVEL1 :
-			tPriority = ICOLL_PRIORITY_LEVEL_1;
-			break;
+        case BV_ICOLL_INTERRUPTn_PRIORITY__LEVEL1 :
+            tPriority = ICOLL_PRIORITY_LEVEL_1;
+            break;
 
-		case BV_ICOLL_INTERRUPTn_PRIORITY__LEVEL2 :
-			tPriority = ICOLL_PRIORITY_LEVEL_2;
-			break;
+        case BV_ICOLL_INTERRUPTn_PRIORITY__LEVEL2 :
+            tPriority = ICOLL_PRIORITY_LEVEL_2;
+            break;
 
-		case BV_ICOLL_INTERRUPTn_PRIORITY__LEVEL3 :
-			tPriority = ICOLL_PRIORITY_LEVEL_3;
-			break;
-	}
+        case BV_ICOLL_INTERRUPTn_PRIORITY__LEVEL3 :
+            tPriority = ICOLL_PRIORITY_LEVEL_3;
+            break;
+    }
 
     return tPriority;
 }
@@ -96,14 +96,14 @@ bool hw_icoll_EnableVector(ICOLL_IRQ_enums_t eIrqVectorNumber, bool bEnable)
 {
     bool b_previousEnableState;
 
-	b_previousEnableState=
-		(HW_ICOLL_INTERRUPTn(eIrqVectorNumber).B.ENABLE)?true:false;
-	if (bEnable)
-		HW_ICOLL_INTERRUPTn_SET(eIrqVectorNumber,
-			BM_ICOLL_INTERRUPTn_ENABLE);
-	else
-		HW_ICOLL_INTERRUPTn_CLR(eIrqVectorNumber,
-			BM_ICOLL_INTERRUPTn_ENABLE);
+    b_previousEnableState=
+        (HW_ICOLL_INTERRUPTn(eIrqVectorNumber).B.ENABLE)?true:false;
+    if (bEnable)
+        HW_ICOLL_INTERRUPTn_SET(eIrqVectorNumber,
+            BM_ICOLL_INTERRUPTn_ENABLE);
+    else
+        HW_ICOLL_INTERRUPTn_CLR(eIrqVectorNumber,
+            BM_ICOLL_INTERRUPTn_ENABLE);
 
     return b_previousEnableState;
 }

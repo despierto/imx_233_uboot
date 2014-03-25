@@ -368,14 +368,14 @@ RtStatus_t ddi_power_LimitVdddAndBo(uint16_t *pu16Vddd_mV, uint16_t *pu16Bo_mV)
     //////////////////////////////////////////
 
 
-	// Make sure Vddd is not above the safe voltage
-	if (u16Vddd_mV > VDDD_SAFE_MAX_MV)
-	{
-		u16Vddd_mV = VDDD_SAFE_MAX_MV;
-		rtn = ERROR_DDI_POWER_VDDD_PARAM_ADJUSTED;
-	}
+    // Make sure Vddd is not above the safe voltage
+    if (u16Vddd_mV > VDDD_SAFE_MAX_MV)
+    {
+        u16Vddd_mV = VDDD_SAFE_MAX_MV;
+        rtn = ERROR_DDI_POWER_VDDD_PARAM_ADJUSTED;
+    }
 
-	// Make sure Vddd is not below the safe voltage
+    // Make sure Vddd is not below the safe voltage
     if (u16Vddd_mV < VDDD_SAFE_MIN_MV)
     {
         u16Vddd_mV = VDDD_SAFE_MIN_MV;

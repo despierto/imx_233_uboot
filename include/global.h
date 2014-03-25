@@ -31,11 +31,11 @@
 #include "net_datalink.h"
 
 
-#define GBL_HEAP_BLOCKS_COUNT	100
+#define GBL_HEAP_BLOCKS_COUNT    100
 
 extern PHEAPHEADER hGlobalHeap;
-#define malloc(size)	sys_heap_alloc(hGlobalHeap, size)
-#define free(ptr)		sys_heap_free(hGlobalHeap, ptr)
+#define malloc(size)    sys_heap_alloc(hGlobalHeap, size)
+#define free(ptr)        sys_heap_free(hGlobalHeap, ptr)
 
 
 #define ETH_PKTBUFSRX           4           /* Rx MAX supported by ks8851 is 12KB */
@@ -43,27 +43,27 @@ extern PHEAPHEADER hGlobalHeap;
 
 //declarations
 typedef struct _GBL_CTX_ {
-    uchar *NetTxPackets[ETH_PKTBUFSTX]; 		/* Transmit packets */
-    uchar *NetRxPackets[ETH_PKTBUFSRX];   		/* Receive packets */
+    uchar *NetTxPackets[ETH_PKTBUFSTX];         /* Transmit packets */
+    uchar *NetRxPackets[ETH_PKTBUFSRX];           /* Receive packets */
 
-    uchar *NetArpWaitTxPacket;               	/* THE transmit packet */
+    uchar *NetArpWaitTxPacket;                   /* THE transmit packet */
     int    NetArpWaitTxPacketSize;
 
-    unsigned int    Status;                         	/* disabled */
+    unsigned int    Status;                             /* disabled */
     char            BootFile[CONFIG_BOOTFILE_SIZE];
     unsigned int    linux_load_addr;
 
-    uchar           *NetArpWaitPacketMAC;           	/* MAC address of waiting packet's destination */
+    uchar           *NetArpWaitPacketMAC;               /* MAC address of waiting packet's destination */
     IPaddr_t        NetArpWaitPacketIP;
     IPaddr_t        NetArpWaitReplyIP;
 
-    unsigned int    NetArpWaitTimerStart;             	/* in usec */
+    unsigned int    NetArpWaitTimerStart;                 /* in usec */
     unsigned int    NetArpWaitTry;
 
-    ushort          NetIPID;                          	/* IP packet ID */
-    ushort          PingSeqNo;                        	/* PING request counter */
+    ushort          NetIPID;                              /* IP packet ID */
+    ushort          PingSeqNo;                            /* PING request counter */
 
-	//system configuration
+    //system configuration
     uchar           cfg_mac_addr[ETHER_ADDR_LEN];
     IPaddr_t        cfg_ip_addr;
     IPaddr_t        cfg_ip_netmask;
@@ -73,7 +73,7 @@ typedef struct _GBL_CTX_ {
     IPaddr_t        cfg_ip_vlan;
 }GBL_CTX, *PGBL_CTX;
 
-extern PGBL_CTX	pGblCtx;
+extern PGBL_CTX    pGblCtx;
 
 
 

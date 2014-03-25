@@ -66,11 +66,11 @@ char *drv_ip_to_string(IPaddr_t ip, uchar *buf)
 
 char *drv_mac_to_string(uchar *mac_out, uchar *mac_in)
 {
-	//unsigned int len = strnlen(mac, ETHER_ADDR_LEN);
-	//if (len != ETHER_ADDR_LEN) {
-	//	print_err("unexpected length (%d) of incoming mac address (%s)", len, mac);
-	//}
-	sprintf((char *)mac_out, "%02X:%02X:%02X:%02X:%02X:%02X", mac_in[0], mac_in[1], mac_in[2], mac_in[3], mac_in[4], mac_in[5]);
+    //unsigned int len = strnlen(mac, ETHER_ADDR_LEN);
+    //if (len != ETHER_ADDR_LEN) {
+    //    print_err("unexpected length (%d) of incoming mac address (%s)", len, mac);
+    //}
+    sprintf((char *)mac_out, "%02X:%02X:%02X:%02X:%02X:%02X", mac_in[0], mac_in[1], mac_in[2], mac_in[3], mac_in[4], mac_in[5]);
 
     return (char *)mac_out;
 }

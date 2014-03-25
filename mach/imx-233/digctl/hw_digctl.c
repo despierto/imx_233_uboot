@@ -74,12 +74,12 @@ bool hw_digctl_CheckTimeOut(uint32_t StartTime, uint32_t TimeOut)
     if ( StartTime <= EndTime)
     {
         bTimeOut = ((CurTime >= StartTime) &&
-		(CurTime < EndTime))? FALSE : TRUE;
+        (CurTime < EndTime))? FALSE : TRUE;
     }
     else
     {
         bTimeOut =
-		((CurTime >= StartTime) || (CurTime < EndTime))? FALSE : TRUE;
+        ((CurTime >= StartTime) || (CurTime < EndTime))? FALSE : TRUE;
     }
 
     return bTimeOut;
@@ -132,18 +132,18 @@ hw_digctl_ChipAndRevision hw_digctl_GetChipRevision(void)
 
     switch(HW_DIGCTL_CHIPID.B.REVISION)
     {
-		case 0x0:
-			ChipAndRevision = HW_3780_TA1;
-			break;
-		case 0x1:
-			ChipAndRevision = HW_3780_TA2;
-			break;
-		case 0x2:
-			ChipAndRevision = HW_3780_TA3;
-			break;
-		case 0x3:
-			ChipAndRevision = HW_3780_TA4;
-			break;
+        case 0x0:
+            ChipAndRevision = HW_3780_TA1;
+            break;
+        case 0x1:
+            ChipAndRevision = HW_3780_TA2;
+            break;
+        case 0x2:
+            ChipAndRevision = HW_3780_TA3;
+            break;
+        case 0x3:
+            ChipAndRevision = HW_3780_TA4;
+            break;
     }
 
     return ChipAndRevision;

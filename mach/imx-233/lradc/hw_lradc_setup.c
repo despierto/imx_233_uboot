@@ -150,7 +150,7 @@ void hw_lradc_EnableInterrupt(hw_lradc_Channel_t eChannel, bool bValue)
                 BF_SET(LRADC_CTRL1, LRADC7_IRQ_EN);
                 break;
             default:
-            	break;
+                break;
         }
     }
     else
@@ -183,7 +183,7 @@ void hw_lradc_EnableInterrupt(hw_lradc_Channel_t eChannel, bool bValue)
                 BF_CLR(LRADC_CTRL1, LRADC7_IRQ_EN);
                 break;
             default:
-            	break;
+                break;
         }
     }
 }

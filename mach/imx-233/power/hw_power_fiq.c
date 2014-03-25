@@ -72,7 +72,7 @@ bool hw_power_FiqHandler(void)
         HW_POWER_CTRL.B.ENIRQ_VDD5V_DROOP )
     {
         // Stop the 4P2.  This forces the DCDC to immediatlely use the battery
-	// power.
+    // power.
         BF_CLR( POWER_DCDC4P2, ENABLE_DCDC );
         BF_CLR( POWER_DCDC4P2, ENABLE_4P2 );
         BF_CLR( POWER_CHARGE,  ENABLE_LOAD );
@@ -80,7 +80,7 @@ bool hw_power_FiqHandler(void)
         // Disable the ICOLL VDD5V droop interrupt
         hw_power_EnableVdd5vDroopInterrupt( false );
         hw_icoll_EnableVector((ICOLL_IRQ_enums_t)(VECTOR_IRQ_VDD5V_DROOP),
-		false );
+        false );
 
         // Clear status for next interrupt.
         hw_power_ClearVdd5vDroopInterrupt();
@@ -107,7 +107,7 @@ bool hw_power_FiqHandler(void)
 
     if (u32FIQBits &
     (BM_POWER_CTRL_VDDD_BO_IRQ | BM_POWER_CTRL_VDDIO_BO_IRQ |
-	BM_POWER_CTRL_VDDA_BO_IRQ))
+    BM_POWER_CTRL_VDDA_BO_IRQ))
     {
         uint32_t  u32BoStsBits;
 
@@ -135,22 +135,22 @@ bool hw_power_FiqHandler(void)
         u32Start = HW_DIGCTL_MICROSECONDS_RD();
 
         while(HW_DIGCTL_MICROSECONDS_RD() < u32Start+FIQ_DEBOUNCE_MICROSECONDS)
-	    {
-	        u32BoStsBits = HW_POWER_STS_RD();
+        {
+            u32BoStsBits = HW_POWER_STS_RD();
 
 
-       	    if(
-    		    ( !(u32BoStsBits & BM_POWER_STS_VDDD_BO)  ) ==
-    		    ( !(u32BoStsBits & BM_POWER_STS_VDDA_BO)  ) ==
-    		    ( !(u32BoStsBits & BM_POWER_STS_VDDIO_BO) )
-    		 )
+               if(
+                ( !(u32BoStsBits & BM_POWER_STS_VDDD_BO)  ) ==
+                ( !(u32BoStsBits & BM_POWER_STS_VDDA_BO)  ) ==
+                ( !(u32BoStsBits & BM_POWER_STS_VDDIO_BO) )
+             )
 
 
-    	    {
+            {
 
                 //--------------------------------------------------------------
                 // This was a false brownout.  We need to clear the brownout IRQ
-		// bits and return.
+        // bits and return.
                 //--------------------------------------------------------------
 
                 BF_CLR(POWER_CTRL,VDDD_BO_IRQ);
@@ -159,13 +159,13 @@ bool hw_power_FiqHandler(void)
 
                 //--------------------------------------------------------------
                 // We need to return FALSE to let the PMI FIQ know this was a
-		// false power supply brownout.  Otherwise, the PMI FIQ will
+        // false power supply brownout.  Otherwise, the PMI FIQ will
                 // assume since we had a brownout and it wasn't a supply, it
-		// must have been the battery.
+        // must have been the battery.
                 //--------------------------------------------------------------
 
                 return false;
-    	    }
+            }
 
         }
 
@@ -199,7 +199,7 @@ bool hw_power_FiqHandler(void)
 
     #ifdef DEBUG_FIQ
         DEBUG_StatusRegister = ( HW_POWER_STS_RD() |
-		BM_POWER_CTRL_DCDC4P2_BO_IRQ );
+        BM_POWER_CTRL_DCDC4P2_BO_IRQ );
         while( DEBUG_StatusRegister );
     #endif
 
@@ -214,7 +214,7 @@ bool hw_power_FiqHandler(void)
     //--------------------------------------------------------------------------
     else if (u32FIQBits & BM_POWER_CTRL_BATT_BO_IRQ)
     {
-	    return true;
+        return true;
     }
 
     //--------------------------------------------------------------------------
@@ -223,7 +223,7 @@ bool hw_power_FiqHandler(void)
     //--------------------------------------------------------------------------
     else
     {
-	    return false;
+        return false;
     }
 
 

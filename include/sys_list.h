@@ -1,5 +1,5 @@
 /**
- * SW sys heap header file
+ * SW sys list header file
  *
  * Copyright (c) 2014 Alex Winter (eterno.despierto@gmail.com)
  *
@@ -18,36 +18,50 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef _SYS_HEAP_H_
-#define _SYS_HEAP_H_
+#ifndef _SYS_LIST_H_
+#define _SYS_LIST_H_
+
+#include "types.h"
+
 
 /************************************************
  *              DEFINITIONS                                                *
  ************************************************/
-typedef struct _HEAP_BLOCK_ {
-    struct _HEAP_BLOCK_ *next_block;
-    struct _HEAP_BLOCK_ *prev_block;
-    void                *buffer;
-    U32                 size;    
-    U32                 used;
-} HEAPBLOCK, *PHEAPBLOCK;
+#define SYS_LIST_CAPTION_LEN    16
 
-typedef struct _HEAP_HEADER_ {
-    HEAPBLOCK           current_block;        
-    PHEAPBLOCK          pheap_block_list;        
-    void                *storage;        
-    U32                 blocks_count;    
-    U32                 alignment;
-} HEAPHEADER, *PHEAPHEADER;
+typedef struct _SYS_LIST_ITEM_ {
+    U32         *next;
+    U32         addr;
+    U32         status;    
+}SYS_LIST_ITEM, *PSYS_LIST_ITEM;
+
+typedef struct _SYS_LIST_CTX_ 
+{
+    PSYS_LIST_ITEM  list;
+    PSYS_LIST_ITEM  next_alloc;    
+    PSYS_LIST_ITEM  next_free;        
+    U32             stats_alloc;
+    U32             stats_free;
+    U32             stats_balance;
+    U32             storage_base;    
+    U32             storage_end;    
+    U32             list_items_count;
+    U32             list_item_size;
+    U8              list_caption[SYS_LIST_CAPTION_LEN];    
+}SYS_LIST_CTX, *PSYS_LIST_CTX;
+
 
 
 /************************************************
   *             FUNCTIONS                                                   *
   ************************************************/
-PHEAPHEADER     sys_heap_init(PHEAPHEADER hp, U32 addr, U32 size, U8 aligment, U32 blocks_count);
-void            *sys_heap_alloc(PHEAPHEADER hp, U32 size);
-int             sys_heap_free(PHEAPHEADER hp, void * ptr);
-int             sys_heap_close(PHEAPHEADER hp);
+
+PSYS_LIST_CTX   sys_list_init(U32 list_items_count, U32 list_item_size, U8 *list_caption);
+void            sys_list_info(PSYS_LIST_CTX pListCtx);
+PTR             sys_list_alloc(PSYS_LIST_CTX pListCtx);
+int             sys_list_free(PSYS_LIST_CTX pListCtx, PTR ptr);
+int             sys_list_close(PSYS_LIST_CTX pListCtx);
 
 
-#endif /*_SYS_HEAP_H_*/
+#endif /*_SYS_LIST_H_*/
+

@@ -386,7 +386,7 @@ void hw_lradc_SetLradc7Select(hw_lradc_Channel_t eChannel);
 //!             ERROR_HW_LRADC_CH_NOT_PRESENT LRADC-7 is not present in hardware
 ////////////////////////////////////////////////////////////////////////////////
 RtStatus_t hw_lradc_EnableBatteryMeasurement(
-	hw_lradc_DelayTrigger_t   eTrigger,uint16_t u16SamplingInterval);
+    hw_lradc_DelayTrigger_t   eTrigger,uint16_t u16SamplingInterval);
 
 hw_lradc_DelayTrigger_t hw_lradc_AcquireBatteryMonitorDelayTrigger(void);
 

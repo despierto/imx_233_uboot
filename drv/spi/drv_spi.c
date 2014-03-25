@@ -27,8 +27,8 @@
  *              DEFINITIONS                                                *
  ************************************************/
 
-#define SPI_NUM_BUSES	2
-#define SPI_NUM_SLAVES	3
+#define SPI_NUM_BUSES    2
+#define SPI_NUM_SLAVES    3
 
 /* Initalized in spi_init() depending on SSP port configuration */
 static unsigned long ssp_bases[SPI_NUM_BUSES];
@@ -49,7 +49,7 @@ static void spi_unlock_cs(void);
 /* Init SSP ports, must be called first and only once */
 int spi_init(void)
 {
-	int rc;
+    int rc;
     ssp_bases[0] = SSP1_BASE;
     rc = ssp_spi_init(0);
     sleep_ms(100);

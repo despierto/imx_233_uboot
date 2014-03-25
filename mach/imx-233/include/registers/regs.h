@@ -158,7 +158,7 @@ typedef unsigned int   reg32_t;
 #define BF_TOGVn(reg, n, field, v)   HW_##reg##_TOG(n, BF_##reg##_##field(v))
 
 #define BV_FLDn(reg,n,field,sym)  BF_##reg##_##field(\
-	BV_##reg##_##field##__##sym)
+    BV_##reg##_##field##__##sym)
 #define BV_VALn(reg, n, field, sym)  BV_##reg##_##field##__##sym
 
 #define BF_RDn(reg, n, field)        HW_##reg(n).B.field

@@ -80,7 +80,7 @@
 #define htons(x) ___htons(x)
 #define ntohs(x) ___ntohs(x)
 
-#define ROUND_UP(_v, b)	(((U32)(_v)+b-1)&~(b-1))
+#define ROUND_UP(_v, b)    (((U32)(_v)+b-1)&~(b-1))
 
 
 
