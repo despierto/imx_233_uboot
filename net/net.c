@@ -154,14 +154,15 @@ void net_rx_process(void)
     while((size = drv_eth_rx_get(&addr)) != 0) {
         
         if (addr && size) {
+#if 0            
             U8 *pA = (U8 *)addr;
             unsigned int i;            
-            
             print_inf("[net] --- Rx Packet[0x%x, %d]: [ ", addr, size);
             for(i=0; i<size; i++) {
                 print_inf("%x ", pA[i]);
             }
             print_inf("] --- \r\n");
+#endif            
             drv_eth_heap_free((PTR)addr);
         }
     

@@ -103,7 +103,7 @@ unsigned int drv_eth_rx_get(unsigned int *addr)
         *addr = pEth->rx_pool[get].addr;
         size =  pEth->rx_pool[get].size;
 
-        print_eth("GET[%d]: addr_0x%x size_%d", get, *addr, size);
+        //print_eth("GET[%d]: addr_0x%x size_%d", get, *addr, size);
     
         if (++get >= ETH_RX_POOL_SIZE)
             pEth->rx_pool_get = 0;
@@ -143,7 +143,7 @@ int drv_eth_rx(void)
         if (rx_len) {
             unsigned int real_packet = (unsigned int)pRxPacket + NET_HW_RX_HEADER_SIZE;
 
-            print_eth("RX PUT: addr_0x%x size_%d pkt_%x", real_packet, rx_len, (unsigned int)pRxPacket);
+            //print_eth("RX PUT: addr_0x%x size_%d pkt_%x", real_packet, rx_len, (unsigned int)pRxPacket);
             
             if (drv_eth_rx_put(real_packet, rx_len)) {
                 print_eth("WARNING: Killed RX packet, len (%d)", rx_len);

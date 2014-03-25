@@ -60,7 +60,7 @@ int cmd_help(int paramc, PCMGR_PARAM params, void *cmd_param)
             cmgr_find_and_print_cmd_info(params[0].value_str);
             return SUCCESS;
         } else if ((params[0].type == CMGR_PARAM_TYPE_OPT) && ((strcmp(params[0].opt_name, "details") == 0) || (strcmp(params[0].opt_name, "d") == 0))) {
-            print_inf("-----------------------------\n");
+            //print_inf("-----------------------------\n");
             print_inf("Console version: %d.%d\n", CMGR_VERSION_R, CMGR_VERSION_RC);    
 #if 0			
             print_inf("Usage: <command> [<param_value>] [-(-)<param_name>] [-(-)<param_name>( )=( )<param_value>]\n");
@@ -93,10 +93,10 @@ int cmd_help(int paramc, PCMGR_PARAM params, void *cmd_param)
             print_inf("      - supported symbols: 'A..Z', 'a..z', 0..9, '_', '-'\n");  
 #endif            
         } else {
-            print_err("%s", "expected only arguments without values");
+            //print_err("%s", "expected only arguments without values");
         }
     } else if (paramc >= 2) {
-        print_err("expected (1) or NO arguments instead of (%d) arguments", paramc);
+        //print_err("expected (1) or NO arguments instead of (%d) arguments", paramc);
     }
     cmgr_print_registered_cmds();
     

@@ -125,7 +125,7 @@ void sys_printf(const char *fmt, ...)
     va_end(args);
 
     /* Print the string */
-    drv_print_puts(printbuffer);
+    drv_serial_puts(printbuffer);
 }
 
 int sys_sscanf(const char * buf, const char * fmt, ...)
@@ -148,9 +148,9 @@ void drv_print_printhex(int data)
         c = data>>(i*4);
         c &= 0xf;
         if (c > 9)
-            drv_print_putc(c-10+'A');
+            drv_serial_putc(c-10+'A');
         else
-            drv_print_putc(c+'0');
+            drv_serial_putc(c+'0');
     }
     return;
 }
@@ -160,14 +160,14 @@ void drv_print_printdec(int data)
     char s[10]; //max length of U32 dec value
 
     if (!data) {
-        drv_print_putc('0');
+        drv_serial_putc('0');
     } else {
         while(data) {
             s[i++]= (char)data%10 +'0';
             data = data/10;
         }
         while(i) {
-            drv_print_putc(s[--i]);
+            drv_serial_putc(s[--i]);
         }
     }
     return;
@@ -178,7 +178,7 @@ void drv_print_printstr(const char *s, int precision)
     int len = strnlen(s, precision);
 
     for (i = 0; i < len; ++i)
-        drv_print_putc(*s++);
+        drv_serial_putc(*s++);
 
 }
 void drv_print_printf(const char *fmt, ...)
@@ -200,7 +200,7 @@ void drv_print_printf(const char *fmt, ...)
                     drv_print_printhex(va_arg(args, int));
                     break;
                 case '%':
-                    drv_print_putc('%');
+                    drv_serial_putc('%');
                     break;
                 case 's':
                     drv_print_printstr(va_arg(args, char *), 255);
@@ -209,7 +209,7 @@ void drv_print_printf(const char *fmt, ...)
                     break;
             }
         } else {
-            drv_print_putc(*fmt);
+            drv_serial_putc(*fmt);
         }
 
         fmt++;

@@ -110,7 +110,15 @@
 /*====================*/
 /* SYS HEAP configuration */
 /*====================*/
-#define    SYS_CACHE_LINE_BYTES        0x20
+#define SYS_CACHE_LINE_BYTES       0x20
+
+
+/*====================*/
+/* Serial Driver info */
+/*====================*/
+#define CONFIG_DBGUART_CLK          24000000
+#define CONFIG_BAUDRATE             115200                                  /* Default baud rate */
+#define CONFIG_SYS_BAUDRATE_TABLE   { 9600, 19200, 38400, 57600, 115200 }
 
 
 /*====================*/

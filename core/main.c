@@ -115,6 +115,7 @@ void  _start(void)
     unsigned int i, a;
     unsigned int time_ms;
     unsigned int time_s;
+    char ch;
 
     print_inf("\r\n");
     print_inf("--- IMX-233: X-BOOT initialization ---\r\n");
@@ -131,19 +132,25 @@ void  _start(void)
     //gbl_pring_info();
 
     //do a test ping
-    net_ping_req(10000UL, pGblCtx->cfg_ip_server);
+    //net_ping_req(10000UL, pGblCtx->cfg_ip_server);
 
     print_log("%s", "Entry to the main loop...");
+    cmgr_logo_str();
     while(1)
     {
         time_ms = get_time_ms();
         time_s = get_time_s();        
     
-        if (system_time_msec%5000 == 0)
-          print_inf("[%d sec] Next cycle...[mst_%d st_%d]\r\n", system_time_msec/1000, time_ms, time_s);
+        //if (system_time_msec%5000 == 0)
+        //  print_inf("[%d sec] Next cycle...[mst_%d st_%d]\r\n", system_time_msec/1000, time_ms, time_s);
 
-        rt_process();
-        
+        //rt_process();
+
+        if (drv_serial_tstc()) {
+            ch = (char)drv_serial_getc();
+            //print_inf("[%c==%d]", ch, ch);
+            cmgr_input(ch);
+        }
         sleep_ms(50);
         system_time_msec+=50;
     }
@@ -218,10 +225,9 @@ static int initialization(void)
 
     /* Configure SPI on SSP1*/
     rc |= spi_init();
-
+    rc |= drv_serial_init();
     rc |= net_init();
-
-	rc |= cmgr_init();
+    rc |= cmgr_init();
 
     return rc;
 }
