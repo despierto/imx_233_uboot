@@ -23,7 +23,7 @@
 
 void init_pinmux(void)
 {
-    //print_pin("%s", "Configure SSP1 pins for ENC28j60: 8maA");
+    print_pin("%s", "Configure SSP1 pins for ENC28j60: 8maA");
         
     /*  */
     REG_CLR(PINCTRL_BASE + PINCTRL_MUXSEL(4), 0x00003fff);

@@ -25,19 +25,14 @@
  *              DEFINITIONS                                                *
  ************************************************/
 
-uchar   NetEtherNullAddr[6] = { 0, 0, 0, 0, 0, 0 };
-uchar   NetBcastAddr[6] = /* Ethernet bcast address */
-            { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+
 
 static unsigned int net_state;
     
-int local_net_ping_send(IPaddr_t ip_addr);
-int local_net_set_eth_hdr(uchar * xet, uchar * addr, uint prot);
-int local_net_set_ipv4_hdr(uchar * pkt, ushort payload_len, ushort frag_off, uchar ttl, uchar prot, IPaddr_t ip_dst);
-int local_net_set_icmp_hdr(uchar * pkt, uchar type, uchar code, ushort id);
-void local_net_arp_request (void);
-int local_net_set_arp_hdr(uchar * pkt);
-void local_net_arp_timeout_check (void);
+//int local_net_ping_send(IPaddr_t ip_addr);
+//int local_net_set_eth_hdr(uchar * xet, uchar * addr, uint prot);
+//int local_net_set_ipv4_hdr(uchar * pkt, ushort payload_len, ushort frag_off, uchar ttl, uchar prot, IPaddr_t ip_dst);
+//int local_net_set_icmp_hdr(uchar * pkt, uchar type, uchar code, ushort id);
 
 
 /************************************************
@@ -95,21 +90,22 @@ int net_close(void)
 {
     int rc;
     
-    //print_net("%s", "Network termination");
+    print_net("%s", "Network termination");
     rc = datalink_close();
 
     return rc;
 }
 
 
-void net_ping_req(unsigned int timeout_ms, IPaddr_t ip_addr)
+void net_ping_req(IPaddr_t ip_addr)
 {
-    uchar ip_str[15];
+
+    uchar ip_str[IP_ADDR_STR_LEN];
     unsigned int data_size = 56;
     unsigned int packet_size = data_size + IP_HDR_SIZE + ICMP_ECHO_HDR_SIZE;
-    unsigned int i;
-    unsigned int mac_reg_time;
-    char *dst_mac;
+    //unsigned int i;
+    //unsigned int mac_reg_time;
+    //char *dst_mac;
     char mac_out[64];
     
     drv_ip_to_string(ip_addr, &ip_str[0]);
@@ -117,13 +113,13 @@ void net_ping_req(unsigned int timeout_ms, IPaddr_t ip_addr)
     //FORMAT: "PING <DNS or incomming IP address> (<IP address>): <size>(<fsize>) bytes of data"
     print_net("PING %s (%s) %d(%d) bytes of data.", ip_str, ip_str, data_size, packet_size);
 
-
+#if 0
 
     
     //NetSetTimeout (timeout_ms, PingTimeout);
     //NetSetHandler (PingHandler);
 
-    local_net_ping_send(ip_addr);
+   // local_net_ping_send(ip_addr);
     
     net_state = NETSTATE_CONTINUE;
 
@@ -132,21 +128,23 @@ void net_ping_req(unsigned int timeout_ms, IPaddr_t ip_addr)
     while (net_state == NETSTATE_CONTINUE)
     {
         drv_eth_rx();
-        local_net_arp_timeout_check();
+        //local_net_arp_timeout_check();
         
         //sleep_ms(50);
     }
 
     print_net("Exit: state (%d)", net_state);
-    
+#endif    
     return;
 }
 
 void net_rx_process(void)
 {
+#if 0    
     unsigned int size;
     unsigned int addr;    
-    
+
+
     //receive all current packets
     drv_eth_rx();
 
@@ -167,6 +165,8 @@ void net_rx_process(void)
         }
     
     }
+#endif
+    datalink_task();
 
     return;
 }
@@ -175,7 +175,7 @@ void net_rx_process(void)
 /************************************************
  *              LOCAL FUNCTIONS                                        *
  ************************************************/
-
+#if 0
 int local_net_ping_send(IPaddr_t ip_addr)
 {
     static uchar    mac[6];
@@ -205,34 +205,9 @@ int local_net_ping_send(IPaddr_t ip_addr)
 
     print_net("---> NetArpWaitTimerStart 0x%x", pGblCtx->NetArpWaitTimerStart);
 
-    local_net_arp_request();
+   // local_net_arp_request();
 
     return 1; /* waiting */
-}
-
-int local_net_set_eth_hdr(uchar * pkt, uchar * addr, uint prot)
-{
-    Ethernet_t *et = (Ethernet_t *)pkt;
-    //ushort myvlanid;
-
-    //myvlanid = ntohs(pGblCtx->cfg_ip_vlan);
-    //if (myvlanid == (ushort)-1) /* ? == 0xffff */
-    //    myvlanid = VLAN_NONE;   /* = 0x1000 */
-
-    memcpy ((void *)et->et_dest, (void *)addr, 6);
-    memcpy ((void *)et->et_src, (void *)pGblCtx->cfg_mac_addr, 6);
-    
-    //if ((myvlanid & VLAN_IDMASK) == VLAN_NONE) {
-        et->et_protlen = htons(prot);
-        return ETHER_HDR_SIZE;
-    //} else {
-    //    VLAN_Ethernet_t *vet = (VLAN_Ethernet_t *)xet;
-
-    //    vet->vet_vlan_type = htons(PROT_VLAN);
-    //    vet->vet_tag = htons((0 << 5) | (myvlanid & VLAN_IDMASK));
-    //    vet->vet_type = htons(prot);
-    //    return VLAN_ETHER_HDR_SIZE;
-    //}
 }
 
 int local_net_set_ipv4_hdr(uchar * pkt, ushort payload_len, ushort frag_off, uchar ttl, uchar prot, IPaddr_t ip_dst)
@@ -279,91 +254,4 @@ int local_net_set_icmp_hdr(uchar * pkt, uchar type, uchar code, ushort id)
     return icmp_hdr_size;
 }
 
-int local_net_set_arp_hdr(uchar * pkt)
-{
-    ARP_t *arp = (ARP_t *)pkt;
-
-    arp->ar_htype = htons (ARP_HW_TYPE_ETHER);
-    arp->ar_ptype = htons (PROT_IP);
-    arp->ar_hlen = ETHER_ADDR_LEN;
-    arp->ar_plen = IP_ADDR_LEN;
-    arp->ar_oper = htons (ARP_OP_REQUEST);
-
-    memcpy ((void *)&arp->ar_sha[0], (void *)&pGblCtx->cfg_mac_addr[0], ETHER_ADDR_LEN);
-    memcpy ((void *)&arp->ar_spa[0], (void *)&pGblCtx->cfg_ip_addr, IP_ADDR_LEN);
-    memcpy ((void *)&arp->ar_tha[0], (void *)&NetEtherNullAddr[0], ETHER_ADDR_LEN);
-
-    if ((pGblCtx->NetArpWaitPacketIP & pGblCtx->cfg_ip_netmask) 
-            != (pGblCtx->cfg_ip_addr & pGblCtx->cfg_ip_netmask)) {
-        if (pGblCtx->cfg_ip_gateway == 0) {
-            print_err ("%s", "## Warning: gatewayip needed but not set");
-            pGblCtx->NetArpWaitReplyIP = pGblCtx->NetArpWaitPacketIP;
-        } else {
-            pGblCtx->NetArpWaitReplyIP = pGblCtx->cfg_ip_gateway;
-        }
-    } else {
-        pGblCtx->NetArpWaitReplyIP = pGblCtx->NetArpWaitPacketIP;
-    }
-    memcpy ((void *)&arp->ar_tpa[0], (void *)&pGblCtx->NetArpWaitReplyIP, IP_ADDR_LEN);
-    
-    return ARP_HDR_SIZE;
-}
-
-void local_net_arp_request (void)
-{
-    int i;
-    uchar *pkt;
-    ARP_t *arp;
-    unsigned int len = 0;
-
-    //print_dbg("ARP broadcast %d", pGblCtx->NetArpWaitTry);
-
-    pkt = (uchar *)&pGblCtx->NetTxPackets[0];
-
-    pkt += local_net_set_eth_hdr(pkt, NetBcastAddr, PROT_ARP);
-    pkt += local_net_set_arp_hdr(pkt);
-
-    len = (unsigned int)pkt - (unsigned int)&pGblCtx->NetTxPackets[0];
-
-    print_net("local_net_arp_request: len_%d, pkt_0x%x tx_packet_0x%x", len, (unsigned int)pkt, (unsigned int)&pGblCtx->NetTxPackets[0]);
-    drv_eth_tx ((void *)&pGblCtx->NetTxPackets[0], len);
-
-    return;
-}
-
-void local_net_arp_timeout_check (void)
-{   
-    unsigned int t;
-    
-    if (!pGblCtx->NetArpWaitPacketIP)
-        return;
-
-    t = get_tick();
-    
-    /* check for arp timeout */
-    if ( (unsigned int)((t - pGblCtx->NetArpWaitTimerStart)/1000) > (unsigned int)ARP_TIMEOUT) {
-        pGblCtx->NetArpWaitTry++;
-
-        print_net("---> NetArpWaitTry %d\n", pGblCtx->NetArpWaitTry);
-
-        if (pGblCtx->NetArpWaitTry >= ARP_TIMEOUT_COUNT) {
-            print_net("%s", "ARP Retry count exceeded (%d) times");
-            pGblCtx->NetArpWaitTry = 0;
-            net_state = NETSTATE_RESTART;
-
-            //printf("---> NetStartAgain\n");
-            //NetStartAgain();
-        } else {
-            pGblCtx->NetArpWaitTimerStart = t;
-            print_net("---> NetArpWaitTimerStart 0x%x", pGblCtx->NetArpWaitTimerStart);
- 
-            printf("---> ArpRequest\n");
-            local_net_arp_request();
-        }
-    }
-
- 
-    return;
-}
-
-
+#endif

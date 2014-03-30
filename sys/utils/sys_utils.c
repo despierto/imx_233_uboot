@@ -173,7 +173,50 @@ uint sys_checksum(ushort * ptr, int len)
     return (xsum & 0xffff);
 }
 
+int sys_check_IPv4_string(const char *ip)
+{
+#if 0
+    int i, j = 0, size, dot;
+    char sdata[255]= {0};
 
+    size = strnlen(ip, IP_ADDR_STR_LEN+1);
+    if (size > IP_ADDR_STR_LEN) {
+        print_err("wrong IPv4 lenght, length (%d)", size);
+        return FAILURE;
+    }
+
+    dot =0;
+    for (i = 0; i < size; i++) {
+        if((ip[i]>='0') && (ip[i] <= '9')) {
+            sdata[j++] = ip[i];
+
+            if (j >= 3) {
+                int value = strtol(sdata, NULL, 0);
+                if ((value == 0) || (value == LONG_MAX) || (value >= 256)) {
+                    print_err("subnet number is out of order: (%d)", value);
+                    return FAILURE;
+                }
+            }
+        } else if (ip[i] == '.') {
+             if ((i == (size-1)) || (j==0)) {
+                 print_err("wrong format of IPv4 address: (%s)", ip);
+                 return FAILURE;
+             }
+             dot++;
+             j = 0;
+        } else {
+            print_err("wrong input char: (%d)", ip[i]);
+            return FAILURE;
+        }
+    }
+
+    if (dot != 3) {
+        print_err("wrong count of subnetworks (%d) in IPv4 address: (%s)", dot, ip);
+        return FAILURE;
+    }
+#endif
+    return 0;
+}
 
 /************************************************
   *              LOCAL  FUNCTIONS                                      *

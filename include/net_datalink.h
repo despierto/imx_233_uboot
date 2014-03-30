@@ -29,17 +29,36 @@
 /************************************************
  *              DEFINITIONS                                    *
  ************************************************/
+typedef enum {
+    DATALINK_TX_SUCCESS,    /* packet successfully sent */
+    DATALINK_TX_ARP_SENT,   /* packet wasn't sent, ARP request sent */
+    DATALINK_TX_ARP_WAIT,   /* packet wasn't sent, ARP request waiting */    
+    DATALINK_TX_ERROR,    /* packet error */
+} DATALINK_TX_STATE;
+
 typedef struct _ETH_PKT_ {
     ETH_HDR        header;
     U8            *payload;    
 }ETH_PKT, *PETH_PKT;
 
-typedef struct _DATALINK_CTX_ {
-    char           curr_src_mac[ETHER_ADDR_LEN];    /* Destination node */
+typedef struct _ARP_REQ_ {
+    struct _ARP_REQ_    *prev;
+    struct _ARP_REQ_    *next;
+    U32                 addr;
+    U32                 size;    
+    U32                 reg_time;
+    IPaddr_t            dst_ip;
+    U32                 transmission_num;    
+}ARP_REQ, *PARP_REQ;
 
-    ETH_POOL        tx_pool[ETH_RX_POOL_SIZE];        /* queue of incomming packets */
-    unsigned int    tx_pool_get;
-    unsigned int    tx_pool_put;    
+typedef struct _DATALINK_CTX_ {
+    //ARP_REQ_POOL    arp_reg_pool[ETH_RX_POOL_SIZE];        /* queue of incomming packets */
+    //unsigned int    arp_reg_pool_get;
+    //unsigned int    arp_reg_pool_put; 
+
+    PSYS_POOL_CTX   arp_reg_pool;
+    PARP_REQ        arp_list_head;
+    PARP_REQ        arp_list_end;    
     
 }DATALINK_CTX, *PDATALINK_CTX;
 
@@ -47,9 +66,13 @@ typedef struct _DATALINK_CTX_ {
 /************************************************
  *              FUNCTIONs                                *
  ************************************************/
+extern U8   NetEtherNullAddr[];
+extern U8   NetBcastAddr[];
+
 int datalink_open(void);
 int datalink_close(void);
-
+DATALINK_TX_STATE datalink_tx_send(PETH_PKT pEthPkt, IPaddr_t dst_ip, U32 type, U32 size);
+int datalink_task(void);
 
 
 #endif /* __NET_DATALINK_H__ */

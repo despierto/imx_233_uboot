@@ -130,10 +130,7 @@ void  _start(void)
 
     //view system configuration
     //gbl_pring_info();
-
-    //do a test ping
-    //net_ping_req(10000UL, pGblCtx->cfg_ip_server);
-
+  
     print_log("%s", "Entry to the main loop...");
     cmgr_logo_str();
     while(1)
@@ -144,7 +141,7 @@ void  _start(void)
         //if (system_time_msec%5000 == 0)
         //  print_inf("[%d sec] Next cycle...[mst_%d st_%d]\r\n", system_time_msec/1000, time_ms, time_s);
 
-        //rt_process();
+        rt_process();
 
         if (drv_serial_tstc()) {
             ch = (char)drv_serial_getc();
@@ -204,11 +201,11 @@ static int initialization(void)
         heap_test_rc |= sys_heap_free(hGlobalHeap, ptr1);
          heap_test_rc |= sys_heap_free(hGlobalHeap, ptr2);        
 
-        //print_inf("[sys] %s", "Heap test... ");
+        print_inf("[sys] %s", "Heap test... ");
         if (heap_test_rc == SUCCESS) {
-            //print_inf("%s", "PASSED\n");
+            print_inf("%s", "PASSED\n");
         } else {
-            //print_inf("%s", "FAILED\n");
+            print_inf("%s", "FAILED\n");
             return FAILURE;
         }
     }

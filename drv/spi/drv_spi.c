@@ -62,15 +62,15 @@ void spi_set_cfg(unsigned int bus, unsigned int cs, unsigned long mode)
     U32 clr_mask = 0;
     U32 set_mask = 0;
 
-    //print_spi("SPI set configuration: bus (%d) cs (%d) mode (%d)", bus, cs, (unsigned int)mode);
+    print_spi("SPI set configuration: bus (%d) cs (%d) mode (%d)", bus, cs, (unsigned int)mode);
 
     if (bus >= SPI_NUM_BUSES || cs >= SPI_NUM_SLAVES) {
-        //print_err("SPI device %d:%d doesn't exist", bus, cs);
+        print_err("SPI device %d:%d doesn't exist", bus, cs);
         return;
     }
 
     if (ssp_bases[bus] == 0) {
-        //print_err("SSP port %d isn't in SPI mode", bus + 1);
+        print_err("SSP port %d isn't in SPI mode", bus + 1);
         return;
     }
 
@@ -156,19 +156,19 @@ static int ssp_spi_init(unsigned int bus)
     U32 spi_div;
     U32 val = 0;
 
-    //print_spi("Configure SPI bus %d", bus);
+    print_spi("Configure SPI bus %d", bus);
 
     if (bus >= SPI_NUM_BUSES) {
-        //print_err("SPI bus %d doesn't exist", bus);
+        print_err("SPI bus %d doesn't exist", bus);
         return FAILURE;
     }
 
     ssp_base = ssp_bases[bus];
-    //print_spi(" - SSP base 0x%x", ssp_base);
+    print_spi(" - SSP base 0x%x", ssp_base);
 
     
     /* Reset block */
-    //print_spi("%s", " - SSP block reset");
+    print_spi("%s", " - SSP block reset");
 
     /* Clear SFTRST */
     REG_CLR(ssp_base + SSP_CTRL0, CTRL0_SFTRST);
@@ -192,7 +192,7 @@ static int ssp_spi_init(unsigned int bus)
     spi_div = ((CONFIG_SSP_CLK>>1) + CONFIG_SPI_CLK - 1) / CONFIG_SPI_CLK;
     val = (2 << TIMING_CLOCK_DIVIDE) | ((spi_div - 1) << TIMING_CLOCK_RATE);
     REG_WR(ssp_base + SSP_TIMING, val);
-    //print_spi(" - Set SSP bus speed %d Hz", CONFIG_SSP_CLK/spi_div);
+    print_spi(" - Set SSP bus speed %d Hz", CONFIG_SSP_CLK/spi_div);
 
     /* Set transfer parameters */
 

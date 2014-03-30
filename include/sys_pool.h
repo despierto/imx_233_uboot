@@ -1,5 +1,5 @@
 /**
- * SW sys list header file
+ * SW sys pool header file
  *
  * Copyright (c) 2014 Alex Winter (eterno.despierto@gmail.com)
  *
@@ -18,8 +18,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef _SYS_LIST_H_
-#define _SYS_LIST_H_
+#ifndef _SYS_POOL_H_
+#define _SYS_POOL_H_
 
 #include "types.h"
 
@@ -27,28 +27,28 @@
 /************************************************
  *              DEFINITIONS                                                *
  ************************************************/
-#define SYS_LIST_CAPTION_LEN    16
+#define SYS_POOL_CAPTION_LEN    16
 
-typedef struct _SYS_LIST_ITEM_ {
+typedef struct _SYS_POOL_ITEM_ {
     U32         *next;
     U32         addr;
     U32         status;    
-}SYS_LIST_ITEM, *PSYS_LIST_ITEM;
+}SYS_POOL_ITEM, *PSYS_POOL_ITEM;
 
-typedef struct _SYS_LIST_CTX_ 
+typedef struct _SYS_POOL_CTX_ 
 {
-    PSYS_LIST_ITEM  list;
-    PSYS_LIST_ITEM  next_alloc;    
-    PSYS_LIST_ITEM  next_free;        
+    PSYS_POOL_ITEM  pool;
+    PSYS_POOL_ITEM  next_alloc;    
+    PSYS_POOL_ITEM  next_free;        
     U32             stats_alloc;
     U32             stats_free;
     U32             stats_balance;
     U32             storage_base;    
     U32             storage_end;    
-    U32             list_items_count;
-    U32             list_item_size;
-    U8              list_caption[SYS_LIST_CAPTION_LEN];    
-}SYS_LIST_CTX, *PSYS_LIST_CTX;
+    U32             pool_items_count;
+    U32             pool_item_size;
+    U8              pool_caption[SYS_POOL_CAPTION_LEN];    
+}SYS_POOL_CTX, *PSYS_POOL_CTX;
 
 
 
@@ -56,12 +56,12 @@ typedef struct _SYS_LIST_CTX_
   *             FUNCTIONS                                                   *
   ************************************************/
 
-PSYS_LIST_CTX   sys_list_init(U32 list_items_count, U32 list_item_size, U8 *list_caption);
-void            sys_list_info(PSYS_LIST_CTX pListCtx);
-PTR             sys_list_alloc(PSYS_LIST_CTX pListCtx);
-int             sys_list_free(PSYS_LIST_CTX pListCtx, PTR ptr);
-int             sys_list_close(PSYS_LIST_CTX pListCtx);
+PSYS_POOL_CTX   sys_pool_init(U32 pool_items_count, U32 pool_item_size, U8 *pool_caption);
+void            sys_pool_info(PSYS_POOL_CTX pPoolCtx);
+PTR             sys_pool_alloc(PSYS_POOL_CTX pPoolCtx);
+int             sys_pool_free(PSYS_POOL_CTX pPoolCtx, PTR ptr);
+int             sys_pool_close(PSYS_POOL_CTX pPoolCtx);
 
 
-#endif /*_SYS_LIST_H_*/
+#endif /*_SYS_POOL_H_*/
 

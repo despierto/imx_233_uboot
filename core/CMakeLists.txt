@@ -10,7 +10,7 @@ target_link_libraries(xboot pinmux)
 target_link_libraries(xboot clock)
 target_link_libraries(xboot sysutils)
 target_link_libraries(xboot dbguart)
-target_link_libraries(xboot syslist)
+target_link_libraries(xboot syspool)
 target_link_libraries(xboot sysheap)
 
 target_link_libraries(xboot ${TARGET_LIBC} ${TARGET_LIBGCC}) # order does matter

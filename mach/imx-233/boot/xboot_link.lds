@@ -12,7 +12,8 @@ UND_STACK_SIZE = 32;
 MEMORY {
 	ROM   (rx)  : ORIGIN = 0xFFFF0000, LENGTH = 64k
 	SRAM  (rwx) : ORIGIN = 0x00000000, LENGTH = 32k
-	SDRAM (rwx) : ORIGIN = 0x40000000, LENGTH = 64M
+	SDRAM_CODE (rwx) : ORIGIN = 0x40000000, LENGTH = 1M
+	SDRAM_DATA (rwx) : ORIGIN = 0x40100000, LENGTH = 63M
 }
 
 SECTIONS {
@@ -21,20 +22,20 @@ SECTIONS {
 		*(ivt)
 	} > SRAM
 
-	.text 0x200 : {
+	.text 0x40000000 : {
 		. = ALIGN(4);
 		*(.text*)
-	} > SRAM
+	} > SDRAM_CODE
 
 	.data : {
 		*(.data)
-	} > SRAM
+	} > SDRAM_CODE
 
 	.bss : {
 		__bss_start__ = . ;
 		*(.bss)
 		__bss_end__ = . ;
-	} > SRAM
+	} > SDRAM_CODE
 
 	.stack 0x7a00 : {
 		__stack_start__ = . ;

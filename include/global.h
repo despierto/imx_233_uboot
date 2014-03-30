@@ -29,7 +29,7 @@
 #include "sys_heap.h"
 #include "net_datalink.h"
 #include "sys_cmgr.h"
-
+#include "sys_pool.h"
 
 
 #define GBL_HEAP_BLOCKS_COUNT    100

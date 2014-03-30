@@ -23,7 +23,8 @@
 
 #include "types.h"
 #include "platform.h"
-#include "sys_list.h"
+#include "sys_pool.h"
+#include "netdefs.h"
 
 #define    GBL_ETH_DIAG_ENA
 
@@ -31,50 +32,8 @@
 /************************************************
  *              DEFINITIONS                                                *
  ************************************************/
-//definitions
-#define ETH_PKTSIZE             1518
-#define ETH_PKTSIZE_ALIGN       1536
-#define ETH_PKTALIGN            32
 
 #define ETH_RX_POOL_SIZE        256
-
-#define VLAN_NONE               4095        /* untagged (0x1000)*/
-#define VLAN_IDMASK             0x0fff      /* mask of valid vlan id */
-
-#define ETHER_ADDR_LEN           6              /* Length of ethernet MAC address */
-#define ETHER_HDR_SIZE          14            /* Ethernet header size */
-#define E802_HDR_SIZE           22             /* 802 ethernet header size */
-
-/* Ethernet header  */
-typedef struct {
-    uchar       et_dest[ETHER_ADDR_LEN];    /* Destination node */
-    uchar       et_src[ETHER_ADDR_LEN];     /* Source node */
-    ushort      et_protlen;                 /* Protocol or length */
-    uchar       et_dsap;                    /* 802 DSAP */
-    uchar       et_ssap;                    /* 802 SSAP */
-    uchar       et_ctl;                     /* 802 control */
-    uchar       et_snap1;                   /* SNAP */
-    uchar       et_snap2;
-    uchar       et_snap3;
-    ushort      et_prot;                    /* 802 protocol */
-} Ethernet_t;
-
-/* Ethernet 2 header  */
-typedef struct tagETH_HDR{
-    uchar       dst[ETHER_ADDR_LEN];        /* Destination node */
-    uchar       src[ETHER_ADDR_LEN];         /* Source node */
-    ushort      type;                     /* Protocol or length */
-} ETH_HDR, *PETH_HDR;
-
-
-/* VLAN Ethernet header */
-typedef struct {
-    uchar       vet_dest[ETHER_ADDR_LEN];   /* Destination node */
-    uchar       vet_src[ETHER_ADDR_LEN];    /* Source node */
-    ushort      vet_vlan_type;              /* PROT_VLAN */
-    ushort      vet_tag;                    /* TAG of VLAN */
-    ushort      vet_type;                   /* protocol type */
-} VLAN_Ethernet_t;
 
 typedef struct _ETH_POOL_ {
     U32         addr;
@@ -86,7 +45,7 @@ typedef struct _ETH_CTX_ {
     ETH_POOL        rx_pool[ETH_RX_POOL_SIZE];        /* queue of incomming packets */
     unsigned int    rx_pool_get;
     unsigned int    rx_pool_put;   
-    PSYS_LIST_CTX   pheap_ctx;
+    PSYS_POOL_CTX   pheap_ctx;
 }ETH_CTX, *PETH_CTX;
 
 
@@ -119,7 +78,7 @@ int         drv_eth_tx(void *packet, int length);
 void        drv_eth_info(void);
 PTR         drv_eth_heap_alloc(void);
 int         drv_eth_heap_free(PTR ptr);
-int         drv_eth_mac_set(char * mac);
+int         drv_eth_mac_set(uchar * mac);
 
 #endif /* __DRV_ETH_H__ */
 

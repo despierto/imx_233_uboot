@@ -146,10 +146,10 @@ extern int 		cmd_init(void);
 ************************************************/
 int cmgr_init (void)
 {
-    //print_sys("%s", "initialization of console");
+    print_sys("%s", "initialization of console");
 
     pCMgrCtx = (PCMGR_CTX)malloc(sizeof(CMGR_CTX));
-	assert(pCMgrCtx);
+    assert(pCMgrCtx);
     memset (pCMgrCtx, 0, sizeof (CMGR_CTX));  
 
     pCMgrCtx->logo = CONFIG_SYS_PROMPT;
@@ -172,31 +172,31 @@ int cmgr_reg_handler(const char *cmd_name, TCMGR_CMD cmd_handler, char *cmd_info
     PCMGR_MENU_ELM menu_el;
 
     if ((cmd_name == NULL) || (!is_alphabetic(cmd_name[0]))) {
-        //print_err("cmd_name is null or first symbol non alphabetic: (%s)", cmd_name);
+        print_err("cmd_name is null or first symbol non alphabetic: (%s)", cmd_name);
         return FAILURE;
     }
 
     if (strlen(cmd_name) >= CMGR_CMD_MAX_LEN) {
-        //print_err("cmd_name length (%d) is out of allowed length in (%d) bytes", strlen(cmd_name), CMGR_CMD_MAX_LEN);
+        print_err("cmd_name length (%d) is out of allowed length in (%d) bytes", strlen(cmd_name), CMGR_CMD_MAX_LEN);
         return FAILURE;
     }
 
     if (cmd_handler == NULL) {
-        //print_err("%s", "cmd_handler is null");
+        print_err("%s", "cmd_handler is null");
         return FAILURE;
     }
 
     if (cmd_info  == NULL) {
-       // print_err("%s", "cmd_info is null");
+        print_err("%s", "cmd_info is null");
         return FAILURE;
     }
     if (strlen(cmd_info) >= CMGR_STRING_MAX_LEN) {
-        //print_err("cmd_info length (%d) is out of allowed length in (%d) bytes", strlen(cmd_info), CMGR_STRING_MAX_LEN);
+        print_err("cmd_info length (%d) is out of allowed length in (%d) bytes", strlen(cmd_info), CMGR_STRING_MAX_LEN);
         return FAILURE;
     }
 
     if (strlen(param_info) >= CMGR_STRING_MAX_LEN) {
-       // print_err("param_info length (%d) is out of allowed length in (%d) bytes", strlen(param_info), CMGR_STRING_MAX_LEN);
+        print_err("param_info length (%d) is out of allowed length in (%d) bytes", strlen(param_info), CMGR_STRING_MAX_LEN);
         return FAILURE;
     }
 
@@ -216,7 +216,7 @@ int cmgr_reg_handler(const char *cmd_name, TCMGR_CMD cmd_handler, char *cmd_info
         PCMGR_MENU_ELM curr_el = pCMgrCtx->menu_first;
 
         if (!pCMgrCtx->menu_last) {
-            //print_err("%s", "logic error: last menu element is null when first is present");
+            print_err("%s", "logic error: last menu element is null when first is present");
             return FAILURE;
         }
 
@@ -304,9 +304,9 @@ void cmgr_print_registered_cmds(void)
 {
     PCMGR_MENU_ELM menu_el = pCMgrCtx->menu_first;
     
-    //print_inf("-----------------------------\n");
+    print_inf("-----------------------------\n");
     print_inf("Available commands:\n");
-    //print_inf("-----------------------------\n");
+    print_inf("-----------------------------\n");
 
     if (menu_el) {
         while(menu_el) {
@@ -319,8 +319,8 @@ void cmgr_print_registered_cmds(void)
         print_inf("No available commands\n");     
     }
 
-    //print_inf("-----------------------------\n");
-    //print_inf(" \n"); 
+    print_inf("-----------------------------\n");
+    print_inf(" \n"); 
     
     return;
 }
@@ -468,20 +468,20 @@ static int cmgr_process_char (char ch)
                             if (correspondence_found) {
                                 if (menu_el->cmd_handler){
                                     int rc = menu_el->cmd_handler(hcmd->paramc, params, menu_el->cmd_param);
-                                    //if (rc != SUCCESS){
-                                        //print_err("command (%s) completed with error:", opt_name);            
-                                        //print_inf("--- CMD details:: name (%s) argc (%d):\n", hcmd->cmd_name, hcmd->paramc);
-                                        //for (i=0; i<hcmd->paramc; i++)
-                                        //{
-                                            //print_inf(" |--- Param[%02d]: type (%d) option (%s) value (%d)==(%s)\n", 
-                                            //    i, params[i].type, params[i].opt_name, params[i].value_num, params[i].value_str);
-                                        //}
-                                    //}
+                                    if (rc != SUCCESS){
+                                        print_err("command (%s) completed with error:", opt_name);            
+                                        print_inf("--- CMD details:: name (%s) argc (%d):\n", hcmd->cmd_name, hcmd->paramc);
+                                        for (i=0; i<hcmd->paramc; i++)
+                                        {
+                                            print_inf(" |--- Param[%02d]: type (%d) option (%s) value (%d)==(%s)\n", 
+                                                i, params[i].type, params[i].opt_name, params[i].value_num, params[i].value_str);
+                                        }
+                                    }
                                 } else {
-                                    //print_err("handler for command (%s) is NULL", opt_name);            
+                                    print_err("handler for command (%s) is NULL", opt_name);            
                                 }
                             } else {
-                                //print_inf("Warning: command (%s) not present at system\n", opt_name);            
+                                print_inf("Warning: command (%s) not present at system\n", opt_name);            
                             }
 
                             break;
@@ -492,7 +492,7 @@ static int cmgr_process_char (char ch)
                         }
                     default:
                         {
-                            //print_err("%s", "parsing error");
+                            print_err("%s", "parsing error");
                             if (hcmd->cmd_name)
                                 cmgr_find_and_print_cmd_info(hcmd->cmd_name);
                             break;
@@ -591,7 +591,7 @@ static int cmgr_process_char (char ch)
         default:
             {
                 if (hcmd->cmd_pos >= (CMGR_STRING_MAX_LEN - 1)) {
-                    //print_err("%s", "the command is out of buffer");
+                    print_err("%s", "the command is out of buffer");
                     return FAILURE;
                 }
 
@@ -741,7 +741,7 @@ static unsigned int cmgr_parse_cmd (char * cmd, PCMGR_PARAM params, unsigned int
                         cmd_name[buf_pos] = 0;                        
                         state = CMGR_STATE_CMD_BODY; 
                     } else {
-                        //print_err("unsupported symbol ( %c ) at begin of command name", ch);
+                        print_err("unsupported symbol ( %c ) at begin of command name", ch);
                         return CMGR_CMD_CHECK__FORMAT_ERROR;
                     }
                 }
@@ -751,7 +751,7 @@ static unsigned int cmgr_parse_cmd (char * cmd, PCMGR_PARAM params, unsigned int
                 {
                     if (is_cmd(ch)) {
                         if (buf_pos >= CMGR_CMD_MAX_LEN) {
-                            //print_err("command name is out of ranges in (%d) bytes", CMGR_CMD_MAX_LEN);
+                            print_err("command name is out of ranges in (%d) bytes", CMGR_CMD_MAX_LEN);
                             return CMGR_CMD_CHECK__FORMAT_ERROR;
                         }
                         cmd_name[buf_pos++] = ch;
@@ -760,7 +760,7 @@ static unsigned int cmgr_parse_cmd (char * cmd, PCMGR_PARAM params, unsigned int
                         //print_inf("Detected command (%s)\n", cmd_name);
                         state = CMGR_STATE_PARAM_DETECT; 
                     } else {
-                        //print_err("unsupported symbol ( %c ) between command and first parameter", ch);
+                        print_err("unsupported symbol ( %c ) between command and first parameter", ch);
                         return CMGR_CMD_CHECK__FORMAT_ERROR;
                     }
                 }
@@ -782,7 +782,7 @@ static unsigned int cmgr_parse_cmd (char * cmd, PCMGR_PARAM params, unsigned int
                         curr_param->type = CMGR_PARAM_TYPE_NONE;
                         state = CMGR_STATE_PARAM_GET_VALUE; 
                     } else {
-                       // print_err("unsupported symbol ( %c ) at parameter #%d", ch, param_count);
+                        print_err("unsupported symbol ( %c ) at parameter #%d", ch, param_count);
                         return CMGR_CMD_CHECK__FORMAT_ERROR;
                     }
                 }
@@ -802,7 +802,7 @@ static unsigned int cmgr_parse_cmd (char * cmd, PCMGR_PARAM params, unsigned int
                                                 
                         state = CMGR_STATE_PARAM_DETECT; 
                     } else {
-                        //print_err("unsupported symbol ( %c ) at parameter #%d", ch, param_count);
+                        print_err("unsupported symbol ( %c ) at parameter #%d", ch, param_count);
                         return CMGR_CMD_CHECK__FORMAT_ERROR;
                     }
                 }
@@ -813,10 +813,10 @@ static unsigned int cmgr_parse_cmd (char * cmd, PCMGR_PARAM params, unsigned int
                     if (is_opt_qualifier(ch)) {  
                         ch = cmd[cmd_pos++];
                         if (ch == 0) {  
-                           // print_err("option not completred at parameter #%d", param_count);
+                            print_err("option not completred at parameter #%d", param_count);
                             return CMGR_CMD_CHECK__FORMAT_ERROR;
                         } else if (is_opt_qualifier(ch)) {  
-                            //print_err("the 3rd dash symbol ( %c ) is unsupported at parameter #%d", ch, param_count);
+                            print_err("the 3rd dash symbol ( %c ) is unsupported at parameter #%d", ch, param_count);
                             return CMGR_CMD_CHECK__FORMAT_ERROR;
                         }
                     }
@@ -829,7 +829,7 @@ static unsigned int cmgr_parse_cmd (char * cmd, PCMGR_PARAM params, unsigned int
                         curr_param->type = CMGR_PARAM_TYPE_OPT;                        
                         state = CMGR_STATE_PARAM_OPT_BODY; 
                     } else {
-                        //print_err("unsupported symbol ( %c ) at begin of option name at parameter #%d", ch, param_count);
+                        print_err("unsupported symbol ( %c ) at begin of option name at parameter #%d", ch, param_count);
                         return CMGR_CMD_CHECK__FORMAT_ERROR;
                     }
                 }
@@ -839,7 +839,7 @@ static unsigned int cmgr_parse_cmd (char * cmd, PCMGR_PARAM params, unsigned int
                 {
                     if (is_opt(ch)) {
                         if (buf_pos >= CMGR_CMD_MAX_LEN) {
-                           // print_err("option name is out of ranges in (%d) bytes at parameter #%d", CMGR_CMD_MAX_LEN, param_count);
+                            print_err("option name is out of ranges in (%d) bytes at parameter #%d", CMGR_CMD_MAX_LEN, param_count);
                             return CMGR_CMD_CHECK__FORMAT_ERROR;
                         }
                         curr_param->opt_name[buf_pos++] = ch;
@@ -877,7 +877,7 @@ static unsigned int cmgr_parse_cmd (char * cmd, PCMGR_PARAM params, unsigned int
                         //print_inf("Detected option (%s), check value\n", curr_param->opt_name);
                         state = CMGR_STATE_PARAM_DETECT_VALUE; 
                     } else {
-                        //print_err("unsupported symbol ( %c ) at option name of parameter #%d", ch, param_count);
+                        print_err("unsupported symbol ( %c ) at option name of parameter #%d", ch, param_count);
                         return CMGR_CMD_CHECK__FORMAT_ERROR;
                     }
 
@@ -894,7 +894,7 @@ static unsigned int cmgr_parse_cmd (char * cmd, PCMGR_PARAM params, unsigned int
                         curr_param->value_str[buf_pos] = 0;
                         state = CMGR_STATE_PARAM_GET_VALUE; 
                     } else {
-                        //print_err("unsupported symbol ( %c ) at parameter #%d", ch, param_count);
+                        print_err("unsupported symbol ( %c ) at parameter #%d", ch, param_count);
                         return CMGR_CMD_CHECK__FORMAT_ERROR;
                     }
                 }

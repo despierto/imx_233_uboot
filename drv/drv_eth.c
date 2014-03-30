@@ -61,15 +61,15 @@ int drv_eth_init(void)
     memset(pEth, 0, sizeof(ETH_CTX));
     print_eth(" - Eth CTX base (0x%x) size (%d) bytes", (unsigned int)pEth, sizeof(ETH_CTX));
 
-    pEth->pheap_ctx = sys_list_init(NET_PKT_COUNT, NET_PKT_MAX_SIZE, (U8 *)&("network heap"));
+    pEth->pheap_ctx = sys_pool_init(NET_PKT_COUNT, NET_PKT_MAX_SIZE, (U8 *)&("network heap"));
     assert(pEth->pheap_ctx);
 
-    addr = sys_list_alloc(pEth->pheap_ctx);
+    addr = sys_pool_alloc(pEth->pheap_ctx);
     if (!addr) {
         print_err("%s", "network heap alloc");        
         return FAILURE;
     }
-    ret = sys_list_free(pEth->pheap_ctx, addr);
+    ret = sys_pool_free(pEth->pheap_ctx, addr);
     if (ret) {
         print_err("%s", "network heap free");        
         return FAILURE;
@@ -189,27 +189,23 @@ int drv_eth_tx(void *packet, int length)
 
 void drv_eth_info(void)
 {
-    sys_list_info(pEth->pheap_ctx);
+    sys_pool_info(pEth->pheap_ctx);
     return;
 }
 
 PTR drv_eth_heap_alloc(void)
 {
-    return sys_list_alloc(pEth->pheap_ctx);
+    return sys_pool_alloc(pEth->pheap_ctx);
 }
 
 int drv_eth_heap_free(PTR ptr)
 {
-    return sys_list_free(pEth->pheap_ctx, ptr);
+    return sys_pool_free(pEth->pheap_ctx, ptr);
 }
 
-int drv_eth_mac_set(char * mac)
+int drv_eth_mac_set(uchar * mac)
 {
-    print_eth("---> mac (%02X:%02X:%02X:%02X:%02X:%02X)", 
-        mac[0], mac[1], mac[2],
-        mac[3], mac[4], mac[5]);
-
-    drv_net_mac_set(mac);
+    drv_net_mac_set((char *)mac);
     return SUCCESS;
 }
 
@@ -230,7 +226,7 @@ static unsigned int drv_eth_rx_put(unsigned int addr, unsigned int size)
         return 1;
     }
 
-    print_eth("PUT[%d]: addr_0x%x size_%d", pEth->rx_pool_put, addr, size);
+    //print_eth("PUT[%d]: addr_0x%x size_%d", pEth->rx_pool_put, addr, size);
             
     pEth->rx_pool[pEth->rx_pool_put].addr = addr;
     pEth->rx_pool[pEth->rx_pool_put].size = size;    
