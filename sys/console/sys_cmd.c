@@ -24,9 +24,10 @@
 /************************************************
 *              GLOBAL DEFINITIONS                                    *
 ************************************************/
-int cmd_exit(int paramc, PCMGR_PARAM params, void *cmd_param);
+int cmd_reboot(int paramc, PCMGR_PARAM params, void *cmd_param);
 int cmd_help(int paramc, PCMGR_PARAM params, void *cmd_param);
 int cmd_ping(int paramc, PCMGR_PARAM params, void *cmd_param);
+int cmd_info(int paramc, PCMGR_PARAM params, void *cmd_param);
 
 
 /************************************************
@@ -37,17 +38,23 @@ int cmd_init(void)
     int rc;
 
     rc = cmgr_reg_handler("help",           cmd_help,       "Information about console commands.", "[<command>] OR [-d] OR [--details]", NULL);
-    rc |= cmgr_reg_handler("exit",          cmd_exit,       "Application exit.", "", NULL);
+    rc |= cmgr_reg_handler("reboot",        cmd_reboot,     "Device reboot command.", "'approve'", NULL);    
     rc |= cmgr_reg_handler("ping",          cmd_ping,       "Ping request.", "<ip addess>", NULL);    
-
+    rc |= cmgr_reg_handler("info",          cmd_info,       "Global information.", "", NULL);    
+    
     return rc;
 }
-
 
 
 /************************************************
 *              LOCAL   FUNCTIONS                                      *
 ************************************************/
+int cmd_info(int paramc, PCMGR_PARAM params, void *cmd_param)
+{
+    gbl_pring_info();
+    return 0;
+}
+
 int cmd_ping(int paramc, PCMGR_PARAM params, void *cmd_param)
 {
 
@@ -56,30 +63,46 @@ int cmd_ping(int paramc, PCMGR_PARAM params, void *cmd_param)
             if (sys_check_IPv4_string(params[0].value_str) == SUCCESS) {
                 IPaddr_t ip_addr = drv_string_to_ip(params[0].value_str);
                 if (ip_addr) { 
+                    
                     net_ping_req(ip_addr);
+                    
                 } else {
-                    print_err("%s", "IPv4 conversion error");
+                    print_err_cmd("%s", "IPv4 conversion error");
                     return FAILURE;
                 }
             } else {
-                print_err("IPv4 address is wrong (%s)", params[0].value_str);
+                print_err_cmd("IPv4 address is wrong (%s)", params[0].value_str);
                 return FAILURE;
             }
        } else {
-            print_err("expected string parameter type: type_%d", params[0].type);
+            print_err_cmd("expected string parameter type: type_%d", params[0].type);
             return FAILURE;
         }
     } else {
-        print_err("expected single parameter: paramc_%d", paramc);
+        print_err_cmd("expected single parameter: paramc_%d", paramc);
         return FAILURE;
     }
 
     return SUCCESS;
 }
 
-int cmd_exit(int paramc, PCMGR_PARAM params, void *cmd_param)
+int cmd_reboot(int paramc, PCMGR_PARAM params, void *cmd_param)
 {
-    print_log("%s", "TODO: reboot feature");
+    if (paramc == 1)  {
+        if ((params[0].type == CMGR_PARAM_TYPE_VAL_STR) &&
+            (strcmp(params[0].value_str, "approve") == 0)){
+             print_inf("Device reboot was scheduled...\n");
+
+             // TODO: device reboot action
+        } else {
+            print_err_cmd("%s", "expected confirmation word: 'approve' as parameter");
+            return FAILURE;
+        }
+    } else {
+        print_err_cmd("expected single parameter: paramc_%d", paramc);
+        return FAILURE;
+    }
+ 
     return 0;
 }
 
@@ -123,10 +146,10 @@ int cmd_help(int paramc, PCMGR_PARAM params, void *cmd_param)
             print_inf("      - supported symbols: 'A..Z', 'a..z', 0..9, '_', '-'\n");  
 #endif            
         } else {
-            print_err("%s", "expected only arguments without values");
+            print_err_cmd("%s", "expected only arguments without values");
         }
     } else if (paramc >= 2) {
-        print_err("expected (1) or NO arguments instead of (%d) arguments", paramc);
+        print_err_cmd("expected (1) or NO arguments instead of (%d) arguments", paramc);
     }
     cmgr_print_registered_cmds();
     

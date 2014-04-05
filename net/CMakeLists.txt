@@ -4,7 +4,8 @@ message(STATUS "xboot: net")
 
 add_library(net STATIC  net.c 
                         net_datalink.c
-                        net_arp.c )
+                        net_arp.c 
+                        net_icmp.c)
 
 install(TARGETS net DESTINATION lib)
 

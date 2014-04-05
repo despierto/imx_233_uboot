@@ -127,7 +127,7 @@ PTR sys_pool_alloc(PSYS_POOL_CTX pPoolCtx)
             
         //print_eth("[dbg] ---> net heap alloc: addr_%x", (U32)addr);
     } else {
-        print_err("%s is full", pPoolCtx->pool_caption);
+        print_err_cmd("%s is full", pPoolCtx->pool_caption);
         addr = NULL;
     }
     
@@ -141,20 +141,20 @@ int sys_pool_free(PSYS_POOL_CTX pPoolCtx, PTR ptr)
 
     assert(pPoolCtx);
 
+    //print_eth("[dbg] ---> net heap free: addr_%x", (U32)ptr);
+
     if (((U32)ptr < pPoolCtx->storage_base) || ((U32)ptr >= pPoolCtx->storage_end)) {
         print_err("ptr 0x%x is out of %s range", (unsigned int)ptr, pPoolCtx->pool_caption);
         return FAILURE;
     }
 
-    index = ((U32)ptr - pPoolCtx->storage_base)/NET_PKT_MAX_SIZE;
+    index = ((U32)ptr - pPoolCtx->storage_base)/pPoolCtx->pool_item_size;
     pPool = &pPoolCtx->pool[index];
     
     if (!pPool->status) {
         print_err("%s: double free", pPoolCtx->pool_caption);
         return FAILURE;
     }
-
-    //print_eth("[dbg] ---> net heap free: addr_%x", (U32)ptr);
 
     pPool->next = NULL;
     pPool->status = 0;

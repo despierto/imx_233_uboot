@@ -247,7 +247,7 @@ RESULTCODE  ks8851_tx(PTR packet, U32 length)
     ks->txh.txw[2] = length;
 
 #if 1//def GBL_ETH_DIAG_ENA
-    print_inf("[dbg] SEND (0x%08x|%d):[ ", (unsigned int)packet, length);
+    print_inf("[dbg:%d] SEND (0x%08x|%d):[ ", get_time_ms(), (unsigned int)packet, length);
     {
         unsigned char *A = (unsigned char *)packet;
         unsigned int i;

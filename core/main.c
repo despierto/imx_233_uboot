@@ -88,6 +88,7 @@
 #include "pinmux.h"
 #include "drv_spi.h"
 #include "net.h"
+#include "dbguart.h"
 
 /************************************************
  *              DEFINITIONS                                                *
@@ -129,7 +130,7 @@ void  _start(void)
     }
 
     //view system configuration
-    //gbl_pring_info();
+    gbl_pring_info();
   
     print_log("%s", "Entry to the main loop...");
     cmgr_logo_str();
@@ -258,7 +259,9 @@ void gbl_pring_info(void)
     print_eth(" - vlanip:       %s", drv_ip_to_string(pGblCtx->cfg_ip_vlan, &s[0]));
 
     drv_eth_info();
+    datalink_info();
     arp_table_info();
+    
     
     return;
 }

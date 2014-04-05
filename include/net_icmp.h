@@ -1,5 +1,5 @@
 /**
- * Top network layer: ARP table support
+ * Internet Control Message Protocol header
  *
  * Copyright (c) 2014 Alex Winter
   *
@@ -18,8 +18,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
  
- #ifndef __NET_ARP_H__
- #define __NET_ARP_H__
+ #ifndef __NET_ICMP_H__
+ #define __NET_ICMP_H__
 
 #include "types.h"
 #include "netdefs.h"
@@ -28,37 +28,14 @@
 /************************************************
  *              DEFINITIONS                                                *
  ************************************************/
-#define ARP_TABLE_SIZE                  (10)
-#define ARP_TABLE_TYPE_ETH              (1)
-#define ARP_TABLE_TYPE_VIRT             (2)
 
-typedef enum {
-    ARP_TABLE_STATE_INVALID,
-    ARP_TABLE_STATE_VALID,
-    ARP_TABLE_STATE_WAIT_ARP_RESPOND
-} ARP_TABLE_STATE;
-
-typedef struct _ARP_TABLE_
-{
-    IPaddr_t        ip_addr;
-    uchar           hw_addr[ETHER_ADDR_LEN];
-    uchar           type;    
-    uchar           state;        
-    unsigned int    reg_time;                                        /* time in msec when MAC addr wa placed into cache. 0 msec means MAC address is obsolete */
-} ARP_TABLE, *PARP_TABLE;
 
 
 /************************************************
  *               FUNCTIONS                                                *
  ************************************************/
-int             arp_table_create(void);
-int             arp_table_destroy(void);
-void            arp_table_info(void);
-ARP_TABLE_STATE arp_table_get_mac(IPaddr_t ip, uchar **mac);
-void            arp_table_reg_ip(IPaddr_t ip, char *mac, uchar type, uchar state);
-void            arp_table_set_valid_period(unsigned int valid_period_msec);
-int             arp_table_update_valid_period(IPaddr_t ip);
+int icmp_send_req(IPaddr_t ip_addr);
 
 
-#endif /* __NET_ARP_H__ */
+#endif /* __NET_ICMP_H__ */
 

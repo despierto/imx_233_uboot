@@ -25,9 +25,8 @@
 #include <stdarg.h>
 #include "types.h"
 #include "sys_utils.h"
-#include "dbguart.h"
 #include "platform.h"
-
+#include "dbguart.h"
 
 /************************************************
  *              DEFINITIONS                                                *

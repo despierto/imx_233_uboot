@@ -247,6 +247,7 @@ typedef struct {
 
 
 /******** ARP  ***********************************/
+
 #define ARP_HW_TYPE_ETHER   (0x0001)        /* Ethernet  hardware address */
 #define ARP_OP_REQUEST      (0x0001)        /* Request  to resolve  address */
 #define ARP_OP_REPLY        (0x0002)        /* Response to previous request */
@@ -255,9 +256,9 @@ typedef struct {
     
 #define ARP_HDR_SIZE        (sizeof (ARP_t))
 
-#define ARP_TIMEOUT         (300)           /* Seconds before trying ARP again */
+#define ARP_TIMEOUT         (5*1000)           /* Miliseconds before trying ARP again */
 #define ARP_TIMEOUT_COUNT   (5)             /* # of timeouts before giving up  */
-#define ARP_VALID_PERIOD    (120)           /* after this period of seconds the ARP item is invalid*/
+#define ARP_VALID_PERIOD    (120*1000)           /* after this period of miliseconds the ARP item is invalid*/
 
 /* Address Resolution Protocol (ARP) header. */
 typedef struct {

@@ -95,6 +95,8 @@
 #define     CM_DIGIT_END                    0x39    /**< end of digits */
 #define     CM_LC_ALPHABET_END              0x7A    /**< end of  lowercase alphabet */
 #define     CM_DASH                         0x2D    
+#define     CM_DOT                          0x2E    
+#define     CM_DOUBLEDOT                    0x3A    
 #define     CM_UNDERLINE                    0x5F
 #define     CM_SINGLE_QUOTE                 0x27
 #define     CM_DOUBLE_QUOTE                 0x22
@@ -120,7 +122,7 @@
 #define is_opt_qualifier(c) (c == CM_DASH)
 #define is_equals_sing(c)   (c == CM_EQUALS_SIGN)
 
-#define is_value(c)         (is_alphabetic(c) || (c == CM_DASH) || (c == CM_UNDERLINE) || is_digit(c))
+#define is_value(c)         (is_alphabetic(c) || (c == CM_DASH) || (c == CM_UNDERLINE) || (c == CM_DOT) || (c == CM_DOUBLEDOT) || is_digit(c))
 
 #define is_zero(c)          (c == CM_DIGIT_ZERO)
 #define is_hex(c)           (c == CM_HEX)

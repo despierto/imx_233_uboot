@@ -24,16 +24,19 @@
 #include "types.h"
 #include "platform.h"
 #include "drv_eth.h"
+#include "net_arp.h"
 
 
 /************************************************
  *              DEFINITIONS                                    *
  ************************************************/
 typedef enum {
-    DATALINK_TX_SUCCESS,    /* packet successfully sent */
-    DATALINK_TX_ARP_SENT,   /* packet wasn't sent, ARP request sent */
-    DATALINK_TX_ARP_WAIT,   /* packet wasn't sent, ARP request waiting */    
-    DATALINK_TX_ERROR,    /* packet error */
+    DATALINK_TX_SUCCESS = 0,        /* packet successfully sent */
+    DATALINK_TX_ARP_SENT,           /* packet wasn't sent, ARP request sent */
+    DATALINK_TX_ARP_WAIT,           /* packet wasn't sent, ARP request waiting */    
+    DATALINK_TX_ERROR,              /* packet error */
+    DATALINK_TX_CANT_ALLOC_PACKET,  /* can't allocate packet from the ethernet queue */        
+    DATALINK_TX_ARP_QUEUE_OVERFLOW, /* to much ARP requests at the same time */    
 } DATALINK_TX_STATE;
 
 typedef struct _ETH_PKT_ {
@@ -52,11 +55,11 @@ typedef struct _ARP_REQ_ {
 }ARP_REQ, *PARP_REQ;
 
 typedef struct _DATALINK_CTX_ {
-    //ARP_REQ_POOL    arp_reg_pool[ETH_RX_POOL_SIZE];        /* queue of incomming packets */
+    //ARP_REQ_POOL    arp_reg_pool_ctx[ETH_RX_POOL_SIZE];        /* queue of incomming packets */
     //unsigned int    arp_reg_pool_get;
     //unsigned int    arp_reg_pool_put; 
 
-    PSYS_POOL_CTX   arp_reg_pool;
+    PSYS_POOL_CTX   arp_reg_pool_ctx;
     PARP_REQ        arp_list_head;
     PARP_REQ        arp_list_end;    
     
@@ -69,11 +72,13 @@ typedef struct _DATALINK_CTX_ {
 extern U8   NetEtherNullAddr[];
 extern U8   NetBcastAddr[];
 
-int datalink_open(void);
-int datalink_close(void);
-DATALINK_TX_STATE datalink_tx_send(PETH_PKT pEthPkt, IPaddr_t dst_ip, U32 type, U32 size);
-int datalink_task(void);
-
+int                 datalink_open(void);
+int                 datalink_close(void);
+DATALINK_TX_STATE   datalink_tx_send(PETH_PKT pEthPkt, IPaddr_t dst_ip, U32 type, U32 size);
+int                 datalink_task(void);
+U32                 datalink_prepare_eth_hdr(PETH_PKT pkt, U8 *dst_mac_addr, U16 protocol);
+U32                 datalink_set_eth_addr(PETH_PKT pkt, U8 *dst_mac_addr);
+void                datalink_info(void);
 
 #endif /* __NET_DATALINK_H__ */
 

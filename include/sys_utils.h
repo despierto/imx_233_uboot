@@ -23,6 +23,8 @@
 #define __SYS_UTILS_H__
 
 #include "types.h"
+#include "drv_utils.h"
+
 
 
 /************************************************
@@ -131,7 +133,7 @@ uint    sys_checksum(ushort * ptr, int len);
 
 #define PRINTF_LOG_OK
 #define PRINTF_ERR_OK
-//#define PRINTF_DBG_OK
+#define PRINTF_DBG_OK
 
 #define PRINTF_INF_OK
 #define PRINTF_NET_OK
@@ -172,7 +174,7 @@ void sys_printf(const char *fmt, ...);
 #endif  /* PRINTF_LOG_OK */
 
 #ifdef PRINTF_DBG_OK
-#define print_dbg(fmt, args...) printf("[dbg] %s: " fmt "\r\n", __FUNCTION__, ## args)
+#define print_dbg(fmt, args...) printf("[dbg:%d] %s: " fmt "\r\n", get_time_ms(), __FUNCTION__, ## args)
 #else  /* PRINTF_DBG_OK */
 #define print_dbg(fmt, args...)
 #endif  /* PRINTF_DBG_OK */
@@ -215,8 +217,10 @@ void sys_printf(const char *fmt, ...);
 
 #ifdef PRINTF_ERR_OK
 #define print_err(fmt, args...) {sys_print_error(__FILE__, __FUNCTION__, __LINE__); printf(fmt "\r\n\r\n", ## args);}
+#define print_err_cmd(fmt, args...) printf("--- Err: " fmt "\r\n", ## args)
 #else  /* PRINTF_ERR_OK */
 #define print_err(fmt, args...)
+#define print_err_cmd(fmt, args...)
 #endif  /* PRINTF_ERR_OK */
 
 #ifdef PRINTF_INF_OK

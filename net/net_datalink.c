@@ -20,7 +20,7 @@
 
 #include "global.h"
 #include "net_datalink.h"
-#include "net_arp.h"
+
 
 /************************************************
  *              DEFINITIONS                                                *
@@ -30,11 +30,12 @@ PDATALINK_CTX pDataLinkCtx = NULL;
 U8  NetEtherNullAddr[ETHER_ADDR_LEN] = { 0, 0, 0, 0, 0, 0 };
 U8  NetBcastAddr[ETHER_ADDR_LEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 
-static U32  local_datalink_set_eth_hdr(PETH_PKT pkt, U8 *addr, U16 protocol);
-static U32  local_datalink_set_arp_hdr(ARP_t *arp);
+static U32  local_datalink_set_arp_hdr(ARP_t *arp, IPaddr_t dst_ip);
 static int  local_datalink_add_arp_req_to_list(PARP_REQ pArpReq);
 static int  local_datalink_rem_arp_req_from_list(PARP_REQ pArpReq);
 void        local_datalink_arp_timeout_check (void);
+
+
 
 /************************************************
  *              GLOBAL FUNCTIONS                                      *
@@ -64,18 +65,18 @@ int datalink_open(void)
     drv_eth_mac_set(pGblCtx->cfg_mac_addr);
 
     //allocate pool for storing current ARP requests 
-    pDataLinkCtx->arp_reg_pool = sys_pool_init(ARP_TABLE_SIZE, sizeof(ARP_REQ), (U8 *)&("ARP requests"));
-    assert(pDataLinkCtx->arp_reg_pool);
+    pDataLinkCtx->arp_reg_pool_ctx = sys_pool_init(ARP_TABLE_SIZE, sizeof(ARP_REQ), (U8 *)&("ARP requests"));
+    assert(pDataLinkCtx->arp_reg_pool_ctx);
 
     //do pool testing
     {
         PTR addr;
-        addr = sys_pool_alloc(pDataLinkCtx->arp_reg_pool);
+        addr = sys_pool_alloc(pDataLinkCtx->arp_reg_pool_ctx);
         if (!addr) {
             print_err("%s", "ARP requests alloc");        
             return FAILURE;
         }
-        rc = sys_pool_free(pDataLinkCtx->arp_reg_pool, addr);
+        rc = sys_pool_free(pDataLinkCtx->arp_reg_pool_ctx, addr);
         if (rc) {
             print_err("%s", "ARP requests free");        
             return rc;
@@ -102,10 +103,10 @@ int datalink_close(void)
         if (pArpReq->addr) {
             drv_eth_heap_free((PTR)pArpReq->addr);
         }
-        sys_pool_free(pDataLinkCtx->arp_reg_pool, (PTR)pArpReq);
+        sys_pool_free(pDataLinkCtx->arp_reg_pool_ctx, (PTR)pArpReq);
         pArpReq = (PARP_REQ)pArpReq->next;
     }
-    sys_pool_close(pDataLinkCtx->arp_reg_pool);
+    sys_pool_close(pDataLinkCtx->arp_reg_pool_ctx);
     
     /* Stop Ethernt device*/    
     drv_eth_halt();
@@ -139,14 +140,9 @@ DATALINK_TX_STATE datalink_tx_send(PETH_PKT pEthPkt, IPaddr_t dst_ip, U32 type, 
     arp_status = arp_table_get_mac(dst_ip, &dst_mac);
 
     if (arp_status == ARP_TABLE_STATE_VALID) {
-        //set src mac
-        memcpy ((void *)pEthPkt->header.src, (void *)&pGblCtx->cfg_mac_addr[0], ETHER_ADDR_LEN);
         //set dst mac
-        memcpy ((void *)pEthPkt->header.dst, (void *)dst_mac, ETHER_ADDR_LEN);
-        pEthPkt->header.type = type;
-
+        datalink_set_eth_addr(pEthPkt, dst_mac);
         drv_eth_tx ((void *)pEthPkt, size);        
-        
         return DATALINK_TX_SUCCESS;
     } else if (arp_status == ARP_TABLE_STATE_WAIT_ARP_RESPOND) {
         //still waiting for ARM responce
@@ -158,12 +154,22 @@ DATALINK_TX_STATE datalink_tx_send(PETH_PKT pEthPkt, IPaddr_t dst_ip, U32 type, 
         PETH_PKT pArpEthPkt = (PETH_PKT)drv_eth_heap_alloc();
         U32 arp_pkt_size = 0;
         PARP_REQ pArpReq;
+
+        if (pArpEthPkt == NULL) {
+            print_err_cmd("%s", "can't allocate new packet");
+            return DATALINK_TX_CANT_ALLOC_PACKET;
+        }
         
-        arp_pkt_size += local_datalink_set_eth_hdr(pArpEthPkt, NetBcastAddr, ETH_P_ARP);
-        arp_pkt_size += local_datalink_set_arp_hdr((ARP_t *)((U32)pArpEthPkt + arp_pkt_size));
+        arp_pkt_size += datalink_prepare_eth_hdr(pArpEthPkt, NetBcastAddr, ETH_P_ARP);
+        arp_pkt_size += local_datalink_set_arp_hdr((ARP_t *)((U32)pArpEthPkt + arp_pkt_size), dst_ip);
 
         //store request to the ARP req pool
-        pArpReq = (PARP_REQ)sys_pool_alloc(pDataLinkCtx->arp_reg_pool);
+        pArpReq = (PARP_REQ)sys_pool_alloc(pDataLinkCtx->arp_reg_pool_ctx);
+        if (pArpReq == NULL) {
+            print_err_cmd("%s", "ARP requests queue overflow");
+            return DATALINK_TX_ARP_QUEUE_OVERFLOW;
+        }
+        
         pArpReq->addr = (U32)pArpEthPkt;
         pArpReq->size = arp_pkt_size;
         pArpReq->dst_ip = dst_ip;
@@ -171,14 +177,14 @@ DATALINK_TX_STATE datalink_tx_send(PETH_PKT pEthPkt, IPaddr_t dst_ip, U32 type, 
         
         local_datalink_add_arp_req_to_list(pArpReq);
 
-        print_net("ARP request: pkt_0x%x, len_%d", (unsigned int)pArpEthPkt, arp_pkt_size);
+        print_dbg("ARP request: pkt_0x%x, len_%d", (unsigned int)pArpEthPkt, arp_pkt_size);
         drv_eth_tx ((void *)pArpEthPkt, arp_pkt_size);  
 
         //update ARP table
         arp_table_reg_ip(dst_ip, NULL, ARP_TABLE_TYPE_ETH, ARP_TABLE_STATE_WAIT_ARP_RESPOND);
     }
 
-    return rc;
+    return DATALINK_TX_ARP_SENT;
 }
 
 int datalink_rx_get_pkt(void)
@@ -194,11 +200,17 @@ int datalink_task(void)
 {
     int rc = SUCCESS;
 
-    local_datalink_arp_timeout_check();
+   local_datalink_arp_timeout_check();
 
     
 
     return rc;
+}
+
+void datalink_info(void)
+{
+    sys_pool_info(pDataLinkCtx->arp_reg_pool_ctx);
+    return;
 }
 
 
@@ -212,38 +224,50 @@ void local_datalink_arp_timeout_check (void)
 
     //check if any ARP request is waiting timeout
     if (pArpReqCurr) {
-        U32 curr_time = (U32)get_time_s();
-        
-        while (pArpReqCurr) {
+        PARP_REQ pArpReqLast = NULL;
+                    
+        while (pArpReqCurr && (pArpReqCurr != pArpReqLast)) {
+            U32 curr_time = (U32)get_time_ms();
             U32 time_diff = get_time_diff(pArpReqCurr->reg_time, curr_time);
-                        
+
+            //print_dbg("ARP-CHK: pArpReqCurr_%x pArpReqNext_%x pArpReqLast_%x regT_%d currT_%d dT_%d", (U32)pArpReqCurr, (U32)pArpReqCurr->next, (U32)pArpReqLast, pArpReqCurr->reg_time, curr_time, time_diff);
+        
             if (time_diff > ARP_TIMEOUT) {
                 //remove current ARP request from the list
                 local_datalink_rem_arp_req_from_list(pArpReqCurr);
+
+                print_dbg("ARP-CHK: pArpReqCurr_%x  regT_%d currT_%d dT_%d", (U32)pArpReqCurr, pArpReqCurr->reg_time, curr_time, time_diff);
                 
                 if (pArpReqCurr->transmission_num < ARP_TIMEOUT_COUNT) {
                     //send ARP again
-                    print_net("ARP re-transmissions #%d: pkt_0x%x len_%d", pArpReqCurr->transmission_num, (unsigned int)pArpReqCurr->addr,  pArpReqCurr->size);                    
+                    print_dbg("ARP re-transmissions #%d: pkt_0x%x len_%d", pArpReqCurr->transmission_num, (unsigned int)pArpReqCurr->addr,  pArpReqCurr->size);                    
                     pArpReqCurr->transmission_num++;
                     local_datalink_add_arp_req_to_list(pArpReqCurr);
-
+                    if (pArpReqLast == NULL) {
+                        //this is first packet from next checking queue
+                        pArpReqLast = pArpReqCurr;
+                        print_dbg("---> pArpReqLast_%x", (U32)pArpReqLast);                        
+                    }
                     drv_eth_tx ((void *)pArpReqCurr->addr, pArpReqCurr->size);  
                     arp_table_reg_ip(pArpReqCurr->dst_ip, NULL, ARP_TABLE_TYPE_ETH, ARP_TABLE_STATE_WAIT_ARP_RESPOND);
                 } else {
                     //ARP is obsolete - kill it
                     arp_table_reg_ip(pArpReqCurr->dst_ip, NULL, ARP_TABLE_TYPE_ETH, ARP_TABLE_STATE_INVALID);
-                    drv_eth_heap_free((PTR)pArpReqCurr->addr);
-                    sys_pool_free(pDataLinkCtx->arp_reg_pool, (PTR)pArpReqCurr);
-                    print_net("%s", "ARP killed after 4 re-transmissions");
-                }
 
-                //it is next due current request ews remived from head
+                    print_dbg("%s", "ARP killed after 4 re-transmissions: pArpReqCurr_%x pArpReqCurr->addr_%x", (U32)pArpReqCurr, pArpReqCurr->addr);
+                    //free ARP packet
+                    drv_eth_heap_free((PTR)pArpReqCurr->addr);
+                    //free ARP requst entity
+                    sys_pool_free(pDataLinkCtx->arp_reg_pool_ctx, (PTR)pArpReqCurr);
+                }
+                print_inf("%s", "-----------\n");
                 pArpReqCurr = pDataLinkCtx->arp_list_head;
             }else {
-                //it doesn't make sense to check next requests due they are adding in ascending time manner
-                pArpReqCurr = NULL;
+                pArpReqCurr = pArpReqCurr->next;
             }
         }
+        
+
     }
      
     return;
@@ -251,21 +275,27 @@ void local_datalink_arp_timeout_check (void)
 
 static int local_datalink_add_arp_req_to_list(PARP_REQ pArpReq)
 {
-    PARP_REQ pArpReqCurr = pDataLinkCtx->arp_list_head;
-
     assert(pArpReq);
-    pArpReq->reg_time = (U32)get_time_s();    
+    pArpReq->reg_time = (U32)get_time_ms();    
     
+    //print_inf("ADD BEFORE: h_%x hp_%x hn_%x e_%x ep_%x en_%x new_%x\n", 
+    //                (U32)pDataLinkCtx->arp_list_head, (U32)pDataLinkCtx->arp_list_head->prev,  (U32)pDataLinkCtx->arp_list_head->next,
+    //                (U32)pDataLinkCtx->arp_list_end, (U32)pDataLinkCtx->arp_list_end->prev,  (U32)pDataLinkCtx->arp_list_end->next, (U32)pArpReq);    
+
     pArpReq->next = NULL;
-        
-    if (pArpReqCurr == NULL) {
+    if (pDataLinkCtx->arp_list_head == NULL) {
         pArpReq->prev = NULL;
         pDataLinkCtx->arp_list_head = pArpReq; 
         pDataLinkCtx->arp_list_end = pArpReq;
     } else {
         pArpReq->prev = pDataLinkCtx->arp_list_end;
         pDataLinkCtx->arp_list_end->next = pArpReq;
+        pDataLinkCtx->arp_list_end = pArpReq;
     }
+
+    //print_inf("ADD END: h_%x hp_%x hn_%x e_%x ep_%x en_%x\n", 
+    //                (U32)pDataLinkCtx->arp_list_head, (U32)pDataLinkCtx->arp_list_head->prev,  (U32)pDataLinkCtx->arp_list_head->next,
+    //                (U32)pDataLinkCtx->arp_list_end, (U32)pDataLinkCtx->arp_list_end->prev,  (U32)pDataLinkCtx->arp_list_end->next);    
 
     return SUCCESS;
 }
@@ -273,6 +303,10 @@ static int local_datalink_add_arp_req_to_list(PARP_REQ pArpReq)
 static int local_datalink_rem_arp_req_from_list(PARP_REQ pArpReq)
 {
    assert(pArpReq);
+
+    //print_inf("REM BEFORE: h_%x hp_%x hn_%x e_%x ep_%x en_%x old_%x\n", 
+    //                (U32)pDataLinkCtx->arp_list_head, (U32)pDataLinkCtx->arp_list_head->prev,  (U32)pDataLinkCtx->arp_list_head->next,
+    //                (U32)pDataLinkCtx->arp_list_end, (U32)pDataLinkCtx->arp_list_end->prev,  (U32)pDataLinkCtx->arp_list_end->next, (U32)pArpReq);    
    
     if ((U32)pArpReq == (U32)pDataLinkCtx->arp_list_head) {
         pDataLinkCtx->arp_list_head = pArpReq->next;
@@ -288,36 +322,68 @@ static int local_datalink_rem_arp_req_from_list(PARP_REQ pArpReq)
         pArpReq->prev = pArpReq->next;
     }
 
+    //print_inf("REM END: h_%x hp_%x hn_%x e_%x ep_%x en_%x\n", 
+    //                (U32)pDataLinkCtx->arp_list_head, (U32)pDataLinkCtx->arp_list_head->prev,  (U32)pDataLinkCtx->arp_list_head->next,
+    //                (U32)pDataLinkCtx->arp_list_end, (U32)pDataLinkCtx->arp_list_end->prev,  (U32)pDataLinkCtx->arp_list_end->next);    
+
     return SUCCESS;
 }
 
-static U32 local_datalink_set_eth_hdr(PETH_PKT pkt, U8 *addr, U16 protocol)
+U32 datalink_prepare_eth_hdr(PETH_PKT pkt, U8 *dst_mac_addr, U16 protocol)
 {
+#if 1
+    
+    if (dst_mac_addr) {
+        memcpy ((void *)pkt->header.dst, (void *)dst_mac_addr, ETHER_ADDR_LEN);
+    }
+    memcpy ((void *)pkt->header.src, (void *)pGblCtx->cfg_mac_addr, ETHER_ADDR_LEN);
+    pkt->header.type = htons(protocol);
+
+    return ETHER_HDR_SIZE;
+#else
     Ethernet_t *et = (Ethernet_t *)pkt;
-    //ushort myvlanid;
+    ushort myvlanid;
 
-    //myvlanid = ntohs(pGblCtx->cfg_ip_vlan);
-    //if (myvlanid == (ushort)-1) /* ? == 0xffff */
-    //    myvlanid = VLAN_NONE;   /* = 0x1000 */
+    myvlanid = ntohs(pGblCtx->cfg_ip_vlan);
+    if (myvlanid == (ushort)-1) /* ? == 0xffff */
+        myvlanid = VLAN_NONE;   /* = 0x1000 */
 
-    memcpy ((void *)et->et_dest, (void *)addr, 6);
+    if (addr) {
+        memcpy ((void *)et->et_dest, (void *)addr, 6);
+    }
     memcpy ((void *)et->et_src, (void *)pGblCtx->cfg_mac_addr, 6);
     
-    //if ((myvlanid & VLAN_IDMASK) == VLAN_NONE) {
+    if ((myvlanid & VLAN_IDMASK) == VLAN_NONE) {
         et->et_protlen = htons(protocol);
         return ETHER_HDR_SIZE;
-    //} else {
-    //    VLAN_Ethernet_t *vet = (VLAN_Ethernet_t *)xet;
+    } else {
+        VLAN_Ethernet_t *vet = (VLAN_Ethernet_t *)xet;
 
-    //    vet->vet_vlan_type = htons(PROT_VLAN);
-    //    vet->vet_tag = htons((0 << 5) | (myvlanid & VLAN_IDMASK));
-    //    vet->vet_type = htons(prot);
-    //    return VLAN_ETHER_HDR_SIZE;
-    //}
+        vet->vet_vlan_type = htons(PROT_VLAN);
+        vet->vet_tag = htons((0 << 5) | (myvlanid & VLAN_IDMASK));
+        vet->vet_type = htons(prot);
+        return VLAN_ETHER_HDR_SIZE;
+    }
+#endif    
 }
 
-static U32 local_datalink_set_arp_hdr(ARP_t *arp)
+U32 datalink_set_eth_addr(PETH_PKT pkt, U8 *dst_mac_addr)
 {
+    Ethernet_t *et = (Ethernet_t *)pkt;
+
+    if (dst_mac_addr) {
+        memcpy ((void *)pkt->header.dst, (void *)dst_mac_addr, 6);
+    } else {
+        return FAILURE;
+    }
+    
+    return SUCCESS;
+}
+
+static U32 local_datalink_set_arp_hdr(ARP_t *arp, IPaddr_t dst_ip)
+{
+    IPaddr_t final_dst_ip;
+    
     arp->ar_htype = htons (ARP_HW_TYPE_ETHER);
     arp->ar_ptype = htons (ETH_P_IP);
     arp->ar_hlen = ETHER_ADDR_LEN;
@@ -328,18 +394,17 @@ static U32 local_datalink_set_arp_hdr(ARP_t *arp)
     memcpy ((void *)&arp->ar_spa[0], (void *)&pGblCtx->cfg_ip_addr, IP_ADDR_LEN);
     memcpy ((void *)&arp->ar_tha[0], (void *)&NetEtherNullAddr[0], ETHER_ADDR_LEN);
 
-    if ((pGblCtx->NetArpWaitPacketIP & pGblCtx->cfg_ip_netmask) 
-            != (pGblCtx->cfg_ip_addr & pGblCtx->cfg_ip_netmask)) {
+    if ((dst_ip & pGblCtx->cfg_ip_netmask) != (pGblCtx->cfg_ip_addr & pGblCtx->cfg_ip_netmask)) {
         if (pGblCtx->cfg_ip_gateway == 0) {
             print_err ("%s", "## Warning: gatewayip needed but not set");
-            pGblCtx->NetArpWaitReplyIP = pGblCtx->NetArpWaitPacketIP;
+            final_dst_ip = dst_ip;
         } else {
-            pGblCtx->NetArpWaitReplyIP = pGblCtx->cfg_ip_gateway;
+            final_dst_ip = pGblCtx->cfg_ip_gateway;
         }
     } else {
-        pGblCtx->NetArpWaitReplyIP = pGblCtx->NetArpWaitPacketIP;
+        final_dst_ip = dst_ip;
     }
-    memcpy ((void *)&arp->ar_tpa[0], (void *)&pGblCtx->NetArpWaitReplyIP, IP_ADDR_LEN);
+    memcpy ((void *)&arp->ar_tpa[0], (void *)&final_dst_ip, IP_ADDR_LEN);
     
     return ARP_HDR_SIZE;
 }

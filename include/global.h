@@ -76,6 +76,7 @@ typedef struct _GBL_CTX_ {
 
 extern PGBL_CTX    pGblCtx;
 
+void         gbl_pring_info(void);
 
 
 #endif /*_GLOBAL_H_*/
