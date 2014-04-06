@@ -61,7 +61,7 @@ void            sys_pool_info(PSYS_POOL_CTX pPoolCtx);
 PTR             sys_pool_alloc(PSYS_POOL_CTX pPoolCtx);
 int             sys_pool_free(PSYS_POOL_CTX pPoolCtx, PTR ptr);
 int             sys_pool_close(PSYS_POOL_CTX pPoolCtx);
-
+int             sys_pool_test(PSYS_POOL_CTX pPoolCtx);
 
 #endif /*_SYS_POOL_H_*/
 

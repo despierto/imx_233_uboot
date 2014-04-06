@@ -1,8 +1,8 @@
 /**
  * SW Sys utils header file
  *
- * Copyright (c) 2013 X-boot GITHUB team
-  *
+ * Copyright (c) 2014 Alex Winter (eterno.despierto@gmail.com)
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -83,19 +83,6 @@
 #define ntohs(x) ___ntohs(x)
 
 #define ROUND_UP(_v, b)    (((U32)(_v)+b-1)&~(b-1))
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 /************************************************
@@ -239,10 +226,12 @@ void sys_printf(const char *fmt, ...);
     #define     SystemHalt(fl, fn, ln) __asm(" .word 0xdeadc0de")
 #endif
 
-#define assert(x) if (!(x)) {SystemHalt(__FILE__, __FUNCTION__, __LINE__); while(1);}
+#define assert(x)       if (!(x)) {SystemHalt(__FILE__, __FUNCTION__, __LINE__); while(1);}
+#define assert_rc(x)    if ((x)) {SystemHalt(__FILE__, __FUNCTION__, __LINE__); while(1);}
 
 #else /*CODEPROTENA*/
 #define assert(x)
+#define assert_rc(x)
 
 #endif /*CODEPROTENA*/
 

@@ -179,6 +179,25 @@ int sys_pool_close(PSYS_POOL_CTX pPoolCtx)
     return rc;
 }
 
+int sys_pool_test(PSYS_POOL_CTX pPoolCtx)
+{
+    PTR addr;
+    int rc;
+    
+    addr = sys_pool_alloc(pPoolCtx);
+    if (!addr) {
+        print_err("%s alloc", pPoolCtx->pool_caption);
+        return FAILURE;
+    }
+    rc = sys_pool_free(pPoolCtx, addr);
+    if (rc) {
+        print_err("%s free", pPoolCtx->pool_caption);
+        return rc;
+    }
+    
+    return SUCCESS;
+}
+
 
 /************************************************
   *              LOCAL FUNCTIONS                                      *

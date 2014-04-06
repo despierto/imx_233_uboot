@@ -1,7 +1,7 @@
 /**
- * HW Print Driver header file
+ * Global definitions
  *
- * Copyright (c) 2013 X-boot GITHUB team
+ * Copyright (c) 2014 Alex Winter (eterno.despierto@gmail.com)
   *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@
 #include "net_datalink.h"
 #include "sys_cmgr.h"
 #include "sys_pool.h"
+#include "core.h"
 
 
 #define GBL_HEAP_BLOCKS_COUNT    100

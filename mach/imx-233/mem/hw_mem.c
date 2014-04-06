@@ -2,6 +2,7 @@
  * iMX233 HW memory init
  *
  * Copyright 2008-2009 Freescale Semiconductor
+ * Copyright (c) 2014 Alex Winter (eterno.despierto@gmail.com)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

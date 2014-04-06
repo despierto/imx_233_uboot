@@ -1,7 +1,7 @@
 /**
  * Top layer ethernel driver file
  *
- * Copyright (c) 2013 X-boot GITHUB team
+ * Copyright (c) 2014 Alex Winter (eterno.despierto@gmail.com)
   *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,18 +63,8 @@ int drv_eth_init(void)
 
     pEth->pheap_ctx = sys_pool_init(NET_PKT_COUNT, NET_PKT_MAX_SIZE, (U8 *)&("network heap"));
     assert(pEth->pheap_ctx);
-
-    addr = sys_pool_alloc(pEth->pheap_ctx);
-    if (!addr) {
-        print_err("%s", "network heap alloc");        
-        return FAILURE;
-    }
-    ret = sys_pool_free(pEth->pheap_ctx, addr);
-    if (ret) {
-        print_err("%s", "network heap free");        
-        return FAILURE;
-    }
-    
+    assert_rc(sys_pool_test(pEth->pheap_ctx));
+        
     ret = drv_net_init(NULL);
     
     if (ret) {

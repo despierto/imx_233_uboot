@@ -2,6 +2,7 @@
 *
 * Copyright 2009 Simtec Electronics
 *      Ben Dooks <ben@simtec.co.uk>
+* Copyright (c) 2014 Alex Winter (eterno.despierto@gmail.com)
 *
 * KS8851 register definitions
 *

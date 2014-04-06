@@ -1,7 +1,7 @@
 /**
  * Data link layer
  *
- * Copyright (c) 2013 X-boot GITHUB team
+ * Copyright (c) 2014 Alex Winter (eterno.despierto@gmail.com)
   *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -67,21 +67,7 @@ int datalink_open(void)
     //allocate pool for storing current ARP requests 
     pDataLinkCtx->arp_reg_pool_ctx = sys_pool_init(ARP_TABLE_SIZE, sizeof(ARP_REQ), (U8 *)&("ARP requests"));
     assert(pDataLinkCtx->arp_reg_pool_ctx);
-
-    //do pool testing
-    {
-        PTR addr;
-        addr = sys_pool_alloc(pDataLinkCtx->arp_reg_pool_ctx);
-        if (!addr) {
-            print_err("%s", "ARP requests alloc");        
-            return FAILURE;
-        }
-        rc = sys_pool_free(pDataLinkCtx->arp_reg_pool_ctx, addr);
-        if (rc) {
-            print_err("%s", "ARP requests free");        
-            return rc;
-        }
-    }
+    assert_rc(sys_pool_test(pDataLinkCtx->arp_reg_pool_ctx));
     
     pDataLinkCtx->arp_list_head = NULL;
     pDataLinkCtx->arp_list_end = NULL;    

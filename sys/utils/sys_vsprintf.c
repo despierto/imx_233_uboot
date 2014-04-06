@@ -4,7 +4,7 @@
  * Copyright (C) 1991, 1992  Linus Torvalds
  * vsprintf.c -- Lars Wirzenius & Linus Torvalds.  
  * 
- * Extensions & reordering: Copyright (c) 2013 X-boot GITHUB team
+ * Copyright (c) 2014 Alex Winter (eterno.despierto@gmail.com)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

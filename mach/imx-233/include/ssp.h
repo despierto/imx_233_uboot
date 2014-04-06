@@ -2,6 +2,7 @@
  * Copyright (C) 2008 Embedded Alley Solutions Inc.
  *
  * (C) Copyright 2009 Freescale Semiconductor, Inc.
+ * Copyright (c) 2014 Alex Winter (eterno.despierto@gmail.com)
  *
  * SSP register definitions
  *

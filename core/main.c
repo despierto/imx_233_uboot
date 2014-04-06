@@ -1,7 +1,7 @@
 /**
  * X-Boot Operation System Entry
  *
- * Copyright (c) 2014 X-boot GITHUB team
+ * Copyright (c) 2014 Alex Winter (eterno.despierto@gmail.com)
   *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -142,6 +142,7 @@ void  _start(void)
         //if (system_time_msec%5000 == 0)
         //  print_inf("[%d sec] Next cycle...[mst_%d st_%d]\r\n", system_time_msec/1000, time_ms, time_s);
 
+        core_dispatcher_task();
         rt_process();
 
         if (drv_serial_tstc()) {
@@ -221,6 +222,8 @@ static int initialization(void)
     /* Configure SSP1 pins*/
     init_pinmux();
 
+    core_init();
+
     /* Configure SPI on SSP1*/
     rc |= spi_init();
     rc |= drv_serial_init();
@@ -242,7 +245,8 @@ static void termination(void)
     print_log("%s", "Environment termination");
 
     net_close();
-
+    core_close();
+    
     return;
 }
 
@@ -261,7 +265,7 @@ void gbl_pring_info(void)
     drv_eth_info();
     datalink_info();
     arp_table_info();
-    
+    core_info();
     
     return;
 }

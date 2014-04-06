@@ -1,8 +1,8 @@
 /**
  * HW Print Driver header file
  *
- * Copyright (c) 2014 Alex Winter <eterno.despierto@gmail.com>
  * (c) Copyright 2009 Freescale Semiconductor, Inc.
+  * Copyright (c) 2014 Alex Winter (eterno.despierto@gmail.com)
  *   
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
