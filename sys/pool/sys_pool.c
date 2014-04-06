@@ -73,7 +73,7 @@ PSYS_POOL_CTX sys_pool_init(U32 pool_items_count, U32 pool_item_size, U8 *pool_c
     storage_base = storage_base + (pool_item_size -1);    
     storage_base -= storage_base % pool_item_size;
 
-    print_sys(" - pPoolCtx (0x%x) pool[c%d x s%x] (0x%x) storage_base (0x%x)", 
+    print_sys(" - pPoolCtx (0x%x) pool[c%d x s%d] (0x%x) storage_base (0x%x)", 
         (U32)pPoolCtx, pool_items_count, pool_item_size, (U32)pPoolCtx->pool, storage_base);
         
     pPoolCtx->storage_base = storage_base;
@@ -95,7 +95,7 @@ PSYS_POOL_CTX sys_pool_init(U32 pool_items_count, U32 pool_item_size, U8 *pool_c
     pPoolCtx->next_alloc = &pPoolCtx->pool[0];
     pPoolCtx->next_free = &pPoolCtx->pool[i];
 
-    //print_eth(" - next AI[%d]_%x FI[%d]_%x", 0, pPoolCtx->next_alloc, i, (U32)pPoolCtx->next_free);
+    //print_eth("[sys_pool_init] - next AI[%d]_%x AN_%x FI[%d]_%x FN_%x", 0, pPoolCtx->next_alloc, pPoolCtx->next_alloc->next, i, (U32)pPoolCtx->next_free, pPoolCtx->next_free->next);
 
     return pPoolCtx;
 }
@@ -125,9 +125,9 @@ PTR sys_pool_alloc(PSYS_POOL_CTX pPoolCtx)
         pPoolCtx->stats_alloc++;
         pPoolCtx->stats_balance++;
             
-        //print_eth("[dbg] ---> net heap alloc: addr_%x", (U32)addr);
+        //print_eth("[sys_pool_alloc] ---> net heap alloc: addr_%x next_%x", (U32)addr, (U32)pPoolCtx->next_alloc);
     } else {
-        print_err_cmd("%s is full", pPoolCtx->pool_caption);
+        print_err_cmd("%s pool is full", pPoolCtx->pool_caption);
         addr = NULL;
     }
     
@@ -156,14 +156,23 @@ int sys_pool_free(PSYS_POOL_CTX pPoolCtx, PTR ptr)
         return FAILURE;
     }
 
+    //print_eth("[sys_pool_free] addr_%x from pool_%x", (U32)ptr, (U32)pPool);
+
     pPool->next = NULL;
     pPool->status = 0;
     
-    pPoolCtx->next_free->next = (U32 *)pPool;
-    pPoolCtx->next_free = pPool;
+    if (pPoolCtx->next_alloc == NULL) {
+        pPoolCtx->next_alloc = pPool;
+        pPoolCtx->next_free = pPool;        
+    } else {
+        pPoolCtx->next_free->next = (U32 *)pPool;    
+    }
+    
     pPoolCtx->stats_free++;
     pPoolCtx->stats_balance--;
-    
+
+    //print_eth("[sys_pool_free] - next AI[%d]_%x AN_%x FI[]_%x FN_%x", 0, pPoolCtx->next_alloc, pPoolCtx->next_alloc->next, (U32)pPoolCtx->next_free, pPoolCtx->next_free->next);
+
     return SUCCESS;
 }
 

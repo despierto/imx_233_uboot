@@ -28,7 +28,7 @@
 static PCORE_CTX pCoreCtx = NULL;
 
 static int local_core_rem_from_list(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX pTask);
-static int local_core_add_to_list(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX pTask);
+static int local_core_add_to_list(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX pTask, U16 priority);
 
 
 /************************************************
@@ -92,15 +92,70 @@ void core_info(void)
     return;
 }
 
-void core_dispatcher_task(void)
+void core_dispatcher_check_prio_task(void)
 {
+    PCORE_TASK_CTX  pCurrTask = pCoreCtx->ptask.list_head;
 
-
+    // priority task doesn't support period or repeat: 
+    // all priority tasks according to its priority are checking every time
+    
+    //process priority tasks
+    while (pCurrTask) {
+        //run procedure
+        pCurrTask->procedure(pCurrTask->proc_param);
+        pCurrTask = pCurrTask->next;
+    }
 
     return;
 }
 
-int     core_reg_task(CORE_PROC *procedure, void * proc_param, U32 period_ms, CORE_TASK_TYPE type, U16 priority)
+void core_dispatcher_task(void)
+{
+    PCORE_TASK_CTX  pCurrTask;
+    core_dispatcher_check_prio_task();
+
+    //process common tasks
+    pCurrTask = pCoreCtx->ctask.list_head;
+    while (pCurrTask) {
+        U32 curr_time = (U32)get_time_ms();
+        U32 time_diff = get_time_diff(pCurrTask->reg_time, curr_time);
+        if (time_diff >= pCurrTask->period_ms) {
+            //run procedure
+            if (pCurrTask->repeat == 0) {
+                //under procedure
+                assert_rc(local_core_rem_from_list(&pCoreCtx->ctask, pCurrTask));
+                assert_rc(sys_pool_free(pCoreCtx->ctask.ctx, pCurrTask));                    
+            } else if (pCurrTask->repeat == 0xFF) {
+                //infinite task: update reg time
+                pCurrTask->reg_time = curr_time;  
+            } else {
+                //finite task: update reg time
+                pCurrTask->reg_time = curr_time;  
+                pCurrTask->repeat--;  
+            }
+
+            pCurrTask->procedure(pCurrTask->proc_param);
+        }
+        
+        pCurrTask = pCurrTask->next;
+        
+        //check prio tasks before processing of next common task or idle task
+        core_dispatcher_check_prio_task();
+    }
+
+    pCurrTask = pCoreCtx->itask.list_head;
+    if (pCurrTask) {
+        //process idle task - it is a single task
+        if (pCurrTask->procedure) {
+            //run procedure            
+            pCurrTask->procedure(pCurrTask->proc_param);
+        }
+    }
+    
+    return;
+}
+
+int     core_reg_task(CORE_PROC *procedure, void * proc_param, U32 period_ms, CORE_TASK_TYPE type, U8 priority, U8 repeat)
 {
     int rc = SUCCESS;
     PCORE_TASK_CLASS pTaskClass;
@@ -139,9 +194,10 @@ int     core_reg_task(CORE_PROC *procedure, void * proc_param, U32 period_ms, CO
     pTask->proc_param = proc_param;
     pTask->period_ms = period_ms;
     pTask->priority = priority;
+    pTask->repeat = repeat;    
     pTask->type = type;
        
-    return local_core_add_to_list(pTaskClass, pTask);
+    return local_core_add_to_list(pTaskClass, pTask, priority);
 }
 
 int     core_unreg_task(CORE_PROC *procedure, CORE_TASK_TYPE type)
@@ -189,46 +245,90 @@ int     core_unreg_task(CORE_PROC *procedure, CORE_TASK_TYPE type)
     assert_rc(local_core_rem_from_list(pTaskClass, pTask));
     assert_rc(sys_pool_free(pTaskClass->ctx, pTask));
    
-    return local_core_add_to_list(pTaskClass, pTask);
+    return local_core_rem_from_list(pTaskClass, pTask);
 }
 
 
 /************************************************
   *              LOCAL  FUNCTIONs                                      *
   ************************************************/
-static int local_core_add_to_list(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX pTask)
+static int local_core_add_to_list(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX pTask, U16 priority)
 {
     assert(pTask);
     pTask->reg_time = (U32)get_time_ms();    
-    
-    print_inf("CT_ADD BEFORE: h_%x e_%x ", (U32)pTaskClass->list_head, (U32)pTaskClass->list_end);
+
+#if 0    
+    print_inf("CORE ADD BEFORE: (h_%x e_%x) ", (U32)pTaskClass->list_head, (U32)pTaskClass->list_end);
     if (pTaskClass->list_head) {
-        print_inf("hp_%x hn_%x ", (U32)pTaskClass->list_head->prev,  (U32)pTaskClass->list_head->next);
+        print_inf("(hp_%x hn_%x) ", (U32)pTaskClass->list_head->prev,  (U32)pTaskClass->list_head->next);
     }
     if (pTaskClass->list_end) {
-        print_inf("ep_%x en_%x ", (U32)pTaskClass->list_end->prev,  (U32)pTaskClass->list_end->next);
+        print_inf("(ep_%x en_%x) ", (U32)pTaskClass->list_end->prev,  (U32)pTaskClass->list_end->next);
     }
-    print_inf("new_%x\n", (U32)pTask);    
-
-    pTask->next = NULL;
+    print_inf("new_%x prio_%d\n", (U32)pTask, pTask->priority);    
+#endif
+    
     if (pTaskClass->list_head == NULL) {
+        //just add as first item
         pTask->prev = NULL;
+        pTask->next = NULL;
         pTaskClass->list_head = pTask; 
         pTaskClass->list_end = pTask;
     } else {
-        pTask->prev = pTaskClass->list_end;
-        pTaskClass->list_end->next = pTask;
-        pTaskClass->list_end = pTask;
+        //some items are already in list
+        PCORE_TASK_CTX pCurrTask = pTaskClass->list_head;
+
+        while(pCurrTask && (pCurrTask->priority > priority)){
+            pCurrTask = pCurrTask->next;
+        }
+
+        if (pCurrTask == NULL) {
+            //all existing tasks has higher priority than new one => add to the end
+            pTask->next = NULL;
+            pTask->prev = pTaskClass->list_end;
+            pTaskClass->list_end->next = pTask;
+            pTaskClass->list_end = pTask;
+        } else if (pCurrTask == pTaskClass->list_head) {
+            //add as head
+            pTask->next = pTaskClass->list_head;
+            pTask->prev = NULL;
+            pCurrTask->prev = pTask;
+            pTaskClass->list_head = pTask; 
+        } else {
+            //add somewhere at the middle before CurrTask
+            pTask->next = pCurrTask;
+            pTask->prev = pCurrTask->prev;
+            pCurrTask->prev->next = pTask;
+            pCurrTask->prev = pTask;
+        }
     }
 
-    print_inf("CT_ADD AFTER: h_%x e_%x ", (U32)pTaskClass->list_head, (U32)pTaskClass->list_end);
-    if (pTaskClass->list_head) {
-        print_inf("hp_%x hn_%x ", (U32)pTaskClass->list_head->prev,  (U32)pTaskClass->list_head->next);
-    }
-    if (pTaskClass->list_end) {
-        print_inf("ep_%x en_%x ", (U32)pTaskClass->list_end->prev,  (U32)pTaskClass->list_end->next);
+#if 1
+    {
+        print_inf("CORE ADD to %s: (h_%x e_%x) ", pTaskClass->ctx->pool_caption, (U32)pTaskClass->list_head, (U32)pTaskClass->list_end);
+        if (pTaskClass->list_head) {
+            PCORE_TASK_CTX pCurrTask;
+            
+            print_inf("(hp_%x hn_%x: pr_%d r_%d ms_%d) ", (U32)pTaskClass->list_head->prev,  (U32)pTaskClass->list_head->next, 
+                pTaskClass->list_end->priority, pTaskClass->list_end->repeat, pTaskClass->list_end->period_ms);
+    
+            pCurrTask = pTaskClass->list_head->next;
+            
+            while(pCurrTask && (pCurrTask != pTaskClass->list_end)){
+                print_inf("(c_%x cp_%x: pr_%d r_%d ms_%d) ", (U32)pCurrTask, (U32)pCurrTask->prev, (U32)pCurrTask->next,
+                    pTaskClass->list_end->priority, pTaskClass->list_end->repeat, pTaskClass->list_end->period_ms);    
+                pCurrTask = pCurrTask->next;
+            }
+        
+        }
+        
+        if (pTaskClass->list_end) {
+            print_inf("(ep_%x en_%x: pr_%d r_%d ms_%d) ", (U32)pTaskClass->list_end->prev,  (U32)pTaskClass->list_end->next, 
+                pTaskClass->list_end->priority, pTaskClass->list_end->repeat, pTaskClass->list_end->period_ms);
+        }
     }
     print_inf("%s", "\n");    
+#endif
 
     return SUCCESS;
 }
@@ -237,7 +337,8 @@ static int local_core_rem_from_list(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX 
 {
    assert(pTask);
 
-    print_inf("CT_REM BEFORE: h_%x e_%x ", (U32)pTaskClass->list_head, (U32)pTaskClass->list_end);
+#if 0
+    print_inf("CORE REM BEFORE: h_%x e_%x ", (U32)pTaskClass->list_head, (U32)pTaskClass->list_end);
     if (pTaskClass->list_head) {
         print_inf("hp_%x hn_%x ", (U32)pTaskClass->list_head->prev,  (U32)pTaskClass->list_head->next);
     }
@@ -245,6 +346,7 @@ static int local_core_rem_from_list(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX 
         print_inf("ep_%x en_%x ", (U32)pTaskClass->list_end->prev,  (U32)pTaskClass->list_end->next);
     }
     print_inf("old_%x\n", (U32)pTask);    
+#endif
        
     if ((U32)pTask == (U32)pTaskClass->list_head) {
         pTaskClass->list_head = pTask->next;
@@ -252,7 +354,6 @@ static int local_core_rem_from_list(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX 
             pTaskClass->list_head->prev = NULL;
         }
     } else if ((U32)pTask == (U32)pTaskClass->list_end) {
-    
         pTaskClass->list_end = pTask->prev;
         pTaskClass->list_end->next = NULL;
     } else {
@@ -260,14 +361,32 @@ static int local_core_rem_from_list(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX 
         pTask->prev = pTask->next;
     }
 
-    print_inf("CT_REM AFTER: h_%x e_%x ", (U32)pTaskClass->list_head, (U32)pTaskClass->list_end);
-    if (pTaskClass->list_head) {
-        print_inf("hp_%x hn_%x ", (U32)pTaskClass->list_head->prev,  (U32)pTaskClass->list_head->next);
+#if 1
+    {
+        print_inf("CORE REM from %s: (h_%x e_%x) ", pTaskClass->ctx->pool_caption, (U32)pTaskClass->list_head, (U32)pTaskClass->list_end);
+        if (pTaskClass->list_head) {
+            PCORE_TASK_CTX pCurrTask;
+            
+            print_inf("(hp_%x hn_%x: pr_%d r_%d ms_%d) ", (U32)pTaskClass->list_head->prev,  (U32)pTaskClass->list_head->next, 
+                pTaskClass->list_end->priority, pTaskClass->list_end->repeat, pTaskClass->list_end->period_ms);
+    
+            pCurrTask = pTaskClass->list_head->next;
+            
+            while(pCurrTask && (pCurrTask != pTaskClass->list_end)){
+                print_inf("(c_%x cp_%x: pr_%d r_%d ms_%d) ", (U32)pCurrTask, (U32)pCurrTask->prev, (U32)pCurrTask->next,
+                    pTaskClass->list_end->priority, pTaskClass->list_end->repeat, pTaskClass->list_end->period_ms);    
+                pCurrTask = pCurrTask->next;
+            }
+        
+        }
+        
+        if (pTaskClass->list_end) {
+            print_inf("(ep_%x en_%x: pr_%d r_%d ms_%d) ", (U32)pTaskClass->list_end->prev,  (U32)pTaskClass->list_end->next, 
+                pTaskClass->list_end->priority, pTaskClass->list_end->repeat, pTaskClass->list_end->period_ms);
+        }
     }
-    if (pTaskClass->list_end) {
-        print_inf("ep_%x en_%x ", (U32)pTaskClass->list_end->prev,  (U32)pTaskClass->list_end->next);
-    }
-    print_inf("%s", "\n");    
+    print_inf("%s", "\n");     
+#endif
 
     return SUCCESS;
 }

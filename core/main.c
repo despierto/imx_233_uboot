@@ -96,28 +96,20 @@
 #define XBOOT_VERSION_R      1
 #define XBOOT_VERSION_RC     1
 
-HEAPHEADER    GlobalHeap;
-PHEAPHEADER    hGlobalHeap;
+HEAPHEADER      GlobalHeap;
+PHEAPHEADER     hGlobalHeap;
 
-PGBL_CTX    pGblCtx;
+PGBL_CTX        pGblCtx;
 
-
-static unsigned int system_time_msec = 0;
-static int initialization(void);
-static void termination(void);
-static void rt_process(void);
-void         gbl_pring_info(void);
+static int      initialization(void);
+static void     termination(void);
+void            gbl_pring_info(void);
 
 /************************************************
   *              ENTRY  FUNCTION                                      *
   ************************************************/
 void  _start(void)
 {
-    unsigned int i, a;
-    unsigned int time_ms;
-    unsigned int time_s;
-    char ch;
-
     print_inf("\r\n");
     print_inf("--- IMX-233: X-BOOT initialization ---\r\n");
     print_inf("%s %s\r\n", __DATE__, __TIME__);
@@ -129,32 +121,18 @@ void  _start(void)
         return;
     }
 
-    //view system configuration
+    //view system configuration & information
     gbl_pring_info();
   
     print_log("%s", "Entry to the main loop...");
     cmgr_logo_str();
     while(1)
     {
-        time_ms = get_time_ms();
-        time_s = get_time_s();        
-    
-        //if (system_time_msec%5000 == 0)
-        //  print_inf("[%d sec] Next cycle...[mst_%d st_%d]\r\n", system_time_msec/1000, time_ms, time_s);
-
         core_dispatcher_task();
-        rt_process();
-
-        if (drv_serial_tstc()) {
-            ch = (char)drv_serial_getc();
-            //print_inf("[%c==%d]", ch, ch);
-            cmgr_input(ch);
-        }
-        sleep_ms(50);
-        system_time_msec+=50;
     }
 
     termination();
+    
     return;
 }
 
@@ -233,13 +211,6 @@ static int initialization(void)
     return rc;
 }
 
-static void rt_process(void)
-{
-    //runtime
-    net_rx_process();
-
-    return;
-}
 static void termination(void)
 {
     print_log("%s", "Environment termination");

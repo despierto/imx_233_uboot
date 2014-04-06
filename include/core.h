@@ -26,6 +26,15 @@
 /************************************************
  *              DEFINITIONS                                                *
  ************************************************/
+//system tasks priority: priority tasks
+#define CORE_TASK_PRIO__UART_RX     50
+
+//system tasks priority: common tasks
+#define CORE_TASK_PRIO__ARP         60
+#define CORE_TASK_PRIO__NET_RX      50
+
+
+
 #define CORE_TASKS_NUM_PRIORITY     10      //must be fast tasks w/o printf etc. according to priority
 #define CORE_TASKS_NUM_COMMON       10      //common tasks according to priority
 #define CORE_TASKS_NUM_IDLE         1       //it is a single low priority idle task that contains console processing
@@ -34,7 +43,7 @@
 #define CORE_TASKS_CAPTION_COMMON   "Common tasks"
 #define CORE_TASKS_CAPTION_IDLE     "Idle tasks"
 
-typedef void CORE_PROC(void);
+typedef void CORE_PROC(void *param);
 
 typedef enum {
     CORE_TASK_TYPE_PRIORITY = 0,
@@ -50,7 +59,8 @@ typedef struct _CORE_TASK_ {
     void                *proc_param;    
     U32                 reg_time;
     U32                 period_ms;
-    U16                 priority;
+    U8                  priority;
+    U8                  repeat;     //0 - no repeat, 0xFF - infinite, rest 1..0xFE is number of repeat
     U16                 type;
     
 }CORE_TASK_CTX, *PCORE_TASK_CTX;
@@ -78,7 +88,7 @@ int     core_init(void);
 int     core_close(void);
 void    core_dispatcher_task(void);
 void    core_info(void);
-int     core_reg_task(CORE_PROC *procedure, void *proc_param, U32 period_ms, CORE_TASK_TYPE type, U16 priority);
+int     core_reg_task(CORE_PROC *procedure, void *proc_param, U32 period_ms, CORE_TASK_TYPE type, U8 priority, U8 repeat);
 int     core_unreg_task(CORE_PROC *procedure, CORE_TASK_TYPE type);
 
 

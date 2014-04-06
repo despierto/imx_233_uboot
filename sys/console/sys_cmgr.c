@@ -137,11 +137,13 @@ PCMGR_CTX       pCMgrCtx;
 unsigned int    cmgr_cmd_name_new_before_curr(const char *curr_cmd, const char *new_cmd);
 void            cmgr_char_put (char ch);
 char            cmgr_char_get (void);
-void            cmgr_proc_input(void);
+void            cmgr_proc_input(void *param);
 static unsigned int cmgr_parse_cmd (char * cmd, PCMGR_PARAM params, unsigned int *paramc, char *cmd_name);
 static int      cmgr_atoi_if_digit(const char *s, unsigned int *num);
+void            cmgr_check_uart (void *param);
 
 extern int 		cmd_init(void);
+
 
 /************************************************
 *              GLOBAL FUNCTIONS                                      *
@@ -166,6 +168,11 @@ int cmgr_init (void)
     if (cmd_init() != SUCCESS)
         return FAILURE;
 
+    //reg system idle task
+    core_reg_task(cmgr_proc_input, NULL, 0, CORE_TASK_TYPE_IDLE, 0, 0);
+    //reg UART input processing as priority task
+    core_reg_task(cmgr_check_uart, NULL, 0, CORE_TASK_TYPE_PRIORITY, CORE_TASK_PRIO__UART_RX, 0);
+ 
     return SUCCESS;
 }
 
@@ -282,7 +289,7 @@ void cmgr_input(char ch)
     }
 
     cmgr_char_put(ch);
-    cmgr_proc_input();
+    //cmgr_proc_input();  processing to be done as idle task
 
     return;
 }
@@ -342,6 +349,16 @@ void cmgr_find_and_print_cmd_info(const char *cmd)
 /************************************************
 *              LOCAL FUNCTIONS                                         *
 ************************************************/
+void cmgr_check_uart (void *param)
+{   
+    if (drv_serial_tstc()) {
+        char ch = (char)drv_serial_getc();
+        //print_inf("[%c==%d]", ch, ch);
+        cmgr_input(ch);
+    }
+    return;
+}
+
 unsigned int cmgr_cmd_name_new_before_curr(const char *curr_cmd, const char *new_cmd)
 {
     unsigned int i, curr_len, new_len, less_len;
@@ -643,7 +660,7 @@ static int cmgr_process_char (char ch)
     return SUCCESS;
 }
 
-void cmgr_proc_input(void)
+void cmgr_proc_input(void *param)
 {
     char ch = 0;
     static unsigned int cmgr_proc_input_state = CMGR_PROC_INPUT_STATE_NONE;

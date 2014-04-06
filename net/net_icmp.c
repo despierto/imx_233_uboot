@@ -80,11 +80,6 @@ int icmp_send_req(IPaddr_t ip_addr)
         drv_eth_heap_free(pIcmpEthPkt);
     }
 
-
-    
-
-    print_inf("%s", "-----------\n");
-
     return SUCCESS;
 }
 

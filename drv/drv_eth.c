@@ -69,11 +69,9 @@ int drv_eth_init(void)
     
     if (ret) {
         drv_eth_halt(); 
-        pGblCtx->Status = 0;
         print_err("%s", "ethernet initialization wasn't completed");
     } else {
         print_eth("%s", "Ethernel was successfully started");
-        pGblCtx->Status = 1;
     }
 
     //rx pool init

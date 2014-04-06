@@ -45,22 +45,8 @@ extern PHEAPHEADER hGlobalHeap;
 
 //declarations
 typedef struct _GBL_CTX_ {
-    uchar *NetTxPackets[ETH_PKTBUFSTX];         /* Transmit packets */
-    uchar *NetRxPackets[ETH_PKTBUFSRX];           /* Receive packets */
-
-    uchar *NetArpWaitTxPacket;                   /* THE transmit packet */
-    int    NetArpWaitTxPacketSize;
-
-    unsigned int    Status;                             /* disabled */
     char            BootFile[CONFIG_BOOTFILE_SIZE];
     unsigned int    linux_load_addr;
-
-    uchar           *NetArpWaitPacketMAC;               /* MAC address of waiting packet's destination */
-    IPaddr_t        NetArpWaitPacketIP;
-    IPaddr_t        NetArpWaitReplyIP;
-
-    unsigned int    NetArpWaitTimerStart;                 /* in usec */
-    unsigned int    NetArpWaitTry;
 
     ushort          NetIPID;                              /* IP packet ID */
     ushort          PingSeqNo;                            /* PING request counter */

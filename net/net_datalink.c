@@ -33,7 +33,7 @@ U8  NetBcastAddr[ETHER_ADDR_LEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 static U32  local_datalink_set_arp_hdr(ARP_t *arp, IPaddr_t dst_ip);
 static int  local_datalink_add_arp_req_to_list(PARP_REQ pArpReq);
 static int  local_datalink_rem_arp_req_from_list(PARP_REQ pArpReq);
-void        local_datalink_arp_timeout_check (void);
+void        local_datalink_arp_timeout_check (void *param);
 
 
 
@@ -170,6 +170,8 @@ DATALINK_TX_STATE datalink_tx_send(PETH_PKT pEthPkt, IPaddr_t dst_ip, U32 type, 
         arp_table_reg_ip(dst_ip, NULL, ARP_TABLE_TYPE_ETH, ARP_TABLE_STATE_WAIT_ARP_RESPOND);
     }
 
+    core_reg_task(local_datalink_arp_timeout_check, NULL, ARP_TIMEOUT, CORE_TASK_TYPE_COMMON, CORE_TASK_PRIO__ARP, 0);
+
     return DATALINK_TX_ARP_SENT;
 }
 
@@ -186,9 +188,7 @@ int datalink_task(void)
 {
     int rc = SUCCESS;
 
-   local_datalink_arp_timeout_check();
-
-    
+   
 
     return rc;
 }
@@ -204,7 +204,7 @@ void datalink_info(void)
  *              LOCAL FUNCTIONS                                        *
  ************************************************/
 
-void local_datalink_arp_timeout_check (void)
+void local_datalink_arp_timeout_check (void *param)
 {   
     PARP_REQ pArpReqCurr = pDataLinkCtx->arp_list_head;
 
@@ -236,6 +236,7 @@ void local_datalink_arp_timeout_check (void)
                     }
                     drv_eth_tx ((void *)pArpReqCurr->addr, pArpReqCurr->size);  
                     arp_table_reg_ip(pArpReqCurr->dst_ip, NULL, ARP_TABLE_TYPE_ETH, ARP_TABLE_STATE_WAIT_ARP_RESPOND);
+                    core_reg_task(local_datalink_arp_timeout_check, NULL, ARP_TIMEOUT, CORE_TASK_TYPE_COMMON, CORE_TASK_PRIO__ARP, 0);
                 } else {
                     //ARP is obsolete - kill it
                     arp_table_reg_ip(pArpReqCurr->dst_ip, NULL, ARP_TABLE_TYPE_ETH, ARP_TABLE_STATE_INVALID);
