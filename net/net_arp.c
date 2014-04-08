@@ -151,7 +151,7 @@ void arp_table_reg_ip(IPaddr_t ip, char *mac, uchar type, uchar state)
             //print_dbg("-->1 Call[%d] local_arp_table_fill_item", i);
             local_arp_table_fill_item(i, ip, mac, type, state);
 
-             print_dbg("ARPT: ip updated: ip_0x%x, t_%d s_%d T_%d", (unsigned int)ip, type, state, pArpTable[i].reg_time);
+             //print_dbg("ARPT: ip updated: ip_0x%x, t_%d s_%d T_%d", (unsigned int)ip, type, state, pArpTable[i].reg_time);
             //ip address info updated
             return;
         }
@@ -191,7 +191,7 @@ void arp_table_reg_ip(IPaddr_t ip, char *mac, uchar type, uchar state)
         //print_dbg("-->3 Call[%d] local_arp_table_fill_item", j);
         local_arp_table_fill_item(j, ip, mac, type, state);
 
-        print_dbg("ARPT: reg after resync: ip_0x%x, t_%d s_%d T_%d", (unsigned int)ip, type, state, pArpTable[j].reg_time);
+        //print_dbg("ARPT: reg after resync: ip_0x%x, t_%d s_%d T_%d", (unsigned int)ip, type, state, pArpTable[j].reg_time);
         //new entry successfully registered into new place
         return;
     }
@@ -213,7 +213,7 @@ void arp_table_reg_ip(IPaddr_t ip, char *mac, uchar type, uchar state)
 
         //print_dbg("-->4 Call[%d] local_arp_table_fill_item", target_index);
         local_arp_table_fill_item(target_index, ip, mac, type, state);
-        print_dbg("ARPT: reg inst old: ip_0x%x, t_%d s_%d T_%d", (unsigned int)ip, type, state, pArpTable[target_index].reg_time);
+        //print_dbg("ARPT: reg inst old: ip_0x%x, t_%d s_%d T_%d", (unsigned int)ip, type, state, pArpTable[target_index].reg_time);
     }
     //new entry successfully registered insteade the oldest entry
     return;

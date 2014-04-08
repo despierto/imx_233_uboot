@@ -27,8 +27,13 @@
  ************************************************/
 static PCORE_CTX pCoreCtx = NULL;
 
-static int local_core_rem_from_list(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX pTask);
-static int local_core_add_to_list(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX pTask, U16 priority);
+static void local_core_proc_pending_tasks(PCORE_TASK_CLASS pTaskClass);
+static void local_core_task_add_pending(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX pTask);
+static void local_core_task_rem_pending(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX pTask);
+
+static void local_core_task_add(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX pTask);
+static void local_core_task_rem(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX pTask);
+
 
 
 /************************************************
@@ -48,22 +53,28 @@ int core_init(void)
     pCoreCtx->ptask.ctx = sys_pool_init(CORE_TASKS_NUM_PRIORITY, sizeof(CORE_TASK_CTX), (U8 *)&(CORE_TASKS_CAPTION_PRIORITY));
     assert(pCoreCtx->ptask.ctx);
     assert_rc(sys_pool_test(pCoreCtx->ptask.ctx));
-    pCoreCtx->ptask.list_end = NULL;
+    pCoreCtx->ptask.list_head= NULL;
     pCoreCtx->ptask.list_end = NULL;   
-
+    pCoreCtx->ptask.list_pending_add = NULL;
+    pCoreCtx->ptask.list_pending_rem = NULL;   
+    
     //allocate pool for common tasks
     pCoreCtx->ctask.ctx = sys_pool_init(CORE_TASKS_NUM_COMMON, sizeof(CORE_TASK_CTX), (U8 *)&(CORE_TASKS_CAPTION_COMMON));
     assert(pCoreCtx->ctask.ctx);
     assert_rc(sys_pool_test(pCoreCtx->ctask.ctx));
-    pCoreCtx->ctask.list_end = NULL;
+    pCoreCtx->ctask.list_head= NULL;
     pCoreCtx->ctask.list_end = NULL;   
+    pCoreCtx->ctask.list_pending_add = NULL;
+    pCoreCtx->ctask.list_pending_rem = NULL;   
     
     //allocate pool for idle task
     pCoreCtx->itask.ctx = sys_pool_init(CORE_TASKS_NUM_IDLE, sizeof(CORE_TASK_CTX), (U8 *)&(CORE_TASKS_CAPTION_IDLE));
     assert(pCoreCtx->itask.ctx);
     assert_rc(sys_pool_test(pCoreCtx->itask.ctx));
-    pCoreCtx->itask.list_end = NULL;
+    pCoreCtx->itask.list_head= NULL;
     pCoreCtx->itask.list_end = NULL;   
+    pCoreCtx->itask.list_pending_add = NULL;
+    pCoreCtx->itask.list_pending_rem = NULL;   
 
     return rc;
 }
@@ -94,7 +105,8 @@ void core_info(void)
 
 void core_dispatcher_check_prio_task(void)
 {
-    PCORE_TASK_CTX  pCurrTask = pCoreCtx->ptask.list_head;
+    PCORE_TASK_CLASS pTaskClass = &pCoreCtx->ptask;
+    PCORE_TASK_CTX  pCurrTask = pTaskClass->list_head;
 
     // priority task doesn't support period or repeat: 
     // all priority tasks according to its priority are checking every time
@@ -106,25 +118,35 @@ void core_dispatcher_check_prio_task(void)
         pCurrTask = pCurrTask->next;
     }
 
+    local_core_proc_pending_tasks(pTaskClass);
+
     return;
 }
 
-void core_dispatcher_task(void)
+void core_dispatcher(void)
 {
-    PCORE_TASK_CTX  pCurrTask;
+    PCORE_TASK_CLASS pTaskClass = &pCoreCtx->ctask;
+    PCORE_TASK_CTX  pCurrTask = pTaskClass->list_head;
+
     core_dispatcher_check_prio_task();
 
     //process common tasks
-    pCurrTask = pCoreCtx->ctask.list_head;
+    pCurrTask = pTaskClass->list_head;
     while (pCurrTask) {
         U32 curr_time = (U32)get_time_ms();
         U32 time_diff = get_time_diff(pCurrTask->reg_time, curr_time);
+                
         if (time_diff >= pCurrTask->period_ms) {
+
+            print_inf("\n------\nPROC_CT: (c_%x cp_%x cn_%x: pr_%d r_%d ms_%d)\n", (U32)pCurrTask, (U32)pCurrTask->prev, (U32)pCurrTask->next,
+                    pCurrTask->priority, pCurrTask->repeat, pCurrTask->period_ms);    
+
+            pCurrTask->procedure(pCurrTask->proc_param);
+            
             //run procedure
             if (pCurrTask->repeat == 0) {
                 //under procedure
-                assert_rc(local_core_rem_from_list(&pCoreCtx->ctask, pCurrTask));
-                assert_rc(sys_pool_free(pCoreCtx->ctask.ctx, pCurrTask));                    
+                local_core_task_rem_pending(pTaskClass, pCurrTask);
             } else if (pCurrTask->repeat == 0xFF) {
                 //infinite task: update reg time
                 pCurrTask->reg_time = curr_time;  
@@ -133,8 +155,6 @@ void core_dispatcher_task(void)
                 pCurrTask->reg_time = curr_time;  
                 pCurrTask->repeat--;  
             }
-
-            pCurrTask->procedure(pCurrTask->proc_param);
         }
         
         pCurrTask = pCurrTask->next;
@@ -143,11 +163,14 @@ void core_dispatcher_task(void)
         core_dispatcher_check_prio_task();
     }
 
+    
+    local_core_proc_pending_tasks(pTaskClass);
+
     pCurrTask = pCoreCtx->itask.list_head;
     if (pCurrTask) {
         //process idle task - it is a single task
         if (pCurrTask->procedure) {
-            //run procedure            
+            //run procedure           
             pCurrTask->procedure(pCurrTask->proc_param);
         }
     }
@@ -157,7 +180,6 @@ void core_dispatcher_task(void)
 
 int     core_reg_task(CORE_PROC *procedure, void * proc_param, U32 period_ms, CORE_TASK_TYPE type, U8 priority, U8 repeat)
 {
-    int rc = SUCCESS;
     PCORE_TASK_CLASS pTaskClass;
     PCORE_TASK_CTX pTask;
 
@@ -196,13 +218,27 @@ int     core_reg_task(CORE_PROC *procedure, void * proc_param, U32 period_ms, CO
     pTask->priority = priority;
     pTask->repeat = repeat;    
     pTask->type = type;
+    pTask->prev = NULL;
+    pTask->next = NULL;
+    pTask->next_pending = NULL;
+
+    //print_inf("ADD PENDING to %s: (c_%x cp_%x cn_%x: pr_%d r_%d ms_%d ex_%x exp_%x t_%d)\n", pTaskClass->ctx->pool_caption,
+    //                (U32)pTask, (U32)pTask->prev, (U32)pTask->next,
+    //                pTask->priority, pTask->repeat, pTask->period_ms,
+    //                (U32)pTask->procedure, (U32)pTask->proc_param, pTask->type);    
+
+    if (type != CORE_TASK_TYPE_IDLE) {
+        local_core_task_add_pending(pTaskClass, pTask);        
+    } else {
+        //idle task is single
+        local_core_task_add(pTaskClass, pTask);
+    }
        
-    return local_core_add_to_list(pTaskClass, pTask, priority);
+    return SUCCESS;
 }
 
 int     core_unreg_task(CORE_PROC *procedure, CORE_TASK_TYPE type)
 {
-    int rc = SUCCESS;
     PCORE_TASK_CLASS pTaskClass;
     PCORE_TASK_CTX pTask;
 
@@ -242,20 +278,95 @@ int     core_unreg_task(CORE_PROC *procedure, CORE_TASK_TYPE type)
         return FAILURE;
     }
 
-    assert_rc(local_core_rem_from_list(pTaskClass, pTask));
-    assert_rc(sys_pool_free(pTaskClass->ctx, pTask));
+    //print_inf("REM PENDING from %s: (c_%x cp_%x cn_%x: pr_%d r_%d ms_%d ex_%x exp_%x t_%d)\n", pTaskClass->ctx->pool_caption,
+    //                (U32)pTask, (U32)pTask->prev, (U32)pTask->next,
+    //                pTask->priority, pTask->repeat, pTask->period_ms,
+    //                (U32)pTask->procedure, (U32)pTask->proc_param, pTask->type);    
+
+    if (type != CORE_TASK_TYPE_IDLE) {
+        local_core_task_rem_pending(pTaskClass, pTask);
+    } else {
+        //idle task is single
+        local_core_task_rem(pTaskClass, pTask);
+    }
    
-    return local_core_rem_from_list(pTaskClass, pTask);
+    return SUCCESS;
 }
 
 
 /************************************************
   *              LOCAL  FUNCTIONs                                      *
   ************************************************/
-static int local_core_add_to_list(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX pTask, U16 priority)
+void local_core_proc_pending_tasks(PCORE_TASK_CLASS pTaskClass)
 {
+    PCORE_TASK_CTX  pCurrTask = pTaskClass->list_pending_rem;
+    
+    if (pCurrTask) {
+        while(pCurrTask) {
+            local_core_task_rem(pTaskClass, pCurrTask);
+            pCurrTask = pCurrTask->next_pending;
+        }
+        pTaskClass->list_pending_rem = NULL;
+    }
+
+    pCurrTask = pTaskClass->list_pending_add;
+    if (pCurrTask) {
+        while(pCurrTask) {
+            local_core_task_add(pTaskClass, pCurrTask);
+            pCurrTask = pCurrTask->next_pending;
+        }
+        pTaskClass->list_pending_add = NULL;        
+    }
+    
+    return;
+}
+
+static void local_core_task_add_pending(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX pTask)
+{
+    PCORE_TASK_CTX pCurrTask = pTaskClass->list_pending_add;
+
     assert(pTask);
+
     pTask->reg_time = (U32)get_time_ms();    
+    pTask->next_pending = NULL;
+
+    if (pCurrTask == NULL) {
+        pTaskClass->list_pending_add = pTask;
+    } else {
+        while(pCurrTask->next_pending) {
+            pCurrTask = pCurrTask->next_pending;
+        }
+        pCurrTask->next_pending = pTask;
+    }
+
+    return;
+}
+
+static void local_core_task_rem_pending(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX pTask)
+{
+    PCORE_TASK_CTX pCurrTask = pTaskClass->list_pending_rem;
+
+    //WARNING: task to be freed at palre of remmoving from the task list
+    
+    assert(pTask);
+
+    pTask->next_pending = NULL;
+  
+    if (pCurrTask == NULL) {
+        pTaskClass->list_pending_rem = pTask;
+    } else {
+        while(pCurrTask->next_pending) {
+            pCurrTask = pCurrTask->next_pending;
+        }
+        pCurrTask->next_pending = pTask;
+    }
+    
+    return;
+}
+
+static void local_core_task_add(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX pTask)
+{
+    U16 priority = pTask->priority;
 
 #if 0    
     print_inf("CORE ADD BEFORE: (h_%x e_%x) ", (U32)pTaskClass->list_head, (U32)pTaskClass->list_end);
@@ -303,20 +414,20 @@ static int local_core_add_to_list(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX pT
         }
     }
 
-#if 1
+#if 0
     {
         print_inf("CORE ADD to %s: (h_%x e_%x) ", pTaskClass->ctx->pool_caption, (U32)pTaskClass->list_head, (U32)pTaskClass->list_end);
         if (pTaskClass->list_head) {
             PCORE_TASK_CTX pCurrTask;
             
             print_inf("(hp_%x hn_%x: pr_%d r_%d ms_%d) ", (U32)pTaskClass->list_head->prev,  (U32)pTaskClass->list_head->next, 
-                pTaskClass->list_end->priority, pTaskClass->list_end->repeat, pTaskClass->list_end->period_ms);
+                pTaskClass->list_head->priority, pTaskClass->list_head->repeat, pTaskClass->list_head->period_ms);
     
             pCurrTask = pTaskClass->list_head->next;
             
             while(pCurrTask && (pCurrTask != pTaskClass->list_end)){
-                print_inf("(c_%x cp_%x: pr_%d r_%d ms_%d) ", (U32)pCurrTask, (U32)pCurrTask->prev, (U32)pCurrTask->next,
-                    pTaskClass->list_end->priority, pTaskClass->list_end->repeat, pTaskClass->list_end->period_ms);    
+                print_inf("(c_%x cp_%x cn_%x: pr_%d r_%d ms_%d) ", (U32)pCurrTask, (U32)pCurrTask->prev, (U32)pCurrTask->next,
+                    pCurrTask->priority, pCurrTask->repeat, pCurrTask->period_ms);    
                 pCurrTask = pCurrTask->next;
             }
         
@@ -330,13 +441,11 @@ static int local_core_add_to_list(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX pT
     print_inf("%s", "\n");    
 #endif
 
-    return SUCCESS;
+    return;
 }
 
-static int local_core_rem_from_list(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX pTask)
+static void local_core_task_rem(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX pTask)
 {
-   assert(pTask);
-
 #if 0
     print_inf("CORE REM BEFORE: h_%x e_%x ", (U32)pTaskClass->list_head, (U32)pTaskClass->list_end);
     if (pTaskClass->list_head) {
@@ -361,20 +470,20 @@ static int local_core_rem_from_list(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX 
         pTask->prev = pTask->next;
     }
 
-#if 1
+#if 0
     {
         print_inf("CORE REM from %s: (h_%x e_%x) ", pTaskClass->ctx->pool_caption, (U32)pTaskClass->list_head, (U32)pTaskClass->list_end);
         if (pTaskClass->list_head) {
             PCORE_TASK_CTX pCurrTask;
             
             print_inf("(hp_%x hn_%x: pr_%d r_%d ms_%d) ", (U32)pTaskClass->list_head->prev,  (U32)pTaskClass->list_head->next, 
-                pTaskClass->list_end->priority, pTaskClass->list_end->repeat, pTaskClass->list_end->period_ms);
+                pTaskClass->list_head->priority, pTaskClass->list_head->repeat, pTaskClass->list_head->period_ms);
     
             pCurrTask = pTaskClass->list_head->next;
             
             while(pCurrTask && (pCurrTask != pTaskClass->list_end)){
-                print_inf("(c_%x cp_%x: pr_%d r_%d ms_%d) ", (U32)pCurrTask, (U32)pCurrTask->prev, (U32)pCurrTask->next,
-                    pTaskClass->list_end->priority, pTaskClass->list_end->repeat, pTaskClass->list_end->period_ms);    
+                print_inf("(c_%x cp_%x cn_%x: pr_%d r_%d ms_%d) ", (U32)pCurrTask, (U32)pCurrTask->prev, (U32)pCurrTask->next,
+                    pCurrTask->priority, pCurrTask->repeat, pCurrTask->period_ms);    
                 pCurrTask = pCurrTask->next;
             }
         
@@ -388,7 +497,9 @@ static int local_core_rem_from_list(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX 
     print_inf("%s", "\n");     
 #endif
 
-    return SUCCESS;
+    assert_rc(sys_pool_free(pTaskClass->ctx, pTask));
+   
+    return;
 }
 
 

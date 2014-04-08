@@ -48,8 +48,11 @@ typedef struct _GBL_CTX_ {
     char            BootFile[CONFIG_BOOTFILE_SIZE];
     unsigned int    linux_load_addr;
 
-    ushort          NetIPID;                              /* IP packet ID */
-    ushort          PingSeqNo;                            /* PING request counter */
+    ushort          NetIPID;                /* IP packet ID */
+    ushort          ping_req_num;           /* PING request counter */
+    ushort          ping_ans_num;           /* PING answer counter */
+    ushort          ping_reg_time;           /* PING request counter */    
+    IPaddr_t        ping_ip;                /* IP to PING*/
 
     //system configuration
     uchar           cfg_mac_addr[ETHER_ADDR_LEN];

@@ -370,6 +370,7 @@ int vsprintf(char *buf, const char *fmt, va_list args)
                 case ' ': flags |= SPACE; goto repeat;
                 case '#': flags |= SPECIAL; goto repeat;
                 case '0': flags |= ZEROPAD; goto repeat;
+                case '%': *str++ = *fmt; continue;
             }
 
         /* get field width */

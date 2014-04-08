@@ -31,6 +31,8 @@
 
 //system tasks priority: common tasks
 #define CORE_TASK_PRIO__ARP         60
+#define CORE_TASK_PRIO__PING        59
+
 #define CORE_TASK_PRIO__NET_RX      50
 
 
@@ -46,8 +48,8 @@
 typedef void CORE_PROC(void *param);
 
 typedef enum {
-    CORE_TASK_TYPE_PRIORITY = 0,
-    CORE_TASK_TYPE_COMMON,     
+    CORE_TASK_TYPE_COMMON = 0,     
+    CORE_TASK_TYPE_PRIORITY,        
     CORE_TASK_TYPE_IDLE    
 
 } CORE_TASK_TYPE;
@@ -55,6 +57,7 @@ typedef enum {
 typedef struct _CORE_TASK_ {
     struct _CORE_TASK_  *prev;
     struct _CORE_TASK_  *next;
+    struct _CORE_TASK_  *next_pending;    
     CORE_PROC           *procedure;
     void                *proc_param;    
     U32                 reg_time;
@@ -70,6 +73,8 @@ typedef struct _CORE_TASK_CLASS_ {
     PSYS_POOL_CTX   ctx;         // priority tasks ctx
     PCORE_TASK_CTX  list_head;
     PCORE_TASK_CTX  list_end;  
+    PCORE_TASK_CTX  list_pending_add;      
+    PCORE_TASK_CTX  list_pending_rem;          
 
 } CORE_TASK_CLASS, *PCORE_TASK_CLASS;
 
@@ -86,7 +91,7 @@ typedef struct _CORE_CTX_ {
   ************************************************/
 int     core_init(void);
 int     core_close(void);
-void    core_dispatcher_task(void);
+void    core_dispatcher(void);
 void    core_info(void);
 int     core_reg_task(CORE_PROC *procedure, void *proc_param, U32 period_ms, CORE_TASK_TYPE type, U8 priority, U8 repeat);
 int     core_unreg_task(CORE_PROC *procedure, CORE_TASK_TYPE type);

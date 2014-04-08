@@ -66,14 +66,14 @@ int icmp_send_req(IPaddr_t ip_addr)
 
     tx_state = datalink_tx_send(pIcmpEthPkt, ip_addr, ETH_P_IP, icmp_pkt_size);        
     if (tx_state == DATALINK_TX_SUCCESS) {
-        print_dbg("ICMP request successfully sent: pkt_0x%x size_%d", (U32)pIcmpEthPkt, icmp_pkt_size);
+        //print_dbg("ICMP request successfully sent: pkt_0x%x size_%d", (U32)pIcmpEthPkt, icmp_pkt_size);
         drv_eth_heap_free(pIcmpEthPkt);
     } else if (tx_state >= DATALINK_TX_ERROR)  {
         print_err_cmd("unexpected error while sending ICMP request: pkt_0x%x size_%d", (U32)pIcmpEthPkt, icmp_pkt_size);
         drv_eth_heap_free(pIcmpEthPkt);
     } else {
         //ARP request sent => let's wait for ARP
-        print_dbg("wait for ARP respond: pkt_0x%x size_%d", (U32)pIcmpEthPkt, icmp_pkt_size);
+        //print_dbg("wait for ARP respond: pkt_0x%x size_%d", (U32)pIcmpEthPkt, icmp_pkt_size);
 
 
         //temporary
@@ -115,7 +115,7 @@ int local_icmp_set_icmp_hdr(uchar * pkt, uchar type, uchar code, ushort id)
             icmp->icmp_type = type;
             icmp->icmp_code = code;
             icmp->icmp_id = id;
-            icmp->icmp_sn = htons (pGblCtx->PingSeqNo++);
+            icmp->icmp_sn = htons (pGblCtx->ping_req_num++);
             icmp->icmp_sum = ~(sys_checksum ((ushort *)icmp, ICMP_ECHO_HDR_SIZE / 2));
 
             icmp_hdr_size = ICMP_ECHO_HDR_SIZE;

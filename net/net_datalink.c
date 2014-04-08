@@ -163,7 +163,7 @@ DATALINK_TX_STATE datalink_tx_send(PETH_PKT pEthPkt, IPaddr_t dst_ip, U32 type, 
         
         local_datalink_add_arp_req_to_list(pArpReq);
 
-        print_dbg("ARP request: pkt_0x%x, len_%d", (unsigned int)pArpEthPkt, arp_pkt_size);
+        //print_dbg("ARP request: pkt_0x%x, len_%d", (unsigned int)pArpEthPkt, arp_pkt_size);
         drv_eth_tx ((void *)pArpEthPkt, arp_pkt_size);  
 
         //update ARP table
@@ -222,17 +222,17 @@ void local_datalink_arp_timeout_check (void *param)
                 //remove current ARP request from the list
                 local_datalink_rem_arp_req_from_list(pArpReqCurr);
 
-                print_dbg("ARP-CHK: pArpReqCurr_%x  regT_%d currT_%d dT_%d", (U32)pArpReqCurr, pArpReqCurr->reg_time, curr_time, time_diff);
+                //print_dbg("ARP-CHK: pArpReqCurr_%x  regT_%d currT_%d dT_%d", (U32)pArpReqCurr, pArpReqCurr->reg_time, curr_time, time_diff);
                 
                 if (pArpReqCurr->transmission_num < ARP_TIMEOUT_COUNT) {
                     //send ARP again
-                    print_dbg("ARP re-transmissions #%d: pkt_0x%x len_%d", pArpReqCurr->transmission_num, (unsigned int)pArpReqCurr->addr,  pArpReqCurr->size);                    
+                    //print_dbg("ARP re-transmissions #%d: pkt_0x%x len_%d", pArpReqCurr->transmission_num, (unsigned int)pArpReqCurr->addr,  pArpReqCurr->size);                    
                     pArpReqCurr->transmission_num++;
                     local_datalink_add_arp_req_to_list(pArpReqCurr);
                     if (pArpReqLast == NULL) {
                         //this is first packet from next checking queue
                         pArpReqLast = pArpReqCurr;
-                        print_dbg("---> pArpReqLast_%x", (U32)pArpReqLast);                        
+                        //print_dbg("---> pArpReqLast_%x", (U32)pArpReqLast);                        
                     }
                     drv_eth_tx ((void *)pArpReqCurr->addr, pArpReqCurr->size);  
                     arp_table_reg_ip(pArpReqCurr->dst_ip, NULL, ARP_TABLE_TYPE_ETH, ARP_TABLE_STATE_WAIT_ARP_RESPOND);
@@ -241,13 +241,13 @@ void local_datalink_arp_timeout_check (void *param)
                     //ARP is obsolete - kill it
                     arp_table_reg_ip(pArpReqCurr->dst_ip, NULL, ARP_TABLE_TYPE_ETH, ARP_TABLE_STATE_INVALID);
 
-                    print_dbg("%s", "ARP killed after 4 re-transmissions: pArpReqCurr_%x pArpReqCurr->addr_%x", (U32)pArpReqCurr, pArpReqCurr->addr);
+                    //print_dbg("%s", "ARP killed after 4 re-transmissions: pArpReqCurr_%x pArpReqCurr->addr_%x", (U32)pArpReqCurr, pArpReqCurr->addr);
                     //free ARP packet
                     drv_eth_heap_free((PTR)pArpReqCurr->addr);
                     //free ARP requst entity
                     sys_pool_free(pDataLinkCtx->arp_reg_pool_ctx, (PTR)pArpReqCurr);
                 }
-                print_inf("%s", "-----------\n");
+                //print_inf("%s", "-----------\n");
                 pArpReqCurr = pDataLinkCtx->arp_list_head;
             }else {
                 pArpReqCurr = pArpReqCurr->next;

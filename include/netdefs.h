@@ -308,6 +308,9 @@ typedef struct {
 #define ICMP_TYPE_ADDR_MASK_REPLY       (18)
 #define ICMP_TYPE_TRACEROUTE            (30)
 
+#define PING_TIMEOUT        (5*1000)        /* Miliseconds before trying ping again */
+#define PING_REPEAT_NUM     (3)             /* 1base request + N repeat count */
+
 /* Internet Control Message Protocol (ICMP) header: echo request (ping) */
 typedef struct {
     uchar       icmp_type;                  /* ICMP type */

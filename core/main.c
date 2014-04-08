@@ -128,7 +128,7 @@ void  _start(void)
     cmgr_logo_str();
     while(1)
     {
-        core_dispatcher_task();
+        core_dispatcher();
     }
 
     termination();
