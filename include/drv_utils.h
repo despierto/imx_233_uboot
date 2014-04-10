@@ -52,7 +52,7 @@ static inline unsigned int get_time_s(void)
     return (unsigned int)HW_RTC_SECONDS_RD();
 }
 
-#define get_time_diff(last_time, new_time)    ((new_time > last_time) ? (new_time - last_time) : (0xFFFFFFFF - last_time + new_time))
+#define get_time_diff(last_time, new_time)    ((new_time >= last_time) ? (new_time - last_time) : (0xFFFFFFFF - last_time + new_time))
 
 
 IPaddr_t    drv_string_to_ip(char *s);

@@ -31,9 +31,9 @@ U8  NetEtherNullAddr[ETHER_ADDR_LEN] = { 0, 0, 0, 0, 0, 0 };
 U8  NetBcastAddr[ETHER_ADDR_LEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 
 static U32  local_datalink_set_arp_hdr(ARP_t *arp, IPaddr_t dst_ip);
-static int  local_datalink_add_arp_req_to_list(PARP_REQ pArpReq);
-static int  local_datalink_rem_arp_req_from_list(PARP_REQ pArpReq);
-void        local_datalink_arp_timeout_check (void *param);
+//static int  local_datalink_add_arp_req_to_list(PARP_REQ pArpReq);
+//static int  local_datalink_rem_arp_req_from_list(PARP_REQ pArpReq);
+void        local_datalink_arp_handler (void *param);
 
 
 
@@ -69,9 +69,6 @@ int datalink_open(void)
     assert(pDataLinkCtx->arp_reg_pool_ctx);
     assert_rc(sys_pool_test(pDataLinkCtx->arp_reg_pool_ctx));
     
-    pDataLinkCtx->arp_list_head = NULL;
-    pDataLinkCtx->arp_list_end = NULL;    
-    
     return rc;
 }
 
@@ -82,16 +79,6 @@ int datalink_close(void)
 
     /* Create ARM table */
     arp_table_destroy();
-
-    //free all ARP requests? list entries and close pool
-    pArpReq = pDataLinkCtx->arp_list_head;
-    while(pArpReq) {
-        if (pArpReq->addr) {
-            drv_eth_heap_free((PTR)pArpReq->addr);
-        }
-        sys_pool_free(pDataLinkCtx->arp_reg_pool_ctx, (PTR)pArpReq);
-        pArpReq = (PARP_REQ)pArpReq->next;
-    }
     sys_pool_close(pDataLinkCtx->arp_reg_pool_ctx);
     
     /* Stop Ethernt device*/    
@@ -161,16 +148,16 @@ DATALINK_TX_STATE datalink_tx_send(PETH_PKT pEthPkt, IPaddr_t dst_ip, U32 type, 
         pArpReq->dst_ip = dst_ip;
         pArpReq->transmission_num = 1;
         
-        local_datalink_add_arp_req_to_list(pArpReq);
+        //local_datalink_add_arp_req_to_list(pArpReq);
 
         //print_dbg("ARP request: pkt_0x%x, len_%d", (unsigned int)pArpEthPkt, arp_pkt_size);
         drv_eth_tx ((void *)pArpEthPkt, arp_pkt_size);  
 
         //update ARP table
         arp_table_reg_ip(dst_ip, NULL, ARP_TABLE_TYPE_ETH, ARP_TABLE_STATE_WAIT_ARP_RESPOND);
+        
+        core_reg_task(local_datalink_arp_handler, (void *)pArpReq, ARP_TIMEOUT, CORE_TASK_TYPE_COMMON, CORE_TASK_PRIO__ARP, 0);
     }
-
-    core_reg_task(local_datalink_arp_timeout_check, NULL, ARP_TIMEOUT, CORE_TASK_TYPE_COMMON, CORE_TASK_PRIO__ARP, 0);
 
     return DATALINK_TX_ARP_SENT;
 }
@@ -204,118 +191,36 @@ void datalink_info(void)
  *              LOCAL FUNCTIONS                                        *
  ************************************************/
 
-void local_datalink_arp_timeout_check (void *param)
+void local_datalink_arp_handler (void *param)
 {   
-    PARP_REQ pArpReqCurr = pDataLinkCtx->arp_list_head;
+    PARP_REQ pArpReq = (PARP_REQ)param;
 
-	print_dbg("pArpReqCurr tx_num_%d", pArpReqCurr->transmission_num);
-
-    //check if any ARP request is waiting timeout
-    if (pArpReqCurr) {
-        PARP_REQ pArpReqLast = NULL;
-                    
-        while (pArpReqCurr && (pArpReqCurr != pArpReqLast)) {
-            U32 curr_time = (U32)get_time_ms();
-            U32 time_diff = get_time_diff(pArpReqCurr->reg_time, curr_time);
-
-            //print_dbg("ARP-CHK: pArpReqCurr_%x pArpReqNext_%x pArpReqLast_%x regT_%d currT_%d dT_%d", (U32)pArpReqCurr, (U32)pArpReqCurr->next, (U32)pArpReqLast, pArpReqCurr->reg_time, curr_time, time_diff);
-        
-            if (time_diff > ARP_TIMEOUT) {
-                //remove current ARP request from the list
-                local_datalink_rem_arp_req_from_list(pArpReqCurr);
-
-                //print_dbg("ARP-CHK: pArpReqCurr_%x  regT_%d currT_%d dT_%d", (U32)pArpReqCurr, pArpReqCurr->reg_time, curr_time, time_diff);
-                
-                if (pArpReqCurr->transmission_num < ARP_TIMEOUT_COUNT) {
-                    //send ARP again
-                    //print_dbg("ARP re-transmissions #%d: pkt_0x%x len_%d", pArpReqCurr->transmission_num, (unsigned int)pArpReqCurr->addr,  pArpReqCurr->size);                    
-                    pArpReqCurr->transmission_num++;
-                    local_datalink_add_arp_req_to_list(pArpReqCurr);
-                    if (pArpReqLast == NULL) {
-                        //this is first packet from next checking queue
-                        pArpReqLast = pArpReqCurr;
-                        //print_dbg("---> pArpReqLast_%x", (U32)pArpReqLast);                        
-                    }
-                    drv_eth_tx ((void *)pArpReqCurr->addr, pArpReqCurr->size);  
-                    arp_table_reg_ip(pArpReqCurr->dst_ip, NULL, ARP_TABLE_TYPE_ETH, ARP_TABLE_STATE_WAIT_ARP_RESPOND);
-                    core_reg_task(local_datalink_arp_timeout_check, NULL, ARP_TIMEOUT, CORE_TASK_TYPE_COMMON, CORE_TASK_PRIO__ARP, 0);
-                } else {
-                    //ARP is obsolete - kill it
-                    arp_table_reg_ip(pArpReqCurr->dst_ip, NULL, ARP_TABLE_TYPE_ETH, ARP_TABLE_STATE_INVALID);
-
-                    //print_dbg("%s", "ARP killed after 4 re-transmissions: pArpReqCurr_%x pArpReqCurr->addr_%x", (U32)pArpReqCurr, pArpReqCurr->addr);
-                    //free ARP packet
-                    drv_eth_heap_free((PTR)pArpReqCurr->addr);
-                    //free ARP requst entity
-                    sys_pool_free(pDataLinkCtx->arp_reg_pool_ctx, (PTR)pArpReqCurr);
-                }
-                //print_inf("%s", "-----------\n");
-                pArpReqCurr = pDataLinkCtx->arp_list_head;
-            }else {
-                pArpReqCurr = pArpReqCurr->next;
-            }
-        }
-        
-
-    }
-     
-    return;
-}
-
-static int local_datalink_add_arp_req_to_list(PARP_REQ pArpReq)
-{
     assert(pArpReq);
-    pArpReq->reg_time = (U32)get_time_ms();    
     
-    //print_inf("ADD BEFORE: h_%x hp_%x hn_%x e_%x ep_%x en_%x new_%x\n", 
-    //                (U32)pDataLinkCtx->arp_list_head, (U32)pDataLinkCtx->arp_list_head->prev,  (U32)pDataLinkCtx->arp_list_head->next,
-    //                (U32)pDataLinkCtx->arp_list_end, (U32)pDataLinkCtx->arp_list_end->prev,  (U32)pDataLinkCtx->arp_list_end->next, (U32)pArpReq);    
+    //print_dbg("pArpReq tx_num_%d", pArpReq->transmission_num);
 
-    pArpReq->next = NULL;
-    if (pDataLinkCtx->arp_list_head == NULL) {
-        pArpReq->prev = NULL;
-        pDataLinkCtx->arp_list_head = pArpReq; 
-        pDataLinkCtx->arp_list_end = pArpReq;
+    if (pArpReq->transmission_num < ARP_TIMEOUT_COUNT) {
+        //send ARP again
+        //print_dbg("ARP re-transmissions #%d: pkt_0x%x len_%d", pArpReqCurr->transmission_num, (unsigned int)pArpReq->addr,  pArpReq->size);                    
+
+        pArpReq->transmission_num++;
+        drv_eth_tx ((void *)pArpReq->addr, pArpReq->size);  
+
+        arp_table_reg_ip(pArpReq->dst_ip, NULL, ARP_TABLE_TYPE_ETH, ARP_TABLE_STATE_WAIT_ARP_RESPOND);
+        core_reg_task(local_datalink_arp_handler, (void *)pArpReq, ARP_TIMEOUT, CORE_TASK_TYPE_COMMON, CORE_TASK_PRIO__ARP, 0);
     } else {
-        pArpReq->prev = pDataLinkCtx->arp_list_end;
-        pDataLinkCtx->arp_list_end->next = pArpReq;
-        pDataLinkCtx->arp_list_end = pArpReq;
+        //ARP is obsolete - kill it
+        arp_table_reg_ip(pArpReq->dst_ip, NULL, ARP_TABLE_TYPE_ETH, ARP_TABLE_STATE_INVALID);
+
+        //print_dbg("%s", "ARP killed after 4 re-transmissions: pArpReq_%x pArpReq->addr_%x", (U32)pArpReq, pArpReq->addr);
+        
+        //free ARP packet
+        drv_eth_heap_free((PTR)pArpReq->addr);
+        //free ARP requst entity
+        sys_pool_free(pDataLinkCtx->arp_reg_pool_ctx, (PTR)pArpReq);
     }
 
-    //print_inf("ADD END: h_%x hp_%x hn_%x e_%x ep_%x en_%x\n", 
-    //                (U32)pDataLinkCtx->arp_list_head, (U32)pDataLinkCtx->arp_list_head->prev,  (U32)pDataLinkCtx->arp_list_head->next,
-    //                (U32)pDataLinkCtx->arp_list_end, (U32)pDataLinkCtx->arp_list_end->prev,  (U32)pDataLinkCtx->arp_list_end->next);    
-
-    return SUCCESS;
-}
-
-static int local_datalink_rem_arp_req_from_list(PARP_REQ pArpReq)
-{
-   assert(pArpReq);
-
-    //print_inf("REM BEFORE: h_%x hp_%x hn_%x e_%x ep_%x en_%x old_%x\n", 
-    //                (U32)pDataLinkCtx->arp_list_head, (U32)pDataLinkCtx->arp_list_head->prev,  (U32)pDataLinkCtx->arp_list_head->next,
-    //                (U32)pDataLinkCtx->arp_list_end, (U32)pDataLinkCtx->arp_list_end->prev,  (U32)pDataLinkCtx->arp_list_end->next, (U32)pArpReq);    
-   
-    if ((U32)pArpReq == (U32)pDataLinkCtx->arp_list_head) {
-        pDataLinkCtx->arp_list_head = pArpReq->next;
-        if (pDataLinkCtx->arp_list_head) {
-            pDataLinkCtx->arp_list_head->prev = NULL;
-        }
-    } else if ((U32)pArpReq == (U32)pDataLinkCtx->arp_list_end) {
-    
-        pDataLinkCtx->arp_list_end = pArpReq->prev;
-        pDataLinkCtx->arp_list_end->next = NULL;
-    } else {
-        //somewhere at the middle
-        pArpReq->prev = pArpReq->next;
-    }
-
-    //print_inf("REM END: h_%x hp_%x hn_%x e_%x ep_%x en_%x\n", 
-    //                (U32)pDataLinkCtx->arp_list_head, (U32)pDataLinkCtx->arp_list_head->prev,  (U32)pDataLinkCtx->arp_list_head->next,
-    //                (U32)pDataLinkCtx->arp_list_end, (U32)pDataLinkCtx->arp_list_end->prev,  (U32)pDataLinkCtx->arp_list_end->next);    
-
-    return SUCCESS;
+    return;
 }
 
 U32 datalink_prepare_eth_hdr(PETH_PKT pkt, U8 *dst_mac_addr, U16 protocol)

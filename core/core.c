@@ -132,10 +132,10 @@ void core_dispatcher(void)
     while (pCurrTask) {
         U32 curr_time = (U32)get_time_ms();
         U32 time_diff = get_time_diff(pCurrTask->reg_time, curr_time);
-		PCORE_TASK_CTX pNextTask = pCurrTask->next;
-				
-        if (time_diff >= pCurrTask->period_ms) {
+        PCORE_TASK_CTX pNextTask = pCurrTask->next;
 
+        if (time_diff >= pCurrTask->period_ms) {
+            //printf("<%d %d: %d %d %d>", pCurrTask->reg_time, curr_time, time_diff, pCurrTask->period_ms, pCurrTask->priority);
             //print_inf("\n------\nPROC_CT: (c_%x cp_%x cn_%x: pr_%d r_%d ms_%d)\n", (U32)pCurrTask, (U32)pCurrTask->prev, (U32)pCurrTask->next,
             //        pCurrTask->priority, pCurrTask->repeat, pCurrTask->period_ms);    
 
@@ -143,7 +143,7 @@ void core_dispatcher(void)
             
             //run procedure
             if (pCurrTask->repeat == 0) {
-				//task is already obsolete
+                //task is already obsolete
                 local_core_task_rem(pTaskClass, pCurrTask);
              } else if (pCurrTask->repeat == 0xFF) {
                 //infinite task: update reg time
@@ -205,14 +205,12 @@ int     core_reg_task(CORE_PROC *procedure, void * proc_param, U32 period_ms, CO
     assert(pTaskClass);
     
     pTask = (PCORE_TASK_CTX)sys_pool_alloc(pTaskClass->ctx);
-	//print_inf("--> AllocTaskCtx[%d]: 0x%x\n",  type, (U32)pTask);
-	
     if (pTask == NULL) {
         print_err_cmd("%s overflow", pTaskClass->ctx->pool_caption);
         return FAILURE;
     }
 
-	//fill up task
+    //fill up task
     pTask->procedure = procedure;
     pTask->proc_param = proc_param;
     pTask->period_ms = period_ms;
@@ -242,7 +240,7 @@ int     core_unreg_task(CORE_PROC *procedure, CORE_TASK_TYPE type)
 {
     PCORE_TASK_CLASS pTaskClass;
     PCORE_TASK_CTX pTask;
-	U32 task_rem_counter = 0;
+    U32 task_rem_counter = 0;
 
     assert(procedure);
     
@@ -270,22 +268,22 @@ int     core_unreg_task(CORE_PROC *procedure, CORE_TASK_TYPE type)
     pTask = pTaskClass->list_head;
     while (pTask) {
         if ((U32)pTask->procedure == (U32)procedure) {
-			//print_inf("REM PENDING from %s: (c_%x cp_%x cn_%x: pr_%d r_%d ms_%d ex_%x exp_%x t_%d)\n", pTaskClass->ctx->pool_caption,
-			//				  (U32)pTask, (U32)pTask->prev, (U32)pTask->next,
-			//				  pTask->priority, pTask->repeat, pTask->period_ms,
-			//				  (U32)pTask->procedure, (U32)pTask->proc_param, pTask->type);	  
+            //print_inf("REM PENDING from %s: (c_%x cp_%x cn_%x: pr_%d r_%d ms_%d ex_%x exp_%x t_%d)\n", pTaskClass->ctx->pool_caption,
+            //                  (U32)pTask, (U32)pTask->prev, (U32)pTask->next,
+            //                  pTask->priority, pTask->repeat, pTask->period_ms,
+            //                  (U32)pTask->procedure, (U32)pTask->proc_param, pTask->type);      
 
-			if (type != CORE_TASK_TYPE_IDLE) {
-				local_core_task_rem_pending(pTaskClass, pTask);
-			} else {
-				//idle task is single
-				if (task_rem_counter) {
-					print_err_cmd("idle task is already killed, unknown task 0x%x", (U32)procedure);
-					return FAILURE;
-				}
-				local_core_task_rem(pTaskClass, pTask);
-			}
-			task_rem_counter++;				
+            if (type != CORE_TASK_TYPE_IDLE) {
+                local_core_task_rem_pending(pTaskClass, pTask);
+            } else {
+                //idle task is single
+                if (task_rem_counter) {
+                    print_err_cmd("idle task is already killed, unknown task 0x%x", (U32)procedure);
+                    return FAILURE;
+                }
+                local_core_task_rem(pTaskClass, pTask);
+            }
+            task_rem_counter++;                
         }
         pTask = pTask->next;
     }
@@ -335,8 +333,6 @@ static void local_core_task_add_pending(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_
 
     assert(pTask);
 
-	print_dbg("0x%x %d", (U32)pTask, pTask->priority);
-
     pTask->reg_time = (U32)get_time_ms();    
     pTask->next_pending = NULL;
 
@@ -360,8 +356,6 @@ static void local_core_task_rem_pending(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_
     
     assert(pTask);
 
-	print_dbg("0x%x %d", (U32)pTask, pTask->priority);
-
     pTask->next_pending = NULL;
   
     if (pCurrTask == NULL) {
@@ -379,20 +373,6 @@ static void local_core_task_rem_pending(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_
 static void local_core_task_add(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX pTask)
 {
     U16 priority = pTask->priority;
-
-	//print_dbg("type_%d task_0x%x\n",  pTask->type, (U32)pTask);
-	print_dbg("0x%x %d", (U32)pTask, pTask->priority);
-
-#if 0    
-    print_inf("CORE ADD BEFORE: (h_%x e_%x) ", (U32)pTaskClass->list_head, (U32)pTaskClass->list_end);
-    if (pTaskClass->list_head) {
-        print_inf("(hp_%x hn_%x) ", (U32)pTaskClass->list_head->prev,  (U32)pTaskClass->list_head->next);
-    }
-    if (pTaskClass->list_end) {
-        print_inf("(ep_%x en_%x) ", (U32)pTaskClass->list_end->prev,  (U32)pTaskClass->list_end->next);
-    }
-    print_inf("new_%x prio_%d\n", (U32)pTask, pTask->priority);    
-#endif
     
     if (pTaskClass->list_head == NULL) {
         //just add as first item
@@ -461,20 +441,8 @@ static void local_core_task_add(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX pTas
 
 static void local_core_task_rem(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX pTask)
 {
-	//print_dbg("type_%d task_0x%x\n",  pTask->type, (U32)pTask);
-	print_dbg("0x%x %d", (U32)pTask, pTask->priority);
-
-#if 0
-    print_inf("CORE REM BEFORE: h_%x e_%x ", (U32)pTaskClass->list_head, (U32)pTaskClass->list_end);
-    if (pTaskClass->list_head) {
-        print_inf("hp_%x hn_%x ", (U32)pTaskClass->list_head->prev,  (U32)pTaskClass->list_head->next);
-    }
-    if (pTaskClass->list_end) {
-        print_inf("ep_%x en_%x ", (U32)pTaskClass->list_end->prev,  (U32)pTaskClass->list_end->next);
-    }
-    print_inf("old_%x\n", (U32)pTask);    
-#endif
-       
+    assert(pTask);
+    
     if ((U32)pTask == (U32)pTaskClass->list_head) {
         pTaskClass->list_head = pTask->next;
         if (pTaskClass->list_head) {
@@ -515,7 +483,6 @@ static void local_core_task_rem(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX pTas
     print_inf("%s", "\n");     
 #endif
 
-    //print_dbg("--> FreeTaskCtx[%d]: 0x%x\n",  pTask->type, (U32)pTask);
     assert_rc(sys_pool_free(pTaskClass->ctx, pTask));
    
     return;

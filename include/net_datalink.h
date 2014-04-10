@@ -60,8 +60,6 @@ typedef struct _DATALINK_CTX_ {
     //unsigned int    arp_reg_pool_put; 
 
     PSYS_POOL_CTX   arp_reg_pool_ctx;
-    PARP_REQ        arp_list_head;
-    PARP_REQ        arp_list_end;    
     
 }DATALINK_CTX, *PDATALINK_CTX;
 

@@ -85,17 +85,17 @@ PSYS_POOL_CTX sys_pool_init(U32 pool_items_count, U32 pool_item_size, U8 *pool_c
         pPoolCtx->pool[i].addr = (U32)(storage_base + pool_item_size * i);
         pPoolCtx->pool[i].next = (U32 *)&pPoolCtx->pool[i+1];
         pPoolCtx->pool[i].status = 0;
-        //print_eth("   [%d] addr_%x next_%x", i, pPoolCtx->pool[i].addr, (U32)pPoolCtx->pool[i].next);
+        //print_eth("[sys_pool_init]   pool[%d]_%x.next=%x addr_%x", i, (U32)&pPoolCtx->pool[i], (U32)pPoolCtx->pool[i].next, (U32)pPoolCtx->pool[i].addr);
     }
     pPoolCtx->pool[i].addr = (U32)(storage_base + pool_item_size * i);
     pPoolCtx->pool[i].next = NULL;
     pPoolCtx->pool[i].status = 0;
-    //print_eth("   [%d] addr_%x next_%x", i, pPoolCtx->pool[i].addr, (U32)pPoolCtx->pool[i].next);
+    //print_eth("[sys_pool_init]   pool[%d]_%x.next=%x addr_%x", i, (U32)&pPoolCtx->pool[i], (U32)pPoolCtx->pool[i].next, (U32)pPoolCtx->pool[i].addr);
 
     pPoolCtx->next_alloc = &pPoolCtx->pool[0];
     pPoolCtx->next_free = &pPoolCtx->pool[i];
 
-    //print_eth("[sys_pool_init] - next AI[%d]_%x AN_%x FI[%d]_%x FN_%x", 0, pPoolCtx->next_alloc, pPoolCtx->next_alloc->next, i, (U32)pPoolCtx->next_free, pPoolCtx->next_free->next);
+    //print_eth("[sys_pool_init] - next AI[%d]_%x AN_%x FI[%d]_%x FN_%x", 0, (U32)pPoolCtx->next_alloc, (U32)pPoolCtx->next_alloc->next, i, (U32)pPoolCtx->next_free, (U32)pPoolCtx->next_free->next);
 
     return pPoolCtx;
 }
@@ -121,11 +121,19 @@ PTR sys_pool_alloc(PSYS_POOL_CTX pPoolCtx)
     if (pPoolCtx->next_alloc) {
         addr = (PTR)pPoolCtx->next_alloc->addr;
         pPoolCtx->next_alloc->status = 1;
-        pPoolCtx->next_alloc = (PSYS_POOL_ITEM)pPoolCtx->next_alloc->next;
+
+        //print_eth("[sys_pool_alloc]  alloc_%x.next=%x addr_%x free_%x", (U32)pPoolCtx->next_alloc, (U32)pPoolCtx->next_alloc->next, (U32)addr, (U32)pPoolCtx->next_free);
+        
+        if (pPoolCtx->next_alloc == pPoolCtx->next_free) {
+            //this is the last item
+            pPoolCtx->next_alloc = NULL;
+            pPoolCtx->next_free = NULL;
+        } else {
+            pPoolCtx->next_alloc = (PSYS_POOL_ITEM)pPoolCtx->next_alloc->next;
+        }
+            
         pPoolCtx->stats_alloc++;
         pPoolCtx->stats_balance++;
-            
-        //print_eth("[sys_pool_alloc] ---> net heap alloc: addr_%x next_%x", (U32)addr, (U32)pPoolCtx->next_alloc);
     } else {
         print_err_cmd("%s pool is full", pPoolCtx->pool_caption);
         addr = NULL;
@@ -160,13 +168,15 @@ int sys_pool_free(PSYS_POOL_CTX pPoolCtx, PTR ptr)
 
     pPool->next = NULL;
     pPool->status = 0;
+
+    //print_eth("[sys_pool_alloc] free_%x pPool_%x", (U32)pPoolCtx->next_free, (U32)pPool);
     
-    if (pPoolCtx->next_alloc == NULL) {
+    if (pPoolCtx->next_free == NULL) {
         pPoolCtx->next_alloc = pPool;
-        pPoolCtx->next_free = pPool;        
     } else {
         pPoolCtx->next_free->next = (U32 *)pPool;    
     }
+    pPoolCtx->next_free = pPool;        
     
     pPoolCtx->stats_free++;
     pPoolCtx->stats_balance--;
