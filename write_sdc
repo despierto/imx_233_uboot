@@ -2,7 +2,7 @@ echo "Create ./_install/bin/imx.img..."
 dd if=/dev/zero of=./_install/bin/imx.img bs=512 count=4
 echo "Copy ./_install/bin/xboot.sb to ./_install/bin/imx.img..."
 dd if=./_install/bin/xboot.sb of=./_install/bin/imx.img ibs=512 seek=4 conv=sync,notrunc
-echo "Write ./_install/bin/imx.img to /dev/sdc2"
-dd if=./_install/bin/imx.img of=/dev/sdc2 bs=512 count=32768
+echo "Write ./_install/bin/imx.img to /dev/sdd2"
+sudo dd if=./_install/bin/imx.img of=/dev/sdd2 bs=512 count=32768
 sync
 echo "Done"

@@ -205,9 +205,11 @@ void sys_printf(const char *fmt, ...);
 #ifdef PRINTF_ERR_OK
 #define print_err(fmt, args...) {sys_print_error(__FILE__, __FUNCTION__, __LINE__); printf(fmt "\r\n\r\n", ## args);}
 #define print_err_cmd(fmt, args...) printf("--- Err: " fmt "\r\n", ## args)
+#define print_wrn_cmd(fmt, args...) printf("--- WARNING: " fmt "\r\n", ## args)
 #else  /* PRINTF_ERR_OK */
 #define print_err(fmt, args...)
 #define print_err_cmd(fmt, args...)
+#define print_wrn_cmd(fmt, args...)
 #endif  /* PRINTF_ERR_OK */
 
 #ifdef PRINTF_INF_OK

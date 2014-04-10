@@ -138,9 +138,9 @@
 #define CONFIG_BOOTFILE_SIZE    128
 #define CONFIG_SYS_PROMPT       "x-boot> "
 #define CONFIG_NETMASK          "255.255.255.0"
-#define CONFIG_IPADDR           "192.168.0.33"                /* 10.1.184.112 192.168.0.136 */
-#define CONFIG_SERVERIP         "192.168.0.103"                /* 10.1.184.188 192.168.0.2 */
-#define CONFIG_GATEWAYIP        "192.168.0.1"
+#define CONFIG_IPADDR           "192.168.5.33"                /* 10.1.184.112 192.168.0.136 */
+#define CONFIG_SERVERIP         "192.168.5.3"                /* 10.1.184.188 192.168.0.2 */
+#define CONFIG_GATEWAYIP        "192.168.5.1"
 #define CONFIG_DNSIP            "1.1.1.1"
 #define CONFIG_VLANIP           "127.0.0.1"
 #define CONFIG_VLANNETMASK      "255.0.0.0"

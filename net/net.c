@@ -136,6 +136,8 @@ void net_ping_task(void *param)
 {
     uchar ip_str[IP_ADDR_STR_LEN];
 
+	//print_dbg("ping_req_num_%d", pGblCtx->ping_req_num);
+
     if (pGblCtx->ping_req_num == 0) {
         unsigned int data_size = 56;
         unsigned int packet_size = data_size + IP_HDR_SIZE + ICMP_ECHO_HDR_SIZE;
@@ -149,10 +151,11 @@ void net_ping_task(void *param)
 
         //send ping request
         icmp_send_req(pGblCtx->ping_ip);
+		//pGblCtx->ping_req_num++; //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         //schedule itself
-        core_reg_task(net_ping_task, NULL, PING_TIMEOUT, CORE_TASK_TYPE_COMMON, CORE_TASK_PRIO__PING, 0);
-        //core_reg_task(net_ping_task, NULL, PING_TIMEOUT, CORE_TASK_TYPE_COMMON, CORE_TASK_PRIO__PING, PING_REPEAT_NUM);
+        //core_reg_task(net_ping_task, NULL, PING_TIMEOUT, CORE_TASK_TYPE_COMMON, CORE_TASK_PRIO__PING, 0);
+        core_reg_task(net_ping_task, NULL, PING_TIMEOUT, CORE_TASK_TYPE_COMMON, CORE_TASK_PRIO__PING, PING_REPEAT_NUM);
 
     } else if (pGblCtx->ping_req_num < (PING_REPEAT_NUM + 1)) {
         print_inf("Request #%d timed out\r\n", pGblCtx->ping_req_num);
@@ -160,7 +163,7 @@ void net_ping_task(void *param)
         pGblCtx->ping_req_num++;
 
         //schedule itself again
-        core_reg_task(net_ping_task, NULL, PING_TIMEOUT, CORE_TASK_TYPE_COMMON, CORE_TASK_PRIO__PING, 0);
+        //core_reg_task(net_ping_task, NULL, PING_TIMEOUT, CORE_TASK_TYPE_COMMON, CORE_TASK_PRIO__PING, 0);
     
     } else {
         print_inf("Request #%d timed out\r\n", pGblCtx->ping_req_num);

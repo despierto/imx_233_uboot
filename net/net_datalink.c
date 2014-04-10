@@ -208,6 +208,8 @@ void local_datalink_arp_timeout_check (void *param)
 {   
     PARP_REQ pArpReqCurr = pDataLinkCtx->arp_list_head;
 
+	print_dbg("pArpReqCurr tx_num_%d", pArpReqCurr->transmission_num);
+
     //check if any ARP request is waiting timeout
     if (pArpReqCurr) {
         PARP_REQ pArpReqLast = NULL;
