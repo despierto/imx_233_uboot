@@ -72,7 +72,7 @@ static inline int drv_eth_mac_is_valid(const uchar * addr)
 
 int         drv_eth_init(void);
 void        drv_eth_halt(void);
-int         drv_eth_rx(void);
+void        drv_eth_rx(void *param);
 unsigned int drv_eth_rx_get(unsigned int *addr);
 int         drv_eth_tx(void *packet, int length);
 void        drv_eth_info(void);

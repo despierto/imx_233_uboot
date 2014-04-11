@@ -254,7 +254,7 @@ typedef unsigned long   ulong;
 
 #ifndef __nop
     #define __nop() asm volatile ("mov r0,r0" ::)
-    #define __NOP()	
+    #define __NOP()    
 #endif
 
 

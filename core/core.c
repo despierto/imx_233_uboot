@@ -221,7 +221,7 @@ int     core_reg_task(CORE_PROC *procedure, void * proc_param, U32 period_ms, CO
     pTask->next = NULL;
     pTask->next_pending = NULL;
 
-    //print_inf("ADD PENDING to %s: (c_%x cp_%x cn_%x: pr_%d r_%d ms_%d ex_%x exp_%x t_%d)\n", pTaskClass->ctx->pool_caption,
+    //print_inf("REG TASK: %s: (c_%x cp_%x cn_%x: pr_%d r_%d ms_%d ex_%x exp_%x t_%d)\n", pTaskClass->ctx->pool_caption,
     //                (U32)pTask, (U32)pTask->prev, (U32)pTask->next,
     //                pTask->priority, pTask->repeat, pTask->period_ms,
     //                (U32)pTask->procedure, (U32)pTask->proc_param, pTask->type);    
@@ -268,7 +268,7 @@ int     core_unreg_task(CORE_PROC *procedure, CORE_TASK_TYPE type)
     pTask = pTaskClass->list_head;
     while (pTask) {
         if ((U32)pTask->procedure == (U32)procedure) {
-            //print_inf("REM PENDING from %s: (c_%x cp_%x cn_%x: pr_%d r_%d ms_%d ex_%x exp_%x t_%d)\n", pTaskClass->ctx->pool_caption,
+            //print_inf("UNREG TASK: %s: (c_%x cp_%x cn_%x: pr_%d r_%d ms_%d ex_%x exp_%x t_%d)\n", pTaskClass->ctx->pool_caption,
             //                  (U32)pTask, (U32)pTask->prev, (U32)pTask->next,
             //                  pTask->priority, pTask->repeat, pTask->period_ms,
             //                  (U32)pTask->procedure, (U32)pTask->proc_param, pTask->type);      

@@ -47,11 +47,10 @@
         |-- ARP processing                
         |-- place packet into tx queue        
     - datalink_close
-    - datalink_task
+    - datalink_rx
         |--process rx queue
         |    |-- process ethernet header
         |    |-- place incoming packet into net rx queue
-    - datalink_rx_get_pkt
 -------------------------------------------
     drv_eth:
     - drv_eth_init

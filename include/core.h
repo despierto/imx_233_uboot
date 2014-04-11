@@ -27,7 +27,8 @@
  *              DEFINITIONS                                                *
  ************************************************/
 //system tasks priority: priority tasks
-#define CORE_TASK_PRIO__UART_RX     50
+#define CORE_TASK_PRIO__UART_RX     51
+#define CORE_TASK_PRIO__ETH_RX      50
 
 //system tasks priority: common tasks
 #define CORE_TASK_PRIO__ARP         60

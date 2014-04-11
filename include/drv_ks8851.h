@@ -29,6 +29,18 @@
  *              FEATURES                                                    *
  ************************************************/
 
+#define NET_RX_STATS_RXFV         (1 << 15)    /* RXFV received frame valid      1: ok*/                    
+#define NET_RX_STATS_RXMR         (1 << 4)     /* RXMR Received MII error        0: ok*/                                     
+#define NET_RX_STATS_RXFTL         (1 << 2)     /* RXFTL Received frame too long    0: ok*/                                     
+#define NET_RX_STATS_RXRF         (1 << 1)     /* RXRF Received Runt Frame         0: ok*/
+#define NET_RX_STATS_RXCE         (1 << 0)    /* RXCE Received CRC error        0: ok*/
+
+
+#define NET_RX_PACKER_VALID_MASK        (NET_RX_STATS_RXFV | NET_RX_STATS_RXMR | NET_RX_STATS_RXFTL | NET_RX_STATS_RXRF | NET_RX_STATS_RXCE)
+
+#define NET_RX_PACKER_VALID_VALUE        (NET_RX_STATS_RXFV) 
+
+
 #define NET_RX_FILTER_PERFECT                           1
 #define NET_RX_FILTER_INVERSE_PERFECT                   2
 #define NET_RX_FILTER_HASH_ONLY                         3
@@ -48,7 +60,7 @@
  ************************************************/
 RESULTCODE  ks8851_init(PTR ptr); 
 void        ks8851_halt(void);
-U32         ks8851_rxfc_get(void);
+U8          ks8851_rxfc_get(void);
 U32         ks8851_rx(PTR rx_buff);
 RESULTCODE  ks8851_tx(PTR packet, uint length);
 void        ks8851_mac_set(const char *ethaddr);

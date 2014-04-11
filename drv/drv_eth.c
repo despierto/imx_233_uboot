@@ -109,9 +109,10 @@ void drv_eth_halt(void)
     sleep_ms(100);
 }
 
-int drv_eth_rx(void)
+void drv_eth_rx(void *param)
 {
-    U32 rx_len, rxfc, i;
+    U8 rxfc;
+    U32 rx_len, i;
     PTR pRxPacket;
 
     rxfc = drv_net_rxfc_get();
@@ -124,8 +125,6 @@ int drv_eth_rx(void)
         if (rx_len < NET_HW_RX_HEADER_SIZE) {
             print_eth("WARNING: received packed with unexpected size (%d)", rx_len);
             continue;
-        } else {
-             rx_len = rx_len - NET_HW_RX_HEADER_SIZE;
         }
 
         if (rx_len) {
@@ -139,7 +138,7 @@ int drv_eth_rx(void)
             }
         } else {
             print_eth("%s", "WARNING: received packed with null payload");
-        }
+        } 
 #if 0        
         print_eth("-------- RX packet len %d bytes from %d packets -----------", rx_len, rxfc);
         if (pRxPacket && rx_len) {
@@ -153,7 +152,7 @@ int drv_eth_rx(void)
 #endif
     }
        
-    return 0;
+    return;
 }
 
 int drv_eth_tx(void *packet, int length)

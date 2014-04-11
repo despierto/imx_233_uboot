@@ -30,6 +30,13 @@
 /************************************************
  *              DEFINITIONS                                    *
  ************************************************/
+#define NET_DATALINK_STATUS_DIS     0
+#define NET_DATALINK_STATUS_ENA        1
+
+#define NET_DATALINK_ERR_CAPTION_DIS    "datalink layer isn't opened"
+#define NET_DATALINK_ERR_CAPTION_ENA    "datalink layer is already opened"
+
+
 typedef enum {
     DATALINK_TX_SUCCESS = 0,        /* packet successfully sent */
     DATALINK_TX_ARP_SENT,           /* packet wasn't sent, ARP request sent */
@@ -73,7 +80,7 @@ extern U8   NetBcastAddr[];
 int                 datalink_open(void);
 int                 datalink_close(void);
 DATALINK_TX_STATE   datalink_tx_send(PETH_PKT pEthPkt, IPaddr_t dst_ip, U32 type, U32 size);
-int                 datalink_task(void);
+int                 datalink_rx(void);
 U32                 datalink_prepare_eth_hdr(PETH_PKT pkt, U8 *dst_mac_addr, U16 protocol);
 U32                 datalink_set_eth_addr(PETH_PKT pkt, U8 *dst_mac_addr);
 void                datalink_info(void);

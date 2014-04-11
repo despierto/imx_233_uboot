@@ -111,7 +111,9 @@ static void     ks_fifo_read(uchar *buff, ushort len);
 void            ks_mac_set(void);
 void            ks_mac_default_set(void);
 static void     ks_config(uint addr_filter);
-uint             ks_get_rx_addres_filter(uint option);
+uint            ks_get_rx_addres_filter(uint option);
+void            ks8851_mac_check(void);
+void            ks_soft_reset(void);
 
 
 /************************************************
@@ -125,12 +127,8 @@ RESULTCODE  ks8851_init(PTR ptr)
 
     print_net("%s", "Network device initialization started");
 
-    print_net("%s", " - Reset device");
-    ks_reg16_write(KS_GRR, GRR_GSR);                                /* issue a global soft reset to reset the device. */
-    sleep_us(500);                                                  /* wait a short time to effect reset */
-    ks_reg16_write(KS_GRR, 0);
-    sleep_us(500);                                                  /* wait for condition to clear */
-    
+    ks_soft_reset();
+
     chip_id = ks_reg16_read(KS_CIDER);                              /* simple check for a valid chip being connected to the bus */
     if((chip_id & ~CIDER_REV_MASK) != CIDER_ID) {
         print_err("The ks8851 chip ID is wrong, ID=0x%x", chip_id);
@@ -150,11 +148,11 @@ RESULTCODE  ks8851_init(PTR ptr)
 
     ks_config(NET_RX_FILTER_HASH_ONLY_W_PHYS_ADDR_PASSED);
 
-    
+   
     ks_reg16_write(KS_ISR, 0xffff);
     ks_reg16_write(KS_IER, IRQ_RXI);
     print_net("%s", " - Enabled device ISR"); 
-           
+
     return ret;
 }
 
@@ -177,52 +175,58 @@ void        ks8851_halt(void)
     return;
 }
 
-U32         ks8851_rxfc_get(void)
+U8         ks8851_rxfc_get(void)
 {
-    U32 rxfc, status;
+    U8 rxfc;
+    U16 status;
         
-    status = (U32)ks_reg16_read(KS_ISR);
-    //print_net("RX: status (%x)", status);
+    status = ks_reg16_read(KS_ISR);
     if(status & IRQ_RXI == 0)
         return 0;
 
     ks_reg16_write(KS_ISR, IRQ_RXI);
-    rxfc = (U32)ks_reg8_read(KS_RXFC);
-    //print_net("RX: fc (%x)", rxfc);
+    rxfc = ks_reg8_read(KS_RXFC);
+
+    if (rxfc >= 2) {
+        //WA: programmed 1 frame, but rxfc=%d, where more than 1 are invalid
+        rxfc = 1;
+    }
+        
+    //if (rxfc)
+    //    print_net("RX: fc (%x) status(%x)", rxfc, status);
 
     return rxfc;
 }
 
 U32         ks8851_rx(PTR rx_buff)
 {
-    uint    rxh;
-    ushort  rxlen, status;
-    int i;
+    uint    rxh = ks_reg32_read(KS_RXFHSR);
+    ushort  status = rxh & 0xFFFF;
+    ushort  rxlen = rxh >> 16;
+    uint    rxalign;    
+    int     i;
 
-    rxh = ks_reg32_read(KS_RXFHSR);
-    /* the length of the packet includes the 32bit CRC */
-    rxlen = rxh >> 16;
-    //print_net(" - RX: h (%x) len (%x)", (U32)rxh, (U32)rxlen);
-
+    if (((status & NET_RX_PACKER_VALID_MASK) != NET_RX_PACKER_VALID_VALUE) 
+        || (rxlen <= 4) 
+        || (rxlen > (NET_PKT_MAX_SIZE-NET_HW_RX_HEADER_SIZE))) {
+        print_err_cmd("packet corrupted, len_%d bytes status_%x", rxlen, status);
+        return 0;
+    }
+   
     /* setup Receive Frame Data Pointer Auto-Increment */
-    ks_reg16_write(KS_RXFDPR, RXFDPR_RXFPAI);
+    ks_reg16_write(KS_RXFDPR, RXFDPR_RXFPAI | 0x00);
 
     /* start the packet dma process, and set auto-dequeue rx */
     ks_reg16_write(KS_RXQCR, RXQCR_SDA | RXQCR_ADRFE);
-
-    if(rxlen > 0) {
-        /* align the packet length to 4 bytes, and add 4 bytes
-                                as we're getting the rx status header as well */
-        rxlen = ALIGN(rxlen, 4) + NET_HW_RX_HEADER_SIZE;
+       
+    /* align the packet length to 4 bytes, and add 4 bytes
+         as we're getting the rx status header as well */
+    rxlen -=4;                        
+    rxalign = ALIGN(rxlen, 4) + NET_HW_RX_HEADER_SIZE;
         
-        if (rxlen > NET_PKT_MAX_SIZE) {
-            print_net("WARNING: rxlen %d bytes is out of range of %d bytes", rxlen, NET_PKT_MAX_SIZE);
-            rxlen = NET_PKT_MAX_SIZE;
-        }
+    //print_net(" - Read: in 0x%x len %d bytes", (U32)rx_buff, (U32)rxlen);
+    ks_fifo_read((uchar *)rx_buff, rxalign);
 
-        //print_net(" - Read: in 0x%x len %d bytes", (U32)rx_buff, (U32)rxlen);
-        ks_fifo_read((uchar *)rx_buff, rxlen);
-    }
     ks_reg16_write(KS_RXQCR, 0);
 
     return (U32)rxlen;
@@ -289,7 +293,8 @@ void ks8851_mac_set(const char *mac)
     sprintf(testmac, "%02X:%02X:%02X:%02X:%02X:%02X",
         mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
-    print_net("Set HW MAC addr (%s)", testmac);
+    //print_net("Set HW MAC addr (%s)", testmac);
+    ks8851_mac_check();
 
     return;
 }
@@ -397,8 +402,26 @@ void ks_mac_default_set(void)
         def_mac_addr[2], def_mac_addr[3],
         def_mac_addr[4], def_mac_addr[5]);
 
-    print_net(" - Set default HW MAC addr to (%s)", ethaddr);
+    //print_net(" - Set default HW MAC addr to (%s)", ethaddr);
+    ks8851_mac_check();
     
+    return;
+}
+
+void ks8851_mac_check(void)
+{
+    int i;
+    char mac[6];  
+    char testmac[64]; 
+
+    for(i = 0; i < ETH_ALEN; i++)
+        mac[i] = ks_reg8_read(KS_MAR(i));
+
+    sprintf(testmac, "%02X:%02X:%02X:%02X:%02X:%02X",
+        mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+
+    print_net("Set HW MAC addr (%s)", testmac);
+
     return;
 }
 
@@ -430,7 +453,7 @@ static void ks_config(uint addr_filter)
     /* Setup Receive Frame Threshold - 1 frame */
     ks_reg16_write(KS_RXFCTR, 1 << RXFCTR_RXFCT_SHIFT);
 
-    /* setup receiver control */
+    /* setup receiver control */    
     ks_reg16_write(KS_RXCR1, (ks_get_rx_addres_filter(addr_filter) |   /*  address filtering */
                             RXCR1_RXUDPFCC |
                             RXCR1_RXTCPFCC |
@@ -445,6 +468,18 @@ static void ks_config(uint addr_filter)
     ks_reg16_write(KS_RXCR2, RXCR2_SRDBL_FRAME);
 
     return;    
+}
+
+/* set power mode of the device */
+void ks_soft_reset(void)
+{
+    print_net("%s", " - Reset device");
+
+    ks_reg16_write(KS_GRR, GRR_GSR);                                /* issue a global soft reset to reset the device. */
+    sleep_us(500);                                                  /* wait a short time to effect reset */
+    ks_reg16_write(KS_GRR, 0);
+    sleep_us(500);                                                  /* wait for condition to clear */
+    
 }
 
 uint ks_get_rx_addres_filter(uint option)

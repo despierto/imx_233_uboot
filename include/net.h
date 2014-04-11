@@ -40,7 +40,6 @@
 int     net_init(void);
 int     net_close(void);
 void    net_ping_req(IPaddr_t ip);
-void    net_rx_process(void);
 
 
 

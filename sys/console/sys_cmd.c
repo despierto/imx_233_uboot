@@ -115,7 +115,7 @@ int cmd_help(int paramc, PCMGR_PARAM params, void *cmd_param)
         } else if ((params[0].type == CMGR_PARAM_TYPE_OPT) && ((strcmp(params[0].opt_name, "details") == 0) || (strcmp(params[0].opt_name, "d") == 0))) {
             //print_inf("-----------------------------\n");
             print_inf("Console version: %d.%d\n", CMGR_VERSION_R, CMGR_VERSION_RC);    
-#if 1			
+#if 1            
             print_inf("Usage: <command> [<param_value>] [-(-)<param_name>] [-(-)<param_name>( )=( )<param_value>]\n");
             print_inf("   - max length of comman line including all parameters is limited to (%d) bytes\n", CMGR_STRING_MAX_LEN);
             print_inf("   - parameters are optional\n");    

@@ -142,7 +142,7 @@ static unsigned int cmgr_parse_cmd (char * cmd, PCMGR_PARAM params, unsigned int
 static int      cmgr_atoi_if_digit(const char *s, unsigned int *num);
 void            cmgr_check_uart (void *param);
 
-extern int 		cmd_init(void);
+extern int         cmd_init(void);
 
 
 /************************************************

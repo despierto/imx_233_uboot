@@ -26,7 +26,8 @@
  *              DEFINITIONS                                                *
  ************************************************/
 PDATALINK_CTX pDataLinkCtx = NULL;
-
+static U32 net_datalink_status = NET_DATALINK_STATUS_DIS;
+    
 U8  NetEtherNullAddr[ETHER_ADDR_LEN] = { 0, 0, 0, 0, 0, 0 };
 U8  NetBcastAddr[ETHER_ADDR_LEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 
@@ -43,6 +44,11 @@ void        local_datalink_arp_handler (void *param);
 int datalink_open(void)
 {
     int rc = SUCCESS;
+
+    if (net_datalink_status == NET_DATALINK_STATUS_ENA) {
+        print_err("%s",NET_DATALINK_ERR_CAPTION_DIS);
+        return FAILURE;
+    }
 
     /* Configure Ethernt device*/
     rc = drv_eth_init();
@@ -68,6 +74,12 @@ int datalink_open(void)
     pDataLinkCtx->arp_reg_pool_ctx = sys_pool_init(ARP_TABLE_SIZE, sizeof(ARP_REQ), (U8 *)&("ARP requests"));
     assert(pDataLinkCtx->arp_reg_pool_ctx);
     assert_rc(sys_pool_test(pDataLinkCtx->arp_reg_pool_ctx));
+
+    //reg eth packet retrieving task -it must fask take packets from eth device and place into the rx queue for future processing
+    print_eth("register rx task: class=prio priority=%d", CORE_TASK_PRIO__ETH_RX);
+    core_reg_task(drv_eth_rx, NULL, 0, CORE_TASK_TYPE_PRIORITY, CORE_TASK_PRIO__ETH_RX, 0);
+
+    net_datalink_status = NET_DATALINK_STATUS_ENA;
     
     return rc;
 }
@@ -77,6 +89,11 @@ int datalink_close(void)
     int rc = SUCCESS;
     PARP_REQ pArpReq = NULL;
 
+    if (net_datalink_status == NET_DATALINK_STATUS_DIS) {
+        print_err("%s", NET_DATALINK_ERR_CAPTION_DIS);
+        return FAILURE;
+    }
+
     /* Create ARM table */
     arp_table_destroy();
     sys_pool_close(pDataLinkCtx->arp_reg_pool_ctx);
@@ -84,12 +101,16 @@ int datalink_close(void)
     /* Stop Ethernt device*/    
     drv_eth_halt();
 
-
     return rc;
 }
 
 PETH_PKT datalink_tx_alloc(void)
 {
+    if (net_datalink_status == NET_DATALINK_STATUS_DIS) {
+        print_err("%s", NET_DATALINK_ERR_CAPTION_DIS);
+        return NULL;
+    }
+
     return (PETH_PKT)drv_eth_heap_alloc();
 }
 
@@ -98,6 +119,11 @@ DATALINK_TX_STATE datalink_tx_send(PETH_PKT pEthPkt, IPaddr_t dst_ip, U32 type, 
     int rc = SUCCESS;
     uchar *dst_mac;
     ARP_TABLE_STATE arp_status;
+
+    if (net_datalink_status == NET_DATALINK_STATUS_DIS) {
+        print_err("%s", NET_DATALINK_ERR_CAPTION_DIS);
+        return DATALINK_TX_ERROR;
+    }
 
     if (pEthPkt == NULL) {
         print_err("%s", "packet to send it null");
@@ -162,26 +188,46 @@ DATALINK_TX_STATE datalink_tx_send(PETH_PKT pEthPkt, IPaddr_t dst_ip, U32 type, 
     return DATALINK_TX_ARP_SENT;
 }
 
-int datalink_rx_get_pkt(void)
+int datalink_rx(void)
 {
     int rc = SUCCESS;
+    unsigned int size;
+    unsigned int addr;    
 
+    if (net_datalink_status == NET_DATALINK_STATUS_DIS) {
+        //print_err("%s", NET_DATALINK_ERR_CAPTION_DIS);
+        return FAILURE;
+    }
 
-
-    return rc;
-}
-
-int datalink_task(void)
-{
-    int rc = SUCCESS;
-
-   
+    //print_net("%s", "datalink_rx");
+    
+    //get and process every packet
+    while((size = drv_eth_rx_get(&addr)) != 0) {
+        
+        if (addr && size) {
+#if 1            
+            U8 *pA = (U8 *)addr;
+            unsigned int i;            
+            print_inf("[net] --- Rx Packet[0x%x, %d]: [ ", addr, size);
+            for(i=0; i<size; i++) {
+                print_inf("%x ", pA[i]);
+            }
+            print_inf("] --- \r\n");
+#endif            
+            drv_eth_heap_free((PTR)addr);
+        }
+    }
 
     return rc;
 }
 
 void datalink_info(void)
 {
+    if (net_datalink_status == NET_DATALINK_STATUS_DIS) {
+        print_err("%s", NET_DATALINK_ERR_CAPTION_DIS);
+        return;
+    }
+
     sys_pool_info(pDataLinkCtx->arp_reg_pool_ctx);
     return;
 }
@@ -190,7 +236,6 @@ void datalink_info(void)
 /************************************************
  *              LOCAL FUNCTIONS                                        *
  ************************************************/
-
 void local_datalink_arp_handler (void *param)
 {   
     PARP_REQ pArpReq = (PARP_REQ)param;

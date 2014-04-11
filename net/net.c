@@ -27,7 +27,8 @@
  ************************************************/
 static unsigned int net_state;
     
-void net_ping_task(void *param);
+void     net_ping_task(void *param);
+void    net_rx_process(void *param);
 
 
 /************************************************
@@ -54,6 +55,8 @@ int net_init(void)
     //reset network variables
     pGblCtx->ping_req_num = 0;
     pGblCtx->ping_ans_num = 0;    
+
+    core_reg_task(net_rx_process, NULL, 50, CORE_TASK_TYPE_COMMON, CORE_TASK_PRIO__NET_RX, 0xFF);
 
     rc = datalink_open();
 
@@ -94,35 +97,14 @@ void net_ping_req(IPaddr_t ip_addr)
     return;
 }
 
-void net_rx_process(void)
+void net_rx_process(void *param)
 {
-#if 0    
     unsigned int size;
     unsigned int addr;    
 
+    //print_net("%s", "rx_process");
 
-    //receive all current packets
-    drv_eth_rx();
-
-    //get and process every packet
-    while((size = drv_eth_rx_get(&addr)) != 0) {
-        
-        if (addr && size) {
-#if 0            
-            U8 *pA = (U8 *)addr;
-            unsigned int i;            
-            print_inf("[net] --- Rx Packet[0x%x, %d]: [ ", addr, size);
-            for(i=0; i<size; i++) {
-                print_inf("%x ", pA[i]);
-            }
-            print_inf("] --- \r\n");
-#endif            
-            drv_eth_heap_free((PTR)addr);
-        }
-    
-    }
-#endif
-    //datalink_task();
+    datalink_rx();
 
     return;
 }
@@ -136,7 +118,7 @@ void net_ping_task(void *param)
 {
     uchar ip_str[IP_ADDR_STR_LEN];
 
-	//print_dbg("ping_req_num_%d", pGblCtx->ping_req_num);
+    //print_dbg("ping_req_num_%d", pGblCtx->ping_req_num);
 
     if (pGblCtx->ping_req_num == 0) {
         unsigned int data_size = 56;
@@ -151,7 +133,7 @@ void net_ping_task(void *param)
 
         //send ping request
         icmp_send_req(pGblCtx->ping_ip);
-		//pGblCtx->ping_req_num++; //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        //pGblCtx->ping_req_num++; //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         //schedule itself
         //core_reg_task(net_ping_task, NULL, PING_TIMEOUT, CORE_TASK_TYPE_COMMON, CORE_TASK_PRIO__PING, 0);
