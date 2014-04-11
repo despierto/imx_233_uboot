@@ -85,6 +85,12 @@ Additional Features. In addition to offering all of the features of a Layer 2 co
 /* turn register number and byte-enable mask into data for start of packet */
 #define MK_OP(_byteen, _reg) (BYTE_EN(_byteen) | (_reg)  << (8+2) | (_reg) >> 6)
 
+#define   KS8851_RX_ERRORS                   ( RXFSHR_RXCE | RXFSHR_RXFTL | RXFSHR_RXRF | RXFSHR_RXMR | \
+                                                RXFSHR_RXICMPFCS | RXFSHR_RXIPFCS | RXFSHR_RXTCPFCS | RXFSHR_RXUDPFCS )
+
+#define   KS8851_RX_FRAME_CNT_MASK           0xFF00    /* Received frame count mask */
+#define   KS8851_RX_BYTE_CNT_MASK            0x0FFF    /* Received frame byte size mask */
+
 //uchar def_mac_addr[] = {0x00, 0x10, 0xA1, 0x86, 0x95, 0x11};
 uchar def_mac_addr[] = {0x00, 0x1F, 0xF2, 0x00, 0x00, 0x00};
 
@@ -175,17 +181,6 @@ void        ks8851_halt(void)
     return;
 }
 
-void
-spi_setbits(ushort reg, ushort bits_to_set)
-{
-   ushort     temp;
-
-   temp = ks_reg16_read(reg);
-   temp |= bits_to_set;
-   ks_reg16_write(reg, temp);
-}
-
-
 U8         ks8851_rxfc_get(void)
 {
     U8 rxfc;
@@ -198,13 +193,8 @@ U8         ks8851_rxfc_get(void)
     ks_reg16_write(KS_ISR, IRQ_RXI);
     rxfc = ks_reg8_read(KS_RXFC);
 
-    //if (rxfc >= 2) {
-   //     //WA: programmed 1 frame, but rxfc=%d, where more than 1 are invalid
-    //    rxfc = 1;
-    //}
-        
-    if (rxfc)
-        print_net("RX: fc (%x) status(%x)", rxfc, status);
+    //if (rxfc)
+    //    print_net("RX: fc (%x) status(%x)", rxfc, status);
 
     return rxfc;
 }
@@ -213,26 +203,37 @@ U32         ks8851_rx(PTR rx_buff, U32 fc)
 {
     uint    rxh = ks_reg32_read(KS_RXFHSR);
     ushort  status = rxh & 0xFFFF;
-    ushort  rxlen = rxh >> 16;
+    ushort  rxlen;
     uint    rxalign;    
     int     i;
+    ushort temp;
+    int     rxbc;
 
     if (fc > 1) {
-        print_err_cmd("drop it: fc_%d", fc);
-
         //manual dequeue the fromng frame
-        spi_setbits(KS_RXQCR, RXQCR_RRXEF);
+        temp = ks_reg16_read(KS_RXQCR);
+        ks_reg16_write(KS_RXQCR, temp | RXQCR_RRXEF);
 
         return 0;
     }
-/*
-    if (((status & NET_RX_PACKER_VALID_MASK) != NET_RX_PACKER_VALID_VALUE) 
-        || (rxlen <= 4) 
-        || (rxlen > (NET_PKT_MAX_SIZE-NET_HW_RX_HEADER_SIZE))) {
-        print_err_cmd("packet corrupted, len_%d bytes status_%x", rxlen, status);
+
+    if (status & KS8851_RX_ERRORS) {
+        //manual dequeue the fromng frame
+        temp = ks_reg16_read(KS_RXQCR);
+        ks_reg16_write(KS_RXQCR, temp | RXQCR_RRXEF);
+
         return 0;
     }
-*/
+    
+    rxbc = ks_reg32_read(KS_RXFHBCR) & KS8851_RX_BYTE_CNT_MASK;    
+    rxlen = rxh >> 16;
+    if ((rxbc <=0) || (rxlen < 4))  {
+        //manual dequeue the fromng frame
+        temp = ks_reg16_read(KS_RXQCR);
+        ks_reg16_write(KS_RXQCR, temp | RXQCR_RRXEF);
+        
+        return 0;
+    }
    
     /* setup Receive Frame Data Pointer Auto-Increment */
     ks_reg16_write(KS_RXFDPR, RXFDPR_RXFPAI | 0x00);

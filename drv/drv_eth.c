@@ -113,44 +113,47 @@ void drv_eth_rx(void *param)
 {
     U8 rxfc;
     U32 rx_len, i;
-    PTR pRxPacket;
+    PTR pRxPacket = NULL;
+    unsigned int real_packet;
 
     rxfc = drv_net_rxfc_get();
     for (i=0; rxfc != 0; rxfc--) {
 
-        pRxPacket = drv_eth_heap_alloc();
-        assert(pRxPacket);
+        if (pRxPacket == NULL) {
+            pRxPacket = drv_eth_heap_alloc();
+            assert(pRxPacket);
+        }        
         
         rx_len = drv_net_rx(pRxPacket, ++i);
         if (rx_len < NET_HW_RX_HEADER_SIZE) {
-            print_eth("WARNING: received packed with unexpected size (%d)", rx_len);
+            //print_eth("WARNING: received packed with unexpected size (%d)", rx_len);
             continue;
         }
 
-        if (rx_len) {
-            unsigned int real_packet = (unsigned int)pRxPacket + NET_HW_RX_HEADER_SIZE;
+        real_packet = (unsigned int)pRxPacket + NET_HW_RX_HEADER_SIZE;
 
-            //print_eth("RX PUT: addr_0x%x size_%d pkt_%x", real_packet, rx_len, (unsigned int)pRxPacket);
-            
-            if (drv_eth_rx_put(real_packet, rx_len)) {
-                print_eth("WARNING: Killed RX packet, len (%d)", rx_len);
-                drv_eth_heap_free(pRxPacket);
-            }
-        } else {
-            print_eth("%s", "WARNING: received packed with null payload");
-        } 
+        //print_eth("RX PUT: addr_0x%x size_%d pkt_%x", real_packet, rx_len, (unsigned int)pRxPacket);
+        if (drv_eth_rx_put(real_packet, rx_len) == 0) {
 #if 0        
-        print_eth("-------- RX packet len %d bytes from %d packets -----------", rx_len, rxfc);
-        if (pRxPacket && rx_len) {
-            U8 *pA = (U8 *)pRxPacket;
-            print_inf("[eth] Rx Packet[%x]: [ ", rx_len);
-            for(i=0; i<rx_len; i++) {
-                print_inf("%x ", pA[i]);
+            print_eth("-------- RX packet len %d bytes from %d packets -----------", rx_len, rxfc);
+            if (real_packet && rx_len) {
+                U8 *pA = (U8 *)real_packet;
+                print_inf("[eth] Rx Packet[%x]: [ ", rx_len);
+                for(i=0; i<rx_len; i++) {
+                    print_inf("%x ", pA[i]);
+                }
+                print_inf("]\r\n");
             }
-            print_inf("]\r\n");
-        }
 #endif
+            //packet was successfully enqueued => it is needed alloc new packet in case of more than 1 frame
+            pRxPacket = NULL;
+        }
     }
+
+    //in case last allocated packed wasn't successfully enqueued => free it
+    if (pRxPacket) {
+        drv_eth_heap_free(pRxPacket);
+    }   
        
     return;
 }
