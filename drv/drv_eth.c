@@ -35,7 +35,7 @@ PETH_CTX        pEth = NULL;
 #define drv_net_init(ptr)           ks8851_init(ptr)
 #define drv_net_halt()              ks8851_halt()
 #define drv_net_rxfc_get()          ks8851_rxfc_get()
-#define drv_net_rx(rx_buff)         ks8851_rx(rx_buff) 
+#define drv_net_rx(rx_buff, fc)     ks8851_rx(rx_buff, fc) 
 #define drv_net_tx(packet, length)  ks8851_tx(packet, length)
 #define drv_net_mac_set(ethaddr)    ks8851_mac_set(ethaddr)
 
@@ -116,12 +116,12 @@ void drv_eth_rx(void *param)
     PTR pRxPacket;
 
     rxfc = drv_net_rxfc_get();
-    for (; rxfc != 0; rxfc--) {
+    for (i=0; rxfc != 0; rxfc--) {
 
         pRxPacket = drv_eth_heap_alloc();
         assert(pRxPacket);
         
-        rx_len = drv_net_rx(pRxPacket);
+        rx_len = drv_net_rx(pRxPacket, ++i);
         if (rx_len < NET_HW_RX_HEADER_SIZE) {
             print_eth("WARNING: received packed with unexpected size (%d)", rx_len);
             continue;

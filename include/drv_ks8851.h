@@ -61,7 +61,7 @@
 RESULTCODE  ks8851_init(PTR ptr); 
 void        ks8851_halt(void);
 U8          ks8851_rxfc_get(void);
-U32         ks8851_rx(PTR rx_buff);
+U32         ks8851_rx(PTR rx_buff, U32 fc);
 RESULTCODE  ks8851_tx(PTR packet, uint length);
 void        ks8851_mac_set(const char *ethaddr);
 

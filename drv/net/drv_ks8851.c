@@ -175,6 +175,17 @@ void        ks8851_halt(void)
     return;
 }
 
+void
+spi_setbits(ushort reg, ushort bits_to_set)
+{
+   ushort     temp;
+
+   temp = ks_reg16_read(reg);
+   temp |= bits_to_set;
+   ks_reg16_write(reg, temp);
+}
+
+
 U8         ks8851_rxfc_get(void)
 {
     U8 rxfc;
@@ -187,18 +198,18 @@ U8         ks8851_rxfc_get(void)
     ks_reg16_write(KS_ISR, IRQ_RXI);
     rxfc = ks_reg8_read(KS_RXFC);
 
-    if (rxfc >= 2) {
-        //WA: programmed 1 frame, but rxfc=%d, where more than 1 are invalid
-        rxfc = 1;
-    }
+    //if (rxfc >= 2) {
+   //     //WA: programmed 1 frame, but rxfc=%d, where more than 1 are invalid
+    //    rxfc = 1;
+    //}
         
-    //if (rxfc)
-    //    print_net("RX: fc (%x) status(%x)", rxfc, status);
+    if (rxfc)
+        print_net("RX: fc (%x) status(%x)", rxfc, status);
 
     return rxfc;
 }
 
-U32         ks8851_rx(PTR rx_buff)
+U32         ks8851_rx(PTR rx_buff, U32 fc)
 {
     uint    rxh = ks_reg32_read(KS_RXFHSR);
     ushort  status = rxh & 0xFFFF;
@@ -206,12 +217,22 @@ U32         ks8851_rx(PTR rx_buff)
     uint    rxalign;    
     int     i;
 
+    if (fc > 1) {
+        print_err_cmd("drop it: fc_%d", fc);
+
+        //manual dequeue the fromng frame
+        spi_setbits(KS_RXQCR, RXQCR_RRXEF);
+
+        return 0;
+    }
+/*
     if (((status & NET_RX_PACKER_VALID_MASK) != NET_RX_PACKER_VALID_VALUE) 
         || (rxlen <= 4) 
         || (rxlen > (NET_PKT_MAX_SIZE-NET_HW_RX_HEADER_SIZE))) {
         print_err_cmd("packet corrupted, len_%d bytes status_%x", rxlen, status);
         return 0;
     }
+*/
    
     /* setup Receive Frame Data Pointer Auto-Increment */
     ks_reg16_write(KS_RXFDPR, RXFDPR_RXFPAI | 0x00);
