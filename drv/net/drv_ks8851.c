@@ -61,6 +61,14 @@ Additional Features. In addition to offering all of the features of a Layer 2 co
     - Adaptive equalizer
     - Baseline wander correction
  ************************************************************************************************************************************/
+/**
+* WA: ks8851 chip has one issue at rx direction: in case broadcast is enabled it starts sending of wrong frames. 
+*        The frame count threshold is set to 1. In case chips returs more than 1 frame all these 2nd, 3rd etc frames are broken.
+*        Broken means both 8bytes header (packet status and length) and payload are corrupted.
+*        The solution is to drop rest than 1 frame and say chip to drop these frame at its side. 
+*        Otherwise it is increasing the interal chip queue and one time chip stop working.
+*
+************************************************************************************************************************************/
 
 #include "global.h"
 #include "drv_ks8851.h"
@@ -265,9 +273,6 @@ RESULTCODE  ks8851_tx(PTR packet, U32 length)
     fid = ks->fid++;
     fid &= TXFR_TXFID_MASK;
 
-    //txsr = ks_reg8_read(KS_TXSR);
-    //print_net("TX: txsr-1 (%x)", txsr);
-
     /* start head./wri  er at txb[1] to align txw entries */
     ks->txh.txb[1] = KS_SPIOP_TXFIFO;
     ks->txh.txw[1] = fid;
@@ -292,15 +297,6 @@ RESULTCODE  ks8851_tx(PTR packet, U32 length)
 
     ks_reg16_write(KS_RXQCR, 0);
 
-    //txsr = ks_reg8_read(KS_TXSR);
-    //print_net("KS_TXQCR 1: (%x)", ks_reg8_read(KS_TXQCR));
-
-    //print_net("TX: txsr-2 (%x)", txsr);
-
-    /* Enable QMU TxQ Auto-Enqueue frame */
-    //ks_reg16_write(KS_TXQCR, TXQCR_METFE);//TXQCR_AETFE);
-
-    //print_net("KS_TXQCR 2: (%x)", ks_reg8_read(KS_TXQCR));
     return 0;
 }
 

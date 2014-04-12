@@ -453,7 +453,8 @@ static void local_core_task_rem(PCORE_TASK_CLASS pTaskClass, PCORE_TASK_CTX pTas
         pTaskClass->list_end->next = NULL;
     } else {
         //somewhere at the middle
-        pTask->prev = pTask->next;
+        pTask->prev->next = pTask->next;
+        pTask->next->prev = pTask->prev;
     }
 
 #if 0

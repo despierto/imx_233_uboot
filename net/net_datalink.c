@@ -262,6 +262,7 @@ void local_datalink_arp_handler (void *param)
         //free ARP packet
         drv_eth_heap_free((PTR)pArpReq->addr);
         //free ARP requst entity
+        print_dbg("free at %s addr (0x%x)", pDataLinkCtx->arp_reg_pool_ctx->pool_caption, (U32)pArpReq);
         sys_pool_free(pDataLinkCtx->arp_reg_pool_ctx, (PTR)pArpReq);
     }
 

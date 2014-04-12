@@ -160,7 +160,7 @@ int sys_pool_free(PSYS_POOL_CTX pPoolCtx, PTR ptr)
     pPool = &pPoolCtx->pool[index];
     
     if (!pPool->status) {
-        print_err("%s: double free", pPoolCtx->pool_caption);
+        print_err("%s: double free: pool[%d]=0x%x", pPoolCtx->pool_caption, index, (U32)pPool);
         return FAILURE;
     }
 
