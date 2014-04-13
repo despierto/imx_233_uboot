@@ -31,10 +31,11 @@ static U32 net_datalink_status = NET_DATALINK_STATUS_DIS;
 U8  NetEtherNullAddr[ETHER_ADDR_LEN] = { 0, 0, 0, 0, 0, 0 };
 U8  NetBcastAddr[ETHER_ADDR_LEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 
-static U32  local_datalink_set_arp_hdr(ARP_t *arp, IPaddr_t dst_ip);
+static U32  local_datalink_set_arp_hdr(ARP_t *arp, IPaddr_t dst_ip, U8 *dst_mac_addr, ushort operation);
 void        local_datalink_arp_handler (void *param);
 void        local_datalink_dump_packet(U32 addr, U32 size, char *caption);
-
+static U32  local_datalink_create_arp_request(IPaddr_t dst_ip, PARP_REQ *pArpReqEx);
+static U32  local_datalink_create_arp_replay(IPaddr_t spa, uchar *sha);
 
 /************************************************
  *              GLOBAL FUNCTIONS                                      *
@@ -114,9 +115,10 @@ PETH_PKT datalink_tx_alloc(void)
 
 DATALINK_TX_STATE datalink_tx_send(PETH_PKT pEthPkt, IPaddr_t dst_ip, U32 type, U32 size)
 {
-    int rc = SUCCESS;
+    DATALINK_TX_STATE rc;
     uchar *dst_mac;
     ARP_TABLE_STATE arp_status;
+    PARP_REQ pArpReq;
 
     if (net_datalink_status == NET_DATALINK_STATUS_DIS) {
         print_err("%s", NET_DATALINK_ERR_CAPTION_DIS);
@@ -147,43 +149,14 @@ DATALINK_TX_STATE datalink_tx_send(PETH_PKT pEthPkt, IPaddr_t dst_ip, U32 type, 
     }
 
     //no mac addr or it is obsolete: send ARP broadcast request
-    {
-        PETH_PKT pArpEthPkt = (PETH_PKT)drv_eth_heap_alloc();
-        U32 arp_pkt_size = 0;
-        PARP_REQ pArpReq;
-
-        if (pArpEthPkt == NULL) {
-            print_err_cmd("%s", "can't allocate new packet");
-            return DATALINK_TX_CANT_ALLOC_PACKET;
-        }
-        
-        arp_pkt_size += datalink_prepare_eth_hdr(pArpEthPkt, NetBcastAddr, ETH_P_ARP);
-        arp_pkt_size += local_datalink_set_arp_hdr((ARP_t *)((U32)pArpEthPkt + arp_pkt_size), dst_ip);
-
-        //store request to the ARP req pool
-        pArpReq = (PARP_REQ)sys_pool_alloc(pDataLinkCtx->arp_reg_pool_ctx);
-        if (pArpReq == NULL) {
-            print_err_cmd("%s", "ARP requests queue overflow");
-            return DATALINK_TX_ARP_QUEUE_OVERFLOW;
-        }
-        
-        pArpReq->addr = (U32)pArpEthPkt;
-        pArpReq->size = arp_pkt_size;
-        pArpReq->dst_ip = dst_ip;
-        pArpReq->transmission_num = 1;
-        
-        //local_datalink_add_arp_req_to_list(pArpReq);
-
-        //print_dbg("ARP request: pkt_0x%x, len_%d", (unsigned int)pArpEthPkt, arp_pkt_size);
-        drv_eth_tx ((void *)pArpEthPkt, arp_pkt_size);  
-
+    rc = local_datalink_create_arp_request(dst_ip, &pArpReq);
+    if (rc == DATALINK_TX_ARP_SENT) {
         //update ARP table
         arp_table_reg_ip(dst_ip, NULL, ARP_TABLE_TYPE_ETH, ARP_TABLE_STATE_WAIT_ARP_RESPOND);
-        
         core_reg_task(local_datalink_arp_handler, (void *)pArpReq, ARP_TIMEOUT, CORE_TASK_TYPE_COMMON, CORE_TASK_PRIO__ARP, 0);
     }
 
-    return DATALINK_TX_ARP_SENT;
+    return rc;
 }
 
 int datalink_rx(void)
@@ -213,13 +186,13 @@ int datalink_rx(void)
             //local_datalink_dump_packet(addr, size, "ANY");
 
             //print_net("type_%x dst_%x:%x:%x:%x:%x:%x src_%x:%x:%x:%x:%x:%x", 
-            //    __swab16(pEthPkt->header.type), 
+            //    htons(pEthPkt->header.type), 
             //    pEthPkt->header.dst[0], pEthPkt->header.dst[1], pEthPkt->header.dst[2], 
             //    pEthPkt->header.dst[3], pEthPkt->header.dst[4], pEthPkt->header.dst[5],
             //    pEthPkt->header.src[0], pEthPkt->header.src[1], pEthPkt->header.src[2],
             //    pEthPkt->header.src[3], pEthPkt->header.src[4], pEthPkt->header.src[5]);
                
-            switch (__swab16(pEthPkt->header.type))
+            switch (htons(pEthPkt->header.type))
             {
                 case ETH_P_IP:
                     {
@@ -232,20 +205,20 @@ int datalink_rx(void)
                 case ETH_P_ARP:
                     {
                         ARP_t *pArpHdr = (ARP_t *)&pEthPkt->payload[0];
-#if 1                        
+#if 0                        
                         printf("\n-------------\n");
                         print_net("type_%02x dst_%02x:%02x:%02x:%02x:%02x:%02x src_%02x:%02x:%02x:%02x:%02x:%02x", 
-                            __swab16(pEthPkt->header.type), 
+                            htons(pEthPkt->header.type), 
                             pEthPkt->header.dst[0], pEthPkt->header.dst[1], pEthPkt->header.dst[2], 
                             pEthPkt->header.dst[3], pEthPkt->header.dst[4], pEthPkt->header.dst[5],
                             pEthPkt->header.src[0], pEthPkt->header.src[1], pEthPkt->header.src[2],
                             pEthPkt->header.src[3], pEthPkt->header.src[4], pEthPkt->header.src[5]);
 #endif
                         local_datalink_dump_packet((U32)&pEthPkt->payload[0], size - ETHER_HDR_SIZE, "ARP");
-#if 1
+#if 0
                         print_net("ARP: ht_%02x pt_%02x hl_%x pl_%x op_%04x sha_%02x:%02x:%02x:%02x:%02x:%02x spa_%d.%d.%d.%d tha_%02x:%02x:%02x:%02x:%02x:%02x tpa_%d.%d.%d.%d",
-                            __swab16(pArpHdr->ar_htype), __swab16(pArpHdr->ar_ptype), 
-                            pArpHdr->ar_hlen, pArpHdr->ar_plen, __swab16(pArpHdr->ar_oper),
+                            htons(pArpHdr->ar_htype), htons(pArpHdr->ar_ptype), 
+                            pArpHdr->ar_hlen, pArpHdr->ar_plen, htons(pArpHdr->ar_oper),
                             pArpHdr->ar_sha[0], pArpHdr->ar_sha[1], pArpHdr->ar_sha[2], 
                             pArpHdr->ar_sha[3], pArpHdr->ar_sha[4], pArpHdr->ar_sha[5],
                             pArpHdr->ar_spa[0], pArpHdr->ar_spa[1], pArpHdr->ar_spa[2], pArpHdr->ar_spa[3],
@@ -253,16 +226,20 @@ int datalink_rx(void)
                             pArpHdr->ar_tha[3], pArpHdr->ar_tha[4], pArpHdr->ar_tha[5],
                             pArpHdr->ar_tpa[0], pArpHdr->ar_tpa[1], pArpHdr->ar_tpa[2], pArpHdr->ar_tpa[3]);
 #endif
-                        switch (__swab16(pArpHdr->ar_oper))
+                        switch (htons(pArpHdr->ar_oper))
                         {
                             case ARP_OP_REQUEST:
                                 {
                                     if (memcmp(&pArpHdr->ar_tpa[0], &pGblCtx->cfg_ip_addr, IP_ADDR_LEN) == TRUE) {
                                         IPaddr_t spa;
-
-                                        memcpy(&spa, &pArpHdr->ar_spa[0], IP_ADDR_LEN);
                                         
-                                        print_net("Create ARP replay to (%x), our (%x)", spa, pGblCtx->cfg_ip_addr);
+                                        memcpy(&spa, &pArpHdr->ar_spa[0], IP_ADDR_LEN);
+                                                                               
+                                        print_net("Create ARP replay to (%x)", spa);
+                                        local_datalink_create_arp_replay(spa, &pArpHdr->ar_sha[0]);
+                                        
+                                        //now we also know requester mac
+                                        arp_table_reg_ip(spa, (char *)&pArpHdr->ar_sha[0], ARP_TABLE_TYPE_ETH, ARP_TABLE_STATE_VALID);
                                     }
                                 }
                                 break;
@@ -274,11 +251,11 @@ int datalink_rx(void)
 
                                     memcpy(&spa, &pArpHdr->ar_spa[0], IP_ADDR_LEN);
 
-                                    print_net("Reg ARP: ip_%d.%d.%d.%d mac_%02x:%02x:%02x:%02x:%02x:%02x", 
-                                        pArpHdr->ar_spa[0], pArpHdr->ar_spa[1], pArpHdr->ar_spa[2], pArpHdr->ar_spa[3], 
-                                        pArpHdr->ar_sha[0], pArpHdr->ar_sha[1], pArpHdr->ar_sha[2], 
-                                        pArpHdr->ar_sha[3], pArpHdr->ar_sha[4], pArpHdr->ar_sha[5]);
-                                    arp_table_reg_ip(spa, &pArpHdr->ar_sha[0], ARP_TABLE_TYPE_ETH, ARP_TABLE_STATE_VALID);
+                                    //print_net("Reg ARP: ip_%d.%d.%d.%d mac_%02x:%02x:%02x:%02x:%02x:%02x", 
+                                    //    pArpHdr->ar_spa[0], pArpHdr->ar_spa[1], pArpHdr->ar_spa[2], pArpHdr->ar_spa[3], 
+                                    //    pArpHdr->ar_sha[0], pArpHdr->ar_sha[1], pArpHdr->ar_sha[2], 
+                                    //    pArpHdr->ar_sha[3], pArpHdr->ar_sha[4], pArpHdr->ar_sha[5]);
+                                    arp_table_reg_ip(spa, (char *)&pArpHdr->ar_sha[0], ARP_TABLE_TYPE_ETH, ARP_TABLE_STATE_VALID);
                                 }
                                 break;
                                 
@@ -423,7 +400,7 @@ U32 datalink_set_eth_addr(PETH_PKT pkt, U8 *dst_mac_addr)
     return SUCCESS;
 }
 
-static U32 local_datalink_set_arp_hdr(ARP_t *arp, IPaddr_t dst_ip)
+static U32 local_datalink_set_arp_hdr(ARP_t *arp, IPaddr_t dst_ip, U8 *dst_mac_addr, ushort operation)
 {
     IPaddr_t final_dst_ip;
     
@@ -431,11 +408,11 @@ static U32 local_datalink_set_arp_hdr(ARP_t *arp, IPaddr_t dst_ip)
     arp->ar_ptype = htons (ETH_P_IP);
     arp->ar_hlen = ETHER_ADDR_LEN;
     arp->ar_plen = IP_ADDR_LEN;
-    arp->ar_oper = htons (ARP_OP_REQUEST);
+    arp->ar_oper = htons (operation);
 
     memcpy ((void *)&arp->ar_sha[0], (void *)&pGblCtx->cfg_mac_addr[0], ETHER_ADDR_LEN);
     memcpy ((void *)&arp->ar_spa[0], (void *)&pGblCtx->cfg_ip_addr, IP_ADDR_LEN);
-    memcpy ((void *)&arp->ar_tha[0], (void *)&NetEtherNullAddr[0], ETHER_ADDR_LEN);
+    memcpy ((void *)&arp->ar_tha[0], (void *)&dst_mac_addr[0], ETHER_ADDR_LEN);
 
     if ((dst_ip & pGblCtx->cfg_ip_netmask) != (pGblCtx->cfg_ip_addr & pGblCtx->cfg_ip_netmask)) {
         if (pGblCtx->cfg_ip_gateway == 0) {
@@ -451,5 +428,61 @@ static U32 local_datalink_set_arp_hdr(ARP_t *arp, IPaddr_t dst_ip)
     
     return ARP_HDR_SIZE;
 }
+
+static U32 local_datalink_create_arp_request(IPaddr_t dst_ip, PARP_REQ *pArpReqEx)
+{
+    PETH_PKT pArpEthPkt = (PETH_PKT)drv_eth_heap_alloc();
+    U32 arp_pkt_size = 0;
+    PARP_REQ pArpReq;
+
+    if (pArpEthPkt == NULL) {
+        print_err_cmd("%s", "can't allocate new packet");
+        return DATALINK_TX_CANT_ALLOC_PACKET;
+    }
+    
+    arp_pkt_size += datalink_prepare_eth_hdr(pArpEthPkt, NetBcastAddr, ETH_P_ARP);
+    arp_pkt_size += local_datalink_set_arp_hdr((ARP_t *)((U32)pArpEthPkt + arp_pkt_size), dst_ip, &NetEtherNullAddr[0], ARP_OP_REQUEST);
+
+    //store request to the ARP req pool
+    pArpReq = (PARP_REQ)sys_pool_alloc(pDataLinkCtx->arp_reg_pool_ctx);
+    if (pArpReq == NULL) {
+        drv_eth_heap_free(pArpEthPkt);
+        print_err_cmd("%s", "ARP requests queue overflow");
+        return DATALINK_TX_ARP_QUEUE_OVERFLOW;
+    }
+    
+    pArpReq->addr = (U32)pArpEthPkt;
+    pArpReq->size = arp_pkt_size;
+    pArpReq->dst_ip = dst_ip;
+    pArpReq->transmission_num = 1;
+    
+    //local_datalink_add_arp_req_to_list(pArpReq);
+
+    //print_dbg("ARP request: pkt_0x%x, len_%d", (unsigned int)pArpEthPkt, arp_pkt_size);
+    drv_eth_tx ((void *)pArpEthPkt, arp_pkt_size);  
+
+    *pArpReqEx = pArpReq;
+
+    return DATALINK_TX_ARP_SENT;
+}    
+
+static U32 local_datalink_create_arp_replay(IPaddr_t spa, uchar *sha)
+{
+    PETH_PKT pArpEthPkt = (PETH_PKT)drv_eth_heap_alloc();
+    U32 arp_pkt_size = 0;
+
+    if (pArpEthPkt == NULL) {
+        print_err_cmd("%s", "can't allocate new packet");
+        return DATALINK_TX_CANT_ALLOC_PACKET;
+    }
+    
+    arp_pkt_size += datalink_prepare_eth_hdr(pArpEthPkt, sha, ETH_P_ARP);
+    arp_pkt_size += local_datalink_set_arp_hdr((ARP_t *)((U32)pArpEthPkt + arp_pkt_size), spa, sha, ARP_OP_REPLY);
+
+    //print_dbg("ARP request: pkt_0x%x, len_%d", (unsigned int)pArpEthPkt, arp_pkt_size);
+    drv_eth_tx ((void *)pArpEthPkt, arp_pkt_size);  
+
+    return DATALINK_TX_ARP_SENT;
+}    
 
 
