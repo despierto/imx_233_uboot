@@ -20,6 +20,7 @@
 
 #include "global.h"
 #include "net_datalink.h"
+#include "net_icmp.h"
 
 
 /************************************************
@@ -159,14 +160,14 @@ DATALINK_TX_STATE datalink_tx_send(PETH_PKT pEthPkt, IPaddr_t dst_ip, U32 type, 
     return rc;
 }
 
-int datalink_rx(void)
+void datalink_rx(void)
 {
-    int rc = SUCCESS;
-    U32 size, addr;    
+    U32 size, addr; 
+    U32 f_free_pkt;
 
     if (net_datalink_status == NET_DATALINK_STATUS_DIS) {
         //print_err("%s", NET_DATALINK_ERR_CAPTION_DIS);
-        return FAILURE;
+        return;
     }
     
     //get and process every packet
@@ -178,27 +179,59 @@ int datalink_rx(void)
         //4 - process ARP
         //4 - process ICMP ping requests
         //3 ----------------------------------
+
+        if (addr == 0) {
+            continue;
+        }
         
-        if (addr && size) {
+        f_free_pkt = 1;
+            
+        if (size) {
             PETH_PKT pEthPkt = (PETH_PKT)addr;
 
             //printf("\n-------------\n");
             //local_datalink_dump_packet(addr, size, "ANY");
 
             //print_net("type_%x dst_%x:%x:%x:%x:%x:%x src_%x:%x:%x:%x:%x:%x", 
-            //    htons(pEthPkt->header.type), 
-            //    pEthPkt->header.dst[0], pEthPkt->header.dst[1], pEthPkt->header.dst[2], 
-            //    pEthPkt->header.dst[3], pEthPkt->header.dst[4], pEthPkt->header.dst[5],
-            //    pEthPkt->header.src[0], pEthPkt->header.src[1], pEthPkt->header.src[2],
-            //    pEthPkt->header.src[3], pEthPkt->header.src[4], pEthPkt->header.src[5]);
+            //    htons(pEthPkt->type), 
+            //    pEthPkt->dst[0], pEthPkt->dst[1], pEthPkt->dst[2], 
+            //    pEthPkt->dst[3], pEthPkt->dst[4], pEthPkt->dst[5],
+            //    pEthPkt->src[0], pEthPkt->src[1], pEthPkt->src[2],
+            //    pEthPkt->src[3], pEthPkt->src[4], pEthPkt->src[5]);
                
-            switch (htons(pEthPkt->header.type))
+            switch (htons(pEthPkt->type))
             {
                 case ETH_P_IP:
                     {
-                        //local_datalink_dump_packet(addr, size, "IP");
+                        PIP_PKT pIpPkt = (PIP_PKT)&pEthPkt->payload[0];
+#if 0                        
+                        printf("\n-------------\n");
+                        print_net("type_%02x dst_%02x:%02x:%02x:%02x:%02x:%02x src_%02x:%02x:%02x:%02x:%02x:%02x", 
+                            htons(pEthPkt->type), 
+                            pEthPkt->dst[0], pEthPkt->dst[1], pEthPkt->dst[2], 
+                            pEthPkt->dst[3], pEthPkt->dst[4], pEthPkt->dst[5],
+                            pEthPkt->src[0], pEthPkt->src[1], pEthPkt->src[2],
+                            pEthPkt->src[3], pEthPkt->src[4], pEthPkt->src[5]);
 
-                        drv_eth_heap_free((PTR)addr);
+                        local_datalink_dump_packet((U32)&pEthPkt->payload[0], size - ETHER_HDR_SIZE, "IP");
+
+                        print_net("IP: hlv_%2x tos_%2x len_%04x id_%04x off_%04x ttl_%x p_%x sum_%04x src_%d.%d.%d.%d dst_%d.%d.%d.%d",
+                            pIpPkt->ip_hl_v, pIpPkt->ip_tos, htons(pIpPkt->ip_len), htons(pIpPkt->ip_id), 
+                            htons(pIpPkt->ip_off), pIpPkt->ip_ttl, pIpPkt->ip_p, htons(pIpPkt->ip_sum),
+                            pIpPkt->ip_src[0], pIpPkt->ip_src[1], pIpPkt->ip_src[2], pIpPkt->ip_src[3], 
+                            pIpPkt->ip_dst[0], pIpPkt->ip_dst[1], pIpPkt->ip_dst[2], pIpPkt->ip_dst[3]);
+#endif
+                        switch (pIpPkt->ip_p)
+                        {
+                            case IPPROTO_ICMP:
+                                {
+                                    icmp_rx_handler(pEthPkt, size, pIpPkt);
+                                }
+                                break;
+                            
+                            default:
+                                break;
+                        }
                     }
                     break;
 
@@ -208,11 +241,11 @@ int datalink_rx(void)
 #if 0                        
                         printf("\n-------------\n");
                         print_net("type_%02x dst_%02x:%02x:%02x:%02x:%02x:%02x src_%02x:%02x:%02x:%02x:%02x:%02x", 
-                            htons(pEthPkt->header.type), 
-                            pEthPkt->header.dst[0], pEthPkt->header.dst[1], pEthPkt->header.dst[2], 
-                            pEthPkt->header.dst[3], pEthPkt->header.dst[4], pEthPkt->header.dst[5],
-                            pEthPkt->header.src[0], pEthPkt->header.src[1], pEthPkt->header.src[2],
-                            pEthPkt->header.src[3], pEthPkt->header.src[4], pEthPkt->header.src[5]);
+                            htons(pEthPkt->type), 
+                            pEthPkt->dst[0], pEthPkt->dst[1], pEthPkt->dst[2], 
+                            pEthPkt->dst[3], pEthPkt->dst[4], pEthPkt->dst[5],
+                            pEthPkt->src[0], pEthPkt->src[1], pEthPkt->src[2],
+                            pEthPkt->src[3], pEthPkt->src[4], pEthPkt->src[5]);
 
                         local_datalink_dump_packet((U32)&pEthPkt->payload[0], size - ETHER_HDR_SIZE, "ARP");
 
@@ -234,10 +267,8 @@ int datalink_rx(void)
                                         IPaddr_t spa;
                                         
                                         memcpy(&spa, &pArpHdr->ar_spa[0], IP_ADDR_LEN);
-                                                                               
-                                        //print_net("Create ARP replay to (%x)", spa);
                                         local_datalink_create_arp_replay(spa, &pArpHdr->ar_sha[0]);
-                                        
+
                                         //now we also know requester mac
                                         arp_table_reg_ip(spa, (char *)&pArpHdr->ar_sha[0], ARP_TABLE_TYPE_ETH, ARP_TABLE_STATE_VALID);
                                     }
@@ -262,19 +293,20 @@ int datalink_rx(void)
                             default:
                                 break;
                         }
-                        
-                        drv_eth_heap_free((PTR)addr);                        
                     }
                     break;
 
                 default:
-                    drv_eth_heap_free((PTR)addr);
                     break;
             }
         }
+
+        if (f_free_pkt) {
+            drv_eth_heap_free((PTR)addr);
+        }
     }
 
-    return rc;
+    return;
 }
 
 void datalink_info(void)
@@ -354,10 +386,10 @@ U32 datalink_prepare_eth_hdr(PETH_PKT pkt, U8 *dst_mac_addr, U16 protocol)
 #if 1
     
     if (dst_mac_addr) {
-        memcpy ((void *)pkt->header.dst, (void *)dst_mac_addr, ETHER_ADDR_LEN);
+        memcpy ((void *)pkt->dst, (void *)dst_mac_addr, ETHER_ADDR_LEN);
     }
-    memcpy ((void *)pkt->header.src, (void *)pGblCtx->cfg_mac_addr, ETHER_ADDR_LEN);
-    pkt->header.type = htons(protocol);
+    memcpy ((void *)pkt->src, (void *)pGblCtx->cfg_mac_addr, ETHER_ADDR_LEN);
+    pkt->type = htons(protocol);
 
     return ETHER_HDR_SIZE;
 #else
@@ -392,7 +424,7 @@ U32 datalink_set_eth_addr(PETH_PKT pkt, U8 *dst_mac_addr)
     Ethernet_t *et = (Ethernet_t *)pkt;
 
     if (dst_mac_addr) {
-        memcpy ((void *)pkt->header.dst, (void *)dst_mac_addr, 6);
+        memcpy ((void *)pkt->dst, (void *)dst_mac_addr, 6);
     } else {
         return FAILURE;
     }

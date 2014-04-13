@@ -35,6 +35,7 @@
  *               FUNCTIONS                                                *
  ************************************************/
 int icmp_send_req(IPaddr_t ip_addr);
+int icmp_rx_handler(PETH_PKT pEthPkt, U32 pkt_size, PIP_PKT pIpPkt);
 
 
 #endif /* __NET_ICMP_H__ */

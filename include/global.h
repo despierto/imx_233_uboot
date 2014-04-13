@@ -51,7 +51,11 @@ typedef struct _GBL_CTX_ {
     ushort          NetIPID;                /* IP packet ID */
     ushort          ping_req_num;           /* PING request counter */
     ushort          ping_ans_num;           /* PING answer counter */
-    ushort          ping_reg_time;           /* PING request counter */    
+    uint            ping_reg_time;          /* PING request counter */    
+    uint            ping_ans_time;          /* PING answer time: 0 or round trip time per request*/        
+    uint            ping_ans_bytes;         /* PING answer bytes*/            
+    uint            ping_rtt_sum;           /* PING round trip time sum for average time computation*/            
+    IPaddr_t        ping_ans_ttl;           /* PING answer TTL*/    
     IPaddr_t        ping_ip;                /* IP to PING*/
 
     //system configuration

@@ -46,11 +46,6 @@ typedef enum {
     DATALINK_TX_ARP_QUEUE_OVERFLOW, /* to much ARP requests at the same time */    
 } DATALINK_TX_STATE;
 
-typedef struct _ETH_PKT_ {
-    ETH_HDR        header;
-    U8             payload[1];    
-}ETH_PKT, *PETH_PKT;
-
 typedef struct _ARP_REQ_ {
     struct _ARP_REQ_    *prev;
     struct _ARP_REQ_    *next;
@@ -80,7 +75,7 @@ extern U8   NetBcastAddr[];
 int                 datalink_open(void);
 int                 datalink_close(void);
 DATALINK_TX_STATE   datalink_tx_send(PETH_PKT pEthPkt, IPaddr_t dst_ip, U32 type, U32 size);
-int                 datalink_rx(void);
+void                datalink_rx(void);
 U32                 datalink_prepare_eth_hdr(PETH_PKT pkt, U8 *dst_mac_addr, U16 protocol);
 U32                 datalink_set_eth_addr(PETH_PKT pkt, U8 *dst_mac_addr);
 void                datalink_info(void);

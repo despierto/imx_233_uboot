@@ -167,6 +167,12 @@ typedef struct tagETH_HDR{
     ushort      type;                       /* Protocol or length */
 } ETH_HDR, *PETH_HDR;
 
+typedef struct _ETH_PKT_ {
+    uchar       dst[ETHER_ADDR_LEN];        /* Destination node */
+    uchar       src[ETHER_ADDR_LEN];        /* Source node */
+    ushort      type;                       /* Protocol or length */
+    uchar       payload[1];    
+}ETH_PKT, *PETH_PKT;
 
 
 /******** VLAN ***********************************/
@@ -219,6 +225,8 @@ typedef enum {
   IPPROTO_MAX
 } IP_PROTOCOL;
 
+#define IP_ADDR_LEN         (4)             /* Length of logical IP address */
+
 /* Internet Protocol v4 (IPv4) header */
 typedef struct {
     uchar       ip_hl_v;                    /* header length and version */
@@ -229,9 +237,24 @@ typedef struct {
     uchar       ip_ttl;                     /* time to live */
     uchar       ip_p;                       /* protocol */
     ushort      ip_sum;                     /* checksum */
-    IPaddr_t    ip_src;                     /* Source IP address */
-    IPaddr_t    ip_dst;                     /* Destination IP address */
+    uchar       ip_src[IP_ADDR_LEN];        /* Source IP address */
+    uchar       ip_dst[IP_ADDR_LEN];        /* Destination IP address */
 } IP_t;
+
+typedef struct _IP_PKT_ {
+    uchar       ip_hl_v;                    /* header length and version */
+    uchar       ip_tos;                     /* type of service */
+    ushort      ip_len;                     /* total length */
+    ushort      ip_id;                      /* identification */
+    ushort      ip_off;                     /* fragment offset field */
+    uchar       ip_ttl;                     /* time to live */
+    uchar       ip_p;                       /* protocol */
+    ushort      ip_sum;                     /* checksum */
+    uchar       ip_src[IP_ADDR_LEN];        /* Source IP address */
+    uchar       ip_dst[IP_ADDR_LEN];        /* Destination IP address */
+    uchar       payload[1];    
+} IP_PKT, *PIP_PKT;
+
 
 #define IP_OFFS             0x1fff          /* ip offset *= 8 */
 #define IP_FLAGS            0xe000          /* first 3 bits */
@@ -239,7 +262,6 @@ typedef struct {
 #define IP_FLAGS_DFRAG      0x4000          /* don't fragments */
 #define IP_FLAGS_MFRAG      0x2000          /* more fragments */
 
-#define IP_ADDR_LEN         (4)             /* Length of logical IP address */
 #define IP_ADDR_STR_LEN     (15)            /* Length of string of IP address with dots */
 #define IP_HDR_SIZE         (sizeof (IP_t))
 
@@ -308,7 +330,7 @@ typedef struct {
 #define ICMP_TYPE_ADDR_MASK_REPLY       (18)
 #define ICMP_TYPE_TRACEROUTE            (30)
 
-#define PING_TIMEOUT        (5*1000)        /* Miliseconds before trying ping again */
+#define PING_TIMEOUT        (1*1000)        /* Miliseconds before trying ping again */
 #define PING_REPEAT_NUM     (3)             /* 1base request + N repeat count */
 
 /* Internet Control Message Protocol (ICMP) header: echo request (ping) */
@@ -320,6 +342,14 @@ typedef struct {
     ushort      icmp_sn;                    /* ICMP sequence number */    
 } ICMP_ECHO_t;
 
+typedef struct _ICMP_ECHO_PKT_ {
+    uchar       icmp_type;                  /* ICMP type */
+    uchar       icmp_code;                  /* ICMP code */
+    ushort      icmp_sum;                   /* ICMP checksum */
+    ushort      icmp_id;                    /* ICMP identificatoin */
+    ushort      icmp_sn;                    /* ICMP sequence number */    
+    uchar       *payload[1];
+} ICMP_ECHO_PKT, *PICMP_ECHO_PKT;
 #define ICMP_ECHO_HDR_SIZE  (sizeof (ICMP_ECHO_t))
 
 
