@@ -48,7 +48,7 @@ typedef enum {
 
 typedef struct _ETH_PKT_ {
     ETH_HDR        header;
-    U8            *payload;    
+    U8             payload[1];    
 }ETH_PKT, *PETH_PKT;
 
 typedef struct _ARP_REQ_ {

@@ -120,17 +120,31 @@ int strncmp(const char * cs,const char * ct,size_t count)
     return __res;
 }
 
-void *memcpy(void *s1, const void *s2, int n)
+void *memcpy(void *dst, const void *src, int n)
 {
-    char *dst = s1;
-    const char *src = s2;
+    char *d = dst;
+    const char *s = src;
 
     while (n-- > 0)
-        *dst++ = *src++;
+        *d++ = *s++;
 
-    return s1;
+    return dst;
 }
 
+int memcmp(void *src, void *dst, int size)
+{
+    uchar *s = (uchar *)src;
+    uchar *d = (uchar *)dst;
+    int rc = TRUE;
+    
+    while (size--) {
+       if (s[size] != d[size]) {
+          rc = FALSE;
+          break;
+       }
+    }
+    return rc;
+}
 
 void sys_print_assert(const char* filename, const char* funcname, const int nrow)
 {

@@ -32,10 +32,8 @@ U8  NetEtherNullAddr[ETHER_ADDR_LEN] = { 0, 0, 0, 0, 0, 0 };
 U8  NetBcastAddr[ETHER_ADDR_LEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 
 static U32  local_datalink_set_arp_hdr(ARP_t *arp, IPaddr_t dst_ip);
-//static int  local_datalink_add_arp_req_to_list(PARP_REQ pArpReq);
-//static int  local_datalink_rem_arp_req_from_list(PARP_REQ pArpReq);
 void        local_datalink_arp_handler (void *param);
-
+void        local_datalink_dump_packet(U32 addr, U32 size, char *caption);
 
 
 /************************************************
@@ -191,30 +189,111 @@ DATALINK_TX_STATE datalink_tx_send(PETH_PKT pEthPkt, IPaddr_t dst_ip, U32 type, 
 int datalink_rx(void)
 {
     int rc = SUCCESS;
-    unsigned int size;
-    unsigned int addr;    
+    U32 size, addr;    
 
     if (net_datalink_status == NET_DATALINK_STATUS_DIS) {
         //print_err("%s", NET_DATALINK_ERR_CAPTION_DIS);
         return FAILURE;
     }
-
-    //print_net("%s", "datalink_rx");
     
     //get and process every packet
     while((size = drv_eth_rx_get(&addr)) != 0) {
+        //3 ----------------------------------
+        //3 Goal: 
+        //4 - extract packet from ethernet queue
+        //4 - place packet into network queue
+        //4 - process ARP
+        //4 - process ICMP ping requests
+        //3 ----------------------------------
         
         if (addr && size) {
-#if 1            
-            U8 *pA = (U8 *)addr;
-            unsigned int i;            
-            print_inf("[net] --- Rx Packet[0x%x, %d]: [ ", addr, size);
-            for(i=0; i<size; i++) {
-                print_inf("%x ", pA[i]);
+            PETH_PKT pEthPkt = (PETH_PKT)addr;
+
+            //printf("\n-------------\n");
+            //local_datalink_dump_packet(addr, size, "ANY");
+
+            //print_net("type_%x dst_%x:%x:%x:%x:%x:%x src_%x:%x:%x:%x:%x:%x", 
+            //    __swab16(pEthPkt->header.type), 
+            //    pEthPkt->header.dst[0], pEthPkt->header.dst[1], pEthPkt->header.dst[2], 
+            //    pEthPkt->header.dst[3], pEthPkt->header.dst[4], pEthPkt->header.dst[5],
+            //    pEthPkt->header.src[0], pEthPkt->header.src[1], pEthPkt->header.src[2],
+            //    pEthPkt->header.src[3], pEthPkt->header.src[4], pEthPkt->header.src[5]);
+               
+            switch (__swab16(pEthPkt->header.type))
+            {
+                case ETH_P_IP:
+                    {
+                        //local_datalink_dump_packet(addr, size, "IP");
+
+                        drv_eth_heap_free((PTR)addr);
+                    }
+                    break;
+
+                case ETH_P_ARP:
+                    {
+                        ARP_t *pArpHdr = (ARP_t *)&pEthPkt->payload[0];
+#if 1                        
+                        printf("\n-------------\n");
+                        print_net("type_%02x dst_%02x:%02x:%02x:%02x:%02x:%02x src_%02x:%02x:%02x:%02x:%02x:%02x", 
+                            __swab16(pEthPkt->header.type), 
+                            pEthPkt->header.dst[0], pEthPkt->header.dst[1], pEthPkt->header.dst[2], 
+                            pEthPkt->header.dst[3], pEthPkt->header.dst[4], pEthPkt->header.dst[5],
+                            pEthPkt->header.src[0], pEthPkt->header.src[1], pEthPkt->header.src[2],
+                            pEthPkt->header.src[3], pEthPkt->header.src[4], pEthPkt->header.src[5]);
+#endif
+                        local_datalink_dump_packet((U32)&pEthPkt->payload[0], size - ETHER_HDR_SIZE, "ARP");
+#if 1
+                        print_net("ARP: ht_%02x pt_%02x hl_%x pl_%x op_%04x sha_%02x:%02x:%02x:%02x:%02x:%02x spa_%d.%d.%d.%d tha_%02x:%02x:%02x:%02x:%02x:%02x tpa_%d.%d.%d.%d",
+                            __swab16(pArpHdr->ar_htype), __swab16(pArpHdr->ar_ptype), 
+                            pArpHdr->ar_hlen, pArpHdr->ar_plen, __swab16(pArpHdr->ar_oper),
+                            pArpHdr->ar_sha[0], pArpHdr->ar_sha[1], pArpHdr->ar_sha[2], 
+                            pArpHdr->ar_sha[3], pArpHdr->ar_sha[4], pArpHdr->ar_sha[5],
+                            pArpHdr->ar_spa[0], pArpHdr->ar_spa[1], pArpHdr->ar_spa[2], pArpHdr->ar_spa[3],
+                            pArpHdr->ar_tha[0], pArpHdr->ar_tha[1], pArpHdr->ar_tha[2], 
+                            pArpHdr->ar_tha[3], pArpHdr->ar_tha[4], pArpHdr->ar_tha[5],
+                            pArpHdr->ar_tpa[0], pArpHdr->ar_tpa[1], pArpHdr->ar_tpa[2], pArpHdr->ar_tpa[3]);
+#endif
+                        switch (__swab16(pArpHdr->ar_oper))
+                        {
+                            case ARP_OP_REQUEST:
+                                {
+                                    if (memcmp(&pArpHdr->ar_tpa[0], &pGblCtx->cfg_ip_addr, IP_ADDR_LEN) == TRUE) {
+                                        IPaddr_t spa;
+
+                                        memcpy(&spa, &pArpHdr->ar_spa[0], IP_ADDR_LEN);
+                                        
+                                        print_net("Create ARP replay to (%x), our (%x)", spa, pGblCtx->cfg_ip_addr);
+                                    }
+                                }
+                                break;
+                                
+                            case ARP_OP_REPLY:
+                                {
+                                    //add to ARP table
+                                    IPaddr_t spa;
+
+                                    memcpy(&spa, &pArpHdr->ar_spa[0], IP_ADDR_LEN);
+
+                                    print_net("Reg ARP: ip_%d.%d.%d.%d mac_%02x:%02x:%02x:%02x:%02x:%02x", 
+                                        pArpHdr->ar_spa[0], pArpHdr->ar_spa[1], pArpHdr->ar_spa[2], pArpHdr->ar_spa[3], 
+                                        pArpHdr->ar_sha[0], pArpHdr->ar_sha[1], pArpHdr->ar_sha[2], 
+                                        pArpHdr->ar_sha[3], pArpHdr->ar_sha[4], pArpHdr->ar_sha[5]);
+                                    arp_table_reg_ip(spa, &pArpHdr->ar_sha[0], ARP_TABLE_TYPE_ETH, ARP_TABLE_STATE_VALID);
+                                }
+                                break;
+                                
+                            default:
+                                break;
+                        }
+                        
+                        drv_eth_heap_free((PTR)addr);                        
+                    }
+                    break;
+
+                default:
+                    drv_eth_heap_free((PTR)addr);
+                    break;
             }
-            print_inf("] --- \r\n");
-#endif            
-            drv_eth_heap_free((PTR)addr);
         }
     }
 
@@ -236,33 +315,57 @@ void datalink_info(void)
 /************************************************
  *              LOCAL FUNCTIONS                                        *
  ************************************************/
+void local_datalink_dump_packet(U32 addr, U32 size, char *caption)
+{
+    U8 *pA = (U8 *)addr;
+    unsigned int i;            
+    
+    print_inf("[net] --- Rx %s Packet[0x%x, %d]: [ ", caption, addr, size);
+    for(i=0; i<size; i++) {
+        print_inf("%x ", pA[i]);
+    }
+    print_inf("] --- \r\n");
+    
+    return;
+}
+
 void local_datalink_arp_handler (void *param)
 {   
     PARP_REQ pArpReq = (PARP_REQ)param;
+    U32 do_arpreq_freeing = 0;
 
     assert(pArpReq);
     
     //print_dbg("pArpReq tx_num_%d", pArpReq->transmission_num);
 
     if (pArpReq->transmission_num < ARP_TIMEOUT_COUNT) {
-        //send ARP again
-        //print_dbg("ARP re-transmissions #%d: pkt_0x%x len_%d", pArpReqCurr->transmission_num, (unsigned int)pArpReq->addr,  pArpReq->size);                    
+        //check if valid IP existing
+        if (arp_table_check_mac(pArpReq->dst_ip) != ARP_TABLE_STATE_VALID) {
+            //send ARP again
+            //print_dbg("ARP re-transmissions #%d: pkt_0x%x len_%d", pArpReqCurr->transmission_num, (unsigned int)pArpReq->addr,  pArpReq->size);                    
 
-        pArpReq->transmission_num++;
-        drv_eth_tx ((void *)pArpReq->addr, pArpReq->size);  
+            pArpReq->transmission_num++;
+            drv_eth_tx ((void *)pArpReq->addr, pArpReq->size);  
 
-        arp_table_reg_ip(pArpReq->dst_ip, NULL, ARP_TABLE_TYPE_ETH, ARP_TABLE_STATE_WAIT_ARP_RESPOND);
-        core_reg_task(local_datalink_arp_handler, (void *)pArpReq, ARP_TIMEOUT, CORE_TASK_TYPE_COMMON, CORE_TASK_PRIO__ARP, 0);
+            arp_table_reg_ip(pArpReq->dst_ip, NULL, ARP_TABLE_TYPE_ETH, ARP_TABLE_STATE_WAIT_ARP_RESPOND);
+            core_reg_task(local_datalink_arp_handler, (void *)pArpReq, ARP_TIMEOUT, CORE_TASK_TYPE_COMMON, CORE_TASK_PRIO__ARP, 0);
+        } else {
+            //compete current arp processing
+            do_arpreq_freeing = 1;
+        }
     } else {
         //ARP is obsolete - kill it
         arp_table_reg_ip(pArpReq->dst_ip, NULL, ARP_TABLE_TYPE_ETH, ARP_TABLE_STATE_INVALID);
 
         //print_dbg("%s", "ARP killed after 4 re-transmissions: pArpReq_%x pArpReq->addr_%x", (U32)pArpReq, pArpReq->addr);
-        
+        do_arpreq_freeing = 1;
+    }
+
+    if (do_arpreq_freeing) {
         //free ARP packet
         drv_eth_heap_free((PTR)pArpReq->addr);
         //free ARP requst entity
-        print_dbg("free at %s addr (0x%x)", pDataLinkCtx->arp_reg_pool_ctx->pool_caption, (U32)pArpReq);
+        //print_dbg("free at %s addr (0x%x)", pDataLinkCtx->arp_reg_pool_ctx->pool_caption, (U32)pArpReq);
         sys_pool_free(pDataLinkCtx->arp_reg_pool_ctx, (PTR)pArpReq);
     }
 

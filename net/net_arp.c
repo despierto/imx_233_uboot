@@ -89,7 +89,6 @@ void arp_table_info(void)
 ARP_TABLE_STATE arp_table_get_mac(IPaddr_t ip, uchar **mac)
 {
     ARP_TABLE_STATE ret_state = ARP_TABLE_STATE_INVALID;
-    
     unsigned int i;
     
     for (i=0; i< ARP_TABLE_SIZE; i++) {
@@ -112,6 +111,20 @@ ARP_TABLE_STATE arp_table_get_mac(IPaddr_t ip, uchar **mac)
             }
                    
             break;
+        }
+    }
+
+    return ret_state;
+}
+
+ARP_TABLE_STATE arp_table_check_mac(IPaddr_t ip)
+{
+    ARP_TABLE_STATE ret_state = ARP_TABLE_STATE_INVALID;
+    unsigned int i;
+    
+    for (i=0; i< ARP_TABLE_SIZE; i++) {
+        if (pArpTable[i].ip_addr == ip) {
+            return pArpTable[i].state;
         }
     }
 

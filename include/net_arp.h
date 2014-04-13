@@ -55,6 +55,7 @@ int             arp_table_create(void);
 int             arp_table_destroy(void);
 void            arp_table_info(void);
 ARP_TABLE_STATE arp_table_get_mac(IPaddr_t ip, uchar **mac);
+ARP_TABLE_STATE arp_table_check_mac(IPaddr_t ip);
 void            arp_table_reg_ip(IPaddr_t ip, char *mac, uchar type, uchar state);
 void            arp_table_set_valid_period(unsigned int valid_period_msec);
 int             arp_table_update_valid_period(IPaddr_t ip);

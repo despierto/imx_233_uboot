@@ -98,8 +98,9 @@ void    sys_print_error(const char* filename, const char* funcname, const int nr
 int     strcmp(const char * cs,const char * ct);
 int     strncmp(const char * cs,const char * ct, size_t count);
 void    *memcpy(void *s1, const void *s2, int n);
+int     memcmp(void *src, void *dst, int size);
 unsigned int strlen(const char * s);
-int sys_check_IPv4_string(const char *ip);
+int     sys_check_IPv4_string(const char *ip);
 
 
 /* sys_vfprintf.h */
