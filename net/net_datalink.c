@@ -213,9 +213,9 @@ int datalink_rx(void)
                             pEthPkt->header.dst[3], pEthPkt->header.dst[4], pEthPkt->header.dst[5],
                             pEthPkt->header.src[0], pEthPkt->header.src[1], pEthPkt->header.src[2],
                             pEthPkt->header.src[3], pEthPkt->header.src[4], pEthPkt->header.src[5]);
-#endif
+
                         local_datalink_dump_packet((U32)&pEthPkt->payload[0], size - ETHER_HDR_SIZE, "ARP");
-#if 0
+
                         print_net("ARP: ht_%02x pt_%02x hl_%x pl_%x op_%04x sha_%02x:%02x:%02x:%02x:%02x:%02x spa_%d.%d.%d.%d tha_%02x:%02x:%02x:%02x:%02x:%02x tpa_%d.%d.%d.%d",
                             htons(pArpHdr->ar_htype), htons(pArpHdr->ar_ptype), 
                             pArpHdr->ar_hlen, pArpHdr->ar_plen, htons(pArpHdr->ar_oper),
@@ -235,7 +235,7 @@ int datalink_rx(void)
                                         
                                         memcpy(&spa, &pArpHdr->ar_spa[0], IP_ADDR_LEN);
                                                                                
-                                        print_net("Create ARP replay to (%x)", spa);
+                                        //print_net("Create ARP replay to (%x)", spa);
                                         local_datalink_create_arp_replay(spa, &pArpHdr->ar_sha[0]);
                                         
                                         //now we also know requester mac

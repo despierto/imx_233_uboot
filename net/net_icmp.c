@@ -61,25 +61,19 @@ int icmp_send_req(IPaddr_t ip_addr)
         return FAILURE;
     }
     icmp_pkt_size += datalink_prepare_eth_hdr(pIcmpEthPkt, NULL, ETH_P_IP);
-    icmp_pkt_size += local_icmp_set_ipv4_hdr((IP_t *)((U32)pIcmpEthPkt + icmp_pkt_size), ICMP_ECHO_HDR_SIZE, IP_FLAGS_DFRAG, 255, IPPROTO_ICMP, ip_addr);
+    icmp_pkt_size += local_icmp_set_ipv4_hdr((IP_t *)((U32)pIcmpEthPkt + icmp_pkt_size), ICMP_ECHO_HDR_SIZE + PING_PAYLOAD_SIZE, IP_FLAGS_DFRAG, 64, IPPROTO_ICMP, ip_addr);
     icmp_pkt_size += local_icmp_set_icmp_hdr((uchar *)((U32)pIcmpEthPkt + icmp_pkt_size), ICMP_TYPE_ECHO_REQUEST, 0, 0);    
-
+    memcpy((void *)((U32)pIcmpEthPkt + icmp_pkt_size), &ping_payload[0], PING_PAYLOAD_SIZE);
+    icmp_pkt_size += PING_PAYLOAD_SIZE;
+    
     tx_state = datalink_tx_send(pIcmpEthPkt, ip_addr, ETH_P_IP, icmp_pkt_size);        
-    if (tx_state == DATALINK_TX_SUCCESS) {
-        //print_dbg("ICMP request successfully sent: pkt_0x%x size_%d", (U32)pIcmpEthPkt, icmp_pkt_size);
-        drv_eth_heap_free(pIcmpEthPkt);
-    } else if (tx_state >= DATALINK_TX_ERROR)  {
+    if (tx_state == DATALINK_TX_ERROR) {
         print_err_cmd("unexpected error while sending ICMP request: pkt_0x%x size_%d", (U32)pIcmpEthPkt, icmp_pkt_size);
-        drv_eth_heap_free(pIcmpEthPkt);
-    } else {
-        //ARP request sent => let's wait for ARP
-        //print_dbg("wait for ARP respond: pkt_0x%x size_%d", (U32)pIcmpEthPkt, icmp_pkt_size);
-
-
-        //temporary
-        drv_eth_heap_free(pIcmpEthPkt);
     }
 
+    //packet was sent (it doesn't matter is it sent icmp packet of ARP request. Processing of respond is doing at higher layer)
+    drv_eth_heap_free(pIcmpEthPkt);
+        
     return SUCCESS;
 }
 
@@ -96,8 +90,8 @@ int local_icmp_set_ipv4_hdr(IP_t *ip, ushort payload_len, ushort frag_off, uchar
     ip->ip_off   = htons (frag_off);   /* Don't fragment */
     ip->ip_ttl   = ttl;
     ip->ip_p     = prot;
-    memcpy((void*)&ip->ip_src, (void*)pGblCtx->cfg_ip_addr, sizeof(IPaddr_t));
-    memcpy((void*)&ip->ip_dst, (void*)&ip_dst, sizeof(IPaddr_t));
+    memcpy((void*)&ip->ip_src, (void*)&pGblCtx->cfg_ip_addr, IP_ADDR_LEN);
+    memcpy((void*)&ip->ip_dst, (void*)&ip_dst, IP_ADDR_LEN);
     ip->ip_sum   = ~(sys_checksum ((ushort *)ip, IP_HDR_SIZE / 2));    
     
     return IP_HDR_SIZE;

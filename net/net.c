@@ -139,7 +139,7 @@ void net_ping_task(void *param)
 
     } else if (pGblCtx->ping_req_num < (PING_REPEAT_NUM + 1)) {
         print_inf("Request #%d timed out\r\n", pGblCtx->ping_req_num);
-        pGblCtx->ping_req_num++;
+        icmp_send_req(pGblCtx->ping_ip);
     
     } else {
         print_inf("Request #%d timed out\r\n", pGblCtx->ping_req_num);
